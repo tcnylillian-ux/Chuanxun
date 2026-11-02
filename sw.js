@@ -2,19 +2,19 @@
  * 传讯 · 离线支持
  * 把网站本身和它用到的程式库存在手机/电脑里，没有网络也能打开。
  * 聊天数据本来就存在本机（IndexedDB），同步数据（Firebase）不经过这里。
- * 更新网站后，把下面的 VERSION 改一下（例如 v2），所有设备会自动换成新版本。
+ * 更新网站后，把下面的 VERSION 改一下（例如 v3），所有设备会自动换成新版本。
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
 const LOCAL = [
-  '', 'index.html', 'manifest.webmanifest', 'css/styles.css', 'cx/sync.js',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
-  'js/config.js', 'js/utils.js', 'js/backup-engine.js', 'js/state.js', 'js/core.js',
-  'js/features/mood.js', 'js/features/envelope.js', 'js/features/reply-library.js',
-  'js/features/theme-editor.js', 'js/features/group-chat.js', 'js/features/call.js',
-  'js/games.js', 'js/features.js', 'js/data.js', 'js/onboarding.js', 'js/listeners.js', 'js/app.js'
+  '', 'index.html', 'manifest.webmanifest', 'styles.css', 'sync.js',
+  'icon-192.png', 'icon-512.png', 'apple-touch-icon.png',
+  'config.js', 'utils.js', 'backup-engine.js', 'state.js', 'core.js',
+  'mood.js', 'envelope.js', 'reply-library.js',
+  'theme-editor.js', 'group-chat.js', 'call.js',
+  'games.js', 'features.js', 'data.js', 'onboarding.js', 'listeners.js', 'app.js'
 ].map(p => BASE + p);
 
 const REMOTE = [
