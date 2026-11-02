@@ -2,9 +2,9 @@
  * 传讯 · 离线支持
  * 把网站本身和它用到的程式库存在手机/电脑里，没有网络也能打开。
  * 聊天数据本来就存在本机（IndexedDB），同步数据（Firebase）不经过这里。
- * 更新网站后，把下面的 VERSION 改一下（例如 v4），所有设备会自动换成新版本。
+ * 更新网站后，把下面的 VERSION 改一下（例如 v5），所有设备会自动换成新版本。
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
@@ -14,7 +14,7 @@ const LOCAL = [
   'config.js', 'utils.js', 'backup-engine.js', 'state.js', 'core.js',
   'mood.js', 'envelope.js', 'reply-library.js',
   'theme-editor.js', 'group-chat.js', 'call.js',
-  'games.js', 'features.js', 'data.js', 'onboarding.js', 'listeners.js', 'app.js'
+  'games.js', 'features.js', 'data.js', 'onboarding.js', 'listeners.js', 'app.js', 'qa.js'
 ].map(p => BASE + p);
 
 const REMOTE = [
