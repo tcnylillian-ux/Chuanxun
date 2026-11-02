@@ -3,7 +3,7 @@ if (typeof replyGroupsEnabled === 'undefined') window.replyGroupsEnabled = false
 if (typeof customPokeGroups === 'undefined') window.customPokeGroups = [];
 if (typeof customStatusGroups === 'undefined') window.customStatusGroups = [];
 
-// 根据当前 tab 返回对应的分组上下文 {groups, items, itemLabel}
+// 根據當前 tab 返回對應的分組上下文 {groups, items, itemLabel}
 function _getGroupCtx(tab) {
     tab = tab || currentSubTab;
     if (tab === 'pokes') {
@@ -12,14 +12,14 @@ function _getGroupCtx(tab) {
     }
     if (tab === 'statuses') {
         if (!window.customStatusGroups) window.customStatusGroups = [];
-        return { groups: window.customStatusGroups, items: customStatuses, itemLabel: '状态' };
+        return { groups: window.customStatusGroups, items: customStatuses, itemLabel: '狀態' };
     }
     // default: custom replies
     if (!window.customReplyGroups) window.customReplyGroups = [];
     return { groups: window.customReplyGroups, items: customReplies, itemLabel: '字卡' };
 }
 
-// 判断当前 tab 是否支持分组
+// 判斷當前 tab 是否支援分組
 function _tabHasGroups(tab) {
     tab = tab || currentSubTab;
     return tab === 'custom' || tab === 'pokes' || tab === 'statuses';
@@ -74,7 +74,7 @@ const ICONS = {
 };
 
 
-// ─── 共享样式：只注入一次，避免每张卡片各塞一个 <style> ───────────────────
+// ─── 共享樣式：只注入一次，避免每張卡片各塞一個 <style> ───────────────────
 (function _injectReplyLibStyles() {
     if (document.getElementById('rl-shared-styles')) return;
     const s = document.createElement('style');
@@ -176,7 +176,7 @@ function _renderListContentOnly() {
 }
 
 let _rlRafId = null;
-/** 防抖版 renderReplyLibrary：同一帧内多次调用只渲染一次 */
+/** 防抖版 renderReplyLibrary：同一幀內多次呼叫只渲染一次 */
 function renderReplyLibraryRaf() {
     if (_rlRafId) return;
     _rlRafId = requestAnimationFrame(() => {
@@ -301,7 +301,7 @@ function _renderModernToolbar() {
                     全部 <span class="gfp-count">${allCount}</span>
                 </button>
                 <button class="gfp-btn ${_activeGroupFilter === 'ungrouped' ? 'gfp-active' : ''}" data-filter="ungrouped">
-                    未分组 <span class="gfp-count">${ungroupedCount}</span>
+                    未分組 <span class="gfp-count">${ungroupedCount}</span>
                 </button>
                 ${ctx.groups.map(g => {
                     const cnt = (g.items || []).filter(item => ctx.items.includes(item)).length;
@@ -334,21 +334,21 @@ function _renderModernToolbar() {
                     display:flex;align-items:center;gap:5px;
                 ">
                     ${ICONS.check}
-                    ${selectedCount === totalItems ? '取消全选' : `全选 (${totalItems})`}
+                    ${selectedCount === totalItems ? '取消全選' : `全選 (${totalItems})`}
                 </button>
                 <span style="font-size:12px;color:var(--text-secondary);flex:1;min-width:60px;">
-                    ${selectedCount > 0 ? `已选 <strong style="color:var(--text-primary);">${selectedCount}</strong> 条` : '点击字卡以选择'}
+                    ${selectedCount > 0 ? `已選 <strong style="color:var(--text-primary);">${selectedCount}</strong> 條` : '點選字卡以選擇'}
                 </span>
                 ${showGroupBtn ? `
-                    <button id="batch-group-btn" class="batch-act-pill ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="分配分组">
-                        ${ICONS.tag} 分组
+                    <button id="batch-group-btn" class="batch-act-pill ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="分配分組">
+                        ${ICONS.tag} 分組
                     </button>
                 ` : ''}
-                <button id="batch-disable-btn" class="batch-act-pill ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="屏蔽/启用">
-                    ${ICONS.eyeOff} 屏蔽
+                <button id="batch-disable-btn" class="batch-act-pill ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="遮蔽/啟用">
+                    ${ICONS.eyeOff} 遮蔽
                 </button>
-                <button id="batch-delete-btn" class="batch-act-pill batch-act-danger ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="删除">
-                    ${ICONS.trash} 删除
+                <button id="batch-delete-btn" class="batch-act-pill batch-act-danger ${selectedCount === 0 ? 'batch-act-disabled' : ''}" data-tip="刪除">
+                    ${ICONS.trash} 刪除
                 </button>
             </div>
         `;
@@ -400,25 +400,25 @@ function _renderModernToolbar() {
         </style>
 
         <div style="display:flex;align-items:center;gap:8px;padding:10px 15px;border-bottom:1px solid var(--border-color);">
-            <button class="toolbar-icon-btn ${_searchVisible ? 'active' : ''}" id="tb-search-btn" title="搜索">
+            <button class="toolbar-icon-btn ${_searchVisible ? 'active' : ''}" id="tb-search-btn" title="搜尋">
                 ${ICONS.search}
             </button>
             ${hasGroupSupport ? `
-            <button class="toolbar-icon-btn" id="tb-groups-btn" title="分组管理">
+            <button class="toolbar-icon-btn" id="tb-groups-btn" title="分組管理">
                 ${ICONS.folder}
             </button>` : ''}
-            <button class="toolbar-icon-btn" id="tb-dedup-btn" title="一键去重">
+            <button class="toolbar-icon-btn" id="tb-dedup-btn" title="一鍵去重">
                 ${ICONS.dedup}
             </button>
             <div style="flex:1;"></div>
             ${canBatch ? `
-            <button class="toolbar-icon-btn ${_batchModeActive ? 'active' : ''}" id="tb-batch-btn" title="${_batchModeActive ? '退出批量' : '批量管理'}">
+            <button class="toolbar-icon-btn ${_batchModeActive ? 'active' : ''}" id="tb-batch-btn" title="${_batchModeActive ? '退出批次' : '批次管理'}">
                 ${ICONS.batch}
             </button>` : ''}
-            <button class="toolbar-icon-btn" id="tb-import-btn" title="导入">
+            <button class="toolbar-icon-btn" id="tb-import-btn" title="匯入">
                 ${ICONS.import}
             </button>
-            <button class="toolbar-icon-btn" id="tb-export-btn" title="导出">
+            <button class="toolbar-icon-btn" id="tb-export-btn" title="匯出">
                 ${ICONS.export}
             </button>
         </div>
@@ -426,7 +426,7 @@ function _renderModernToolbar() {
         ${_searchVisible ? `
         <div class="search-input-line">
             <div style="color:var(--text-secondary);">${ICONS.search}</div>
-            <input type="text" id="rl-search-input" value="${_searchQuery}" placeholder="搜索内容…" autocomplete="off">
+            <input type="text" id="rl-search-input" value="${_searchQuery}" placeholder="搜尋內容…" autocomplete="off">
             <button class="toolbar-icon-btn" id="tb-search-clear" title="清除" style="width:28px;height:28px;">
                 ${ICONS.close}
             </button>
@@ -515,19 +515,19 @@ function _renderModernToolbar() {
         });
         toolbar.querySelector('#batch-delete-btn')?.addEventListener('click', () => {
             if (_batchSelectedIndices.size === 0) return;
-            if (!confirm(`确定删除选中的 ${_batchSelectedIndices.size} 条？`)) return;
+            if (!confirm(`確定刪除選中的 ${_batchSelectedIndices.size} 條？`)) return;
             const indices = [..._batchSelectedIndices].sort((a, b) => b - a);
             if (isStickersTab) {
                 const deleted = indices.map(i => stickerLibrary[i]).filter(Boolean);
                 indices.forEach(i => stickerLibrary.splice(i, 1));
-                // 同步清理已删除条目的“屏蔽集合”
+                // 同步清理已刪除條目的“遮蔽集合”
                 const dis = _getDisabledStickerItemsSet();
                 deleted.forEach(d => dis.delete(d));
                 _saveDisabledStickerItemsSet(dis);
                 _batchSelectedIndices.clear();
                 throttledSaveData();
                 renderReplyLibrary();
-                showNotification(`已删除 ${indices.length} 个贴纸`, 'success');
+                showNotification(`已刪除 ${indices.length} 個貼紙`, 'success');
             } else {
                 const deletedTexts = indices.map(i => customReplies[i]);
                 indices.forEach(i => customReplies.splice(i, 1));
@@ -539,7 +539,7 @@ function _renderModernToolbar() {
                 _batchSelectedIndices.clear();
                 throttledSaveData();
                 renderReplyLibrary();
-                showNotification(`已删除 ${indices.length} 条`, 'success');
+                showNotification(`已刪除 ${indices.length} 條`, 'success');
             }
         });
     }
@@ -550,7 +550,7 @@ function _renderCardViewWithGroups(list, items) {
     const groups = ctx.groups;
     const sourceItems = ctx.items;
     const disabledSet = _getDisabledItemsSet();
-    // 预建索引 Map，避免 indexOf 的 O(n²) 查找
+    // 預建索引 Map，避免 indexOf 的 O(n²) 查詢
     const replyIndexMap = new Map();
     sourceItems.forEach((r, i) => { if (!replyIndexMap.has(r)) replyIndexMap.set(r, i); });
     const itemsWithIdx = items.map(text => ({
@@ -575,7 +575,7 @@ function _renderCardViewWithGroups(list, items) {
 
         const ungrouped = itemsWithIdx.filter(x => !inGroup.has(x.idx));
         if (ungrouped.length > 0) {
-            _renderGroupBlock(list, { id: '__ungrouped', name: '未分组', color: '#868E96', disabled: false }, ungrouped, disabledSet, true);
+            _renderGroupBlock(list, { id: '__ungrouped', name: '未分組', color: '#868E96', disabled: false }, ungrouped, disabledSet, true);
         }
     } else if (_activeGroupFilter === 'ungrouped') {
         const inGroup = new Set();
@@ -585,16 +585,16 @@ function _renderCardViewWithGroups(list, items) {
         }));
         const ungrouped = itemsWithIdx.filter(x => !inGroup.has(x.idx));
         if (ungrouped.length === 0) {
-            list.innerHTML = renderEmptyState('所有内容均已分组');
+            list.innerHTML = renderEmptyState('所有內容均已分組');
         } else {
             _renderCardList(list, ungrouped, disabledSet);
         }
     } else {
         const g = groups.find(g => g.id === _activeGroupFilter);
-        if (!g) { list.innerHTML = renderEmptyState('分组不存在'); return; }
+        if (!g) { list.innerHTML = renderEmptyState('分組不存在'); return; }
         const filtered = itemsWithIdx.filter(x => (g.items || []).includes(x.text));
         if (filtered.length === 0) {
-            list.innerHTML = renderEmptyState('此分组暂无内容');
+            list.innerHTML = renderEmptyState('此分組暫無內容');
         } else {
             _renderCardList(list, filtered, disabledSet);
         }
@@ -610,26 +610,26 @@ function _renderGroupBlock(list, group, groupItems, disabledSet, isUngrouped = f
 
     section.innerHTML = `
         <div class="rl-group-header${isCollapsed ? ' collapsed' : ''}" id="grp-hdr-${group.id}" style="${isDisabled ? 'opacity:0.5;' : ''}">
-            <div class="rl-group-tag" id="grp-tag-${group.id}" title="${isDisabled ? '点击启用此分组' : '点击屏蔽此分组'}">
+            <div class="rl-group-tag" id="grp-tag-${group.id}" title="${isDisabled ? '點選啟用此分組' : '點選遮蔽此分組'}">
                 <span style="width:8px;height:8px;border-radius:50%;background:${colorDot};flex-shrink:0;"></span>
                 <span style="font-size:12px;font-weight:700;color:${colorDot};">${group.name}</span>
-                ${isDisabled ? `<span title="已屏蔽" style="color:${colorDot};">${ICONS.eyeOff}</span>` : ''}
+                ${isDisabled ? `<span title="已遮蔽" style="color:${colorDot};">${ICONS.eyeOff}</span>` : ''}
             </div>
-            <span style="font-size:11px;color:var(--text-secondary);">${groupItems.length} 条</span>
+            <span style="font-size:11px;color:var(--text-secondary);">${groupItems.length} 條</span>
             ${_batchModeActive && groupItems.length > 0 ? (() => {
                 const allSel = groupItems.every(x => _batchSelectedIndices.has(x.idx));
                 const someSel = !allSel && groupItems.some(x => _batchSelectedIndices.has(x.idx));
-                return `<button class="grp-select-all-btn" data-gid="${group.id}" title="${allSel ? '取消本组全选' : '全选本组'}" style="
+                return `<button class="grp-select-all-btn" data-gid="${group.id}" title="${allSel ? '取消本組全選' : '全選本組'}" style="
                     margin-left:auto;flex-shrink:0;padding:3px 9px;border-radius:20px;cursor:pointer;
                     font-size:11px;font-weight:700;font-family:var(--font-family);
                     transition:all 0.15s;
                     border:1.5px solid ${allSel ? 'var(--accent-color)' : someSel ? colorDot : 'var(--border-color)'};
                     background:${allSel ? 'var(--accent-color)' : someSel ? colorDot + '22' : 'var(--primary-bg)'};
                     color:${allSel ? '#fff' : someSel ? colorDot : 'var(--text-secondary)'};
-                ">${allSel ? '✓ 全选' : someSel ? `已选${groupItems.filter(x=>_batchSelectedIndices.has(x.idx)).length}` : '全选'}</button>`;
+                ">${allSel ? '✓ 全選' : someSel ? `已選${groupItems.filter(x=>_batchSelectedIndices.has(x.idx)).length}` : '全選'}</button>`;
             })() : `<div style="flex:1;"></div>`}
             ${!isUngrouped ? `
-            <button class="grp-edit-btn" title="编辑分组" style="
+            <button class="grp-edit-btn" title="編輯分組" style="
                 ${_batchModeActive ? '' : 'margin-left:auto;'}width:26px;height:26px;border-radius:8px;border:1px solid var(--border-color);
                 background:var(--primary-bg);color:var(--text-secondary);cursor:pointer;
                 display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -645,7 +645,7 @@ function _renderGroupBlock(list, group, groupItems, disabledSet, isUngrouped = f
 
     const body = section.querySelector(`#grp-body-${group.id}`);
     if (groupItems.length === 0) {
-        body.innerHTML = `<div style="padding:18px;text-align:center;font-size:12px;color:var(--text-secondary);opacity:0.6;">此分组暂无内容</div>`;
+        body.innerHTML = `<div style="padding:18px;text-align:center;font-size:12px;color:var(--text-secondary);opacity:0.6;">此分組暫無內容</div>`;
     } else {
         _renderCardList(body, groupItems, disabledSet);
     }
@@ -676,7 +676,7 @@ function _renderGroupBlock(list, group, groupItems, disabledSet, isUngrouped = f
             group.disabled = !group.disabled;
             throttledSaveData();
             renderReplyLibrary();
-            showNotification(group.disabled ? `已屏蔽「${group.name}」` : `已启用「${group.name}」`, 'success');
+            showNotification(group.disabled ? `已遮蔽「${group.name}」` : `已啟用「${group.name}」`, 'success');
         });
     }
 
@@ -686,7 +686,7 @@ function _renderGroupBlock(list, group, groupItems, disabledSet, isUngrouped = f
     });
 }
 
-const _CARD_PAGE_SIZE = 80; // 每次最多渲染 80 张，超过时追加"显示更多"
+const _CARD_PAGE_SIZE = 80; // 每次最多渲染 80 張，超過時追加"顯示更多"
 
 function _renderCardList(container, itemsWithIdx, disabledSet) {
     const total = itemsWithIdx.length;
@@ -701,7 +701,7 @@ function _renderCardList(container, itemsWithIdx, disabledSet) {
     if (remaining > 0) {
         const btn = document.createElement('button');
         btn.style.cssText = 'width:100%;padding:10px;margin-top:4px;border:1.5px dashed var(--border-color);border-radius:12px;background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-family);';
-        btn.textContent = `显示剩余 ${remaining} 条`;
+        btn.textContent = `顯示剩餘 ${remaining} 條`;
         btn.onclick = () => {
             btn.remove();
             const moreFrag = document.createDocumentFragment();
@@ -772,16 +772,16 @@ function _createCard(item, index, disabledSet) {
             ${groupBadge}
         </div>
         <div class="rl-card-actions">
-            <button class="rl-act-btn ${isDisabled ? 'active' : ''}" data-action="disable" title="${isDisabled ? '启用' : '屏蔽'}">
+            <button class="rl-act-btn ${isDisabled ? 'active' : ''}" data-action="disable" title="${isDisabled ? '啟用' : '遮蔽'}">
                 ${isDisabled ? ICONS.eye : ICONS.eyeOff}
             </button>
-            <button class="rl-act-btn" data-action="tag" title="分组">
+            <button class="rl-act-btn" data-action="tag" title="分組">
                 ${ICONS.tag}
             </button>
-            <button class="rl-act-btn" data-action="edit" title="编辑">
+            <button class="rl-act-btn" data-action="edit" title="編輯">
                 ${ICONS.edit}
             </button>
-            <button class="rl-act-btn danger" data-action="delete" title="删除">
+            <button class="rl-act-btn danger" data-action="delete" title="刪除">
                 ${ICONS.trash}
             </button>
         </div>
@@ -797,7 +797,7 @@ function _createCard(item, index, disabledSet) {
 
 function _renderAtmosphereList(list, items) {
     const disabledSet = _getDisabledItemsSet();
-    // 预建各数组的索引 Map，避免 O(n²)
+    // 預建各陣列的索引 Map，避免 O(n²)
     const indexMaps = {
         pokes:    new Map(customPokes.map((r,i)   => [r, i])),
         statuses: new Map(customStatuses.map((r,i) => [r, i])),
@@ -812,8 +812,8 @@ function _renderAtmosphereList(list, items) {
         div.innerHTML = `
             <span class="custom-reply-text">${item.replace('|','<br><small style="opacity:.65">')}</span>
             <div class="custom-reply-actions">
-                <button class="reply-action-mini edit-btn" title="编辑">${ICONS.edit}</button>
-                <button class="reply-action-mini delete-btn" title="删除">${ICONS.trash}</button>
+                <button class="reply-action-mini edit-btn" title="編輯">${ICONS.edit}</button>
+                <button class="reply-action-mini delete-btn" title="刪除">${ICONS.trash}</button>
             </div>
         `;
         div.querySelector('.delete-btn').onclick = () => deleteItem(realIdx);
@@ -825,7 +825,7 @@ function _renderAtmosphereList(list, items) {
 
 function _renderEmojiTab(list, itemsToRender) {
     if (itemsToRender.length === 0 && customEmojis.length === 0) {
-        list.innerHTML = renderEmptyState('暂无 Emoji'); return;
+        list.innerHTML = renderEmptyState('暫無 Emoji'); return;
     }
     itemsToRender.forEach(item => {
         const div = document.createElement('div');
@@ -836,7 +836,7 @@ function _renderEmojiTab(list, itemsToRender) {
     if (customEmojis.length > 0) {
         const sep = document.createElement('div');
         sep.style.cssText = 'grid-column:1/-1;font-size:11px;color:var(--text-secondary);padding:4px 2px 2px;border-top:1px dashed var(--border-color);margin-top:4px;';
-        sep.textContent = '— 自定义 —';
+        sep.textContent = '— 自定義 —';
         list.appendChild(sep);
         customEmojis.forEach((item, idx) => {
             const div = document.createElement('div');
@@ -877,8 +877,8 @@ function _renderStickerTab(list, itemsToRender) {
         });
         div.querySelector('.sticker-delete-btn').addEventListener('click', e => {
             e.stopPropagation();
-            if (confirm('删除此表情？')) {
-                // 如果该贴纸处于“已屏蔽”，删除后同步移出屏蔽集合
+            if (confirm('刪除此表情？')) {
+                // 如果該貼紙處於“已遮蔽”，刪除後同步移出遮蔽集合
                 if (isDisabled) {
                     disabledSet.delete(item);
                     _saveDisabledStickerItemsSet(disabledSet);
@@ -916,8 +916,8 @@ function _saveDisabledItemsSet(set) {
 
 function _toggleItemDisable(itemText) {
     const set = _getDisabledItemsSet();
-    if (set.has(itemText)) { set.delete(itemText); showNotification('已启用', 'success'); }
-    else { set.add(itemText); showNotification('已屏蔽（不会出现在随机回复中）', 'info'); }
+    if (set.has(itemText)) { set.delete(itemText); showNotification('已啟用', 'success'); }
+    else { set.add(itemText); showNotification('已遮蔽（不會出現在隨機回覆中）', 'info'); }
     _saveDisabledItemsSet(set);
     renderReplyLibrary();
 }
@@ -928,10 +928,10 @@ function _batchToggleDisable() {
     const allDisabled = selectedItems.every(item => set.has(item));
     if (allDisabled) {
         selectedItems.forEach(item => set.delete(item));
-        showNotification(`已启用 ${selectedItems.length} 条`, 'success');
+        showNotification(`已啟用 ${selectedItems.length} 條`, 'success');
     } else {
         selectedItems.forEach(item => set.add(item));
-        showNotification(`已屏蔽 ${selectedItems.length} 条`, 'info');
+        showNotification(`已遮蔽 ${selectedItems.length} 條`, 'info');
     }
     _saveDisabledItemsSet(set);
     _batchSelectedIndices.clear();
@@ -945,10 +945,10 @@ function _batchToggleDisableStickers() {
     const allDisabled = selectedItems.every(item => set.has(item));
     if (allDisabled) {
         selectedItems.forEach(item => set.delete(item));
-        showNotification(`已启用 ${selectedItems.length} 个贴纸`, 'success');
+        showNotification(`已啟用 ${selectedItems.length} 個貼紙`, 'success');
     } else {
         selectedItems.forEach(item => set.add(item));
-        showNotification(`已屏蔽 ${selectedItems.length} 个贴纸`, 'info');
+        showNotification(`已遮蔽 ${selectedItems.length} 個貼紙`, 'info');
     }
     _saveDisabledStickerItemsSet(set);
     _batchSelectedIndices.clear();
@@ -972,9 +972,9 @@ function _runDedup() {
     totalRemoved += (preEmoji - customEmojis.length);
     if (totalRemoved > 0) {
         throttledSaveData(); renderReplyLibrary();
-        showNotification(`🧹 共清理了 ${totalRemoved} 条重复内容`, 'success');
+        showNotification(`🧹 共清理了 ${totalRemoved} 條重複內容`, 'success');
     } else {
-        showNotification('✨ 没有重复内容', 'info');
+        showNotification('✨ 沒有重複內容', 'info');
     }
 }
 
@@ -988,7 +988,7 @@ function _showGroupManager() {
         const noGroups = !groups || groups.length === 0;
         panel.querySelector('#gm-list').innerHTML = noGroups
             ? `<div style="text-align:center;padding:32px 0;color:var(--text-secondary);font-size:13px;opacity:0.7;">
-                    还没有分组<br><span style="font-size:11px;">点击下方按钮创建第一个分组</span>
+                    還沒有分組<br><span style="font-size:11px;">點選下方按鈕建立第一個分組</span>
                </div>`
             : groups.map((g, i) => `
                 <div style="
@@ -999,23 +999,23 @@ function _showGroupManager() {
                 ">
                     <span style="width:12px;height:12px;border-radius:50%;background:${g.color||'#868E96'};flex-shrink:0;box-shadow:0 0 0 2px ${g.color||'#868E96'}30;"></span>
                     <span style="flex:1;font-size:13px;color:var(--text-primary);font-weight:600;">${g.name}</span>
-                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).filter(t=>sourceItems.includes(t)).length} 条</span>
+                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).filter(t=>sourceItems.includes(t)).length} 條</span>
                     <button data-action="toggle" data-i="${i}" style="
                         width:28px;height:28px;border-radius:8px;border:1px solid var(--border-color);
                         background:${g.disabled ? 'var(--accent-color)' : 'transparent'};
                         color:${g.disabled ? '#fff' : 'var(--text-secondary)'};
                         cursor:pointer;display:flex;align-items:center;justify-content:center;
-                    " title="${g.disabled ? '启用' : '屏蔽'}">${g.disabled ? ICONS.eye : ICONS.eyeOff}</button>
+                    " title="${g.disabled ? '啟用' : '遮蔽'}">${g.disabled ? ICONS.eye : ICONS.eyeOff}</button>
                     <button data-action="edit" data-i="${i}" style="
                         width:28px;height:28px;border-radius:8px;border:1px solid var(--border-color);
                         background:transparent;color:var(--text-secondary);cursor:pointer;
                         display:flex;align-items:center;justify-content:center;
-                    " title="编辑">${ICONS.edit}</button>
+                    " title="編輯">${ICONS.edit}</button>
                     <button data-action="del" data-i="${i}" style="
                         width:28px;height:28px;border-radius:8px;border:1px solid rgba(239,68,68,.25);
                         background:transparent;color:#ef4444;cursor:pointer;
                         display:flex;align-items:center;justify-content:center;
-                    " title="删除">${ICONS.trash}</button>
+                    " title="刪除">${ICONS.trash}</button>
                 </div>
             `).join('');
 
@@ -1030,7 +1030,7 @@ function _showGroupManager() {
                     overlay.remove();
                     _showGroupEditor(groups[i], ctx);
                 } else if (action === 'del') {
-                    if (confirm(`删除分组「${groups[i].name}」？（内容不会被删除）`)) {
+                    if (confirm(`刪除分組「${groups[i].name}」？（內容不會被刪除）`)) {
                         groups.splice(i, 1);
                         throttledSaveData(); render(); renderReplyLibrary();
                     }
@@ -1053,7 +1053,7 @@ function _showGroupManager() {
         </style>
         <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                ${ICONS.folder} 分组管理
+                ${ICONS.folder} 分組管理
             </div>
             <button id="gm-close" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--primary-bg);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;">${ICONS.close}</button>
         </div>
@@ -1064,7 +1064,7 @@ function _showGroupManager() {
             font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:7px;
             transition:background 0.15s;
         " onmouseover="this.style.background='rgba(var(--accent-color-rgb),0.06)'" onmouseout="this.style.background='transparent'">
-            ${ICONS.plus} 新建分组
+            ${ICONS.plus} 新建分組
         </button>
     `;
     overlay.appendChild(panel);
@@ -1094,12 +1094,12 @@ function _showGroupEditor(group, ctx) {
     panel.innerHTML = `
         <style>@keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }</style>
         <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px;">
-            ${isNew ? '新建分组' : '编辑分组'}
+            ${isNew ? '新建分組' : '編輯分組'}
         </div>
 
         <div style="margin-bottom:16px;">
             <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:7px;letter-spacing:.5px;">LABEL</label>
-            <input id="ge-name" value="${group?.name || ''}" placeholder="分组名称…" style="
+            <input id="ge-name" value="${group?.name || ''}" placeholder="分組名稱…" style="
                 width:100%;box-sizing:border-box;padding:11px 14px;
                 border:1.5px solid var(--border-color);border-radius:12px;
                 background:var(--primary-bg);color:var(--text-primary);
@@ -1139,7 +1139,7 @@ function _showGroupEditor(group, ctx) {
                     background:${selectedColor}18;
                 ">
                     <span style="width:8px;height:8px;border-radius:50%;background:${selectedColor};"></span>
-                    <span id="ge-preview-name" style="font-size:12px;font-weight:700;color:${selectedColor};">${group?.name || '预览'}</span>
+                    <span id="ge-preview-name" style="font-size:12px;font-weight:700;color:${selectedColor};">${group?.name || '預覽'}</span>
                 </div>
             </div>
         </div>
@@ -1153,7 +1153,7 @@ function _showGroupEditor(group, ctx) {
                 flex:2;padding:12px;border:none;border-radius:13px;
                 background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;
                 cursor:pointer;font-family:var(--font-family);transition:opacity 0.15s;
-            ">保存</button>
+            ">儲存</button>
         </div>
     `;
     overlay.appendChild(panel);
@@ -1169,7 +1169,7 @@ function _showGroupEditor(group, ctx) {
         preview.style.background = color + '18';
         previewName.style.color = color;
         const nameInput = panel.querySelector('#ge-name');
-        previewName.textContent = nameInput.value || '预览';
+        previewName.textContent = nameInput.value || '預覽';
         panel.querySelectorAll('[data-preset]').forEach(dot => {
             const isSelected = dot.dataset.preset === color;
             dot.style.border = `2.5px solid ${isSelected ? '#fff' : 'transparent'}`;
@@ -1178,7 +1178,7 @@ function _showGroupEditor(group, ctx) {
     };
 
     panel.querySelector('#ge-name').addEventListener('input', e => {
-        panel.querySelector('#ge-preview-name').textContent = e.target.value || '预览';
+        panel.querySelector('#ge-preview-name').textContent = e.target.value || '預覽';
     });
     panel.querySelector('#ge-name').addEventListener('focus', e => { e.target.style.borderColor = 'var(--accent-color)'; });
     panel.querySelector('#ge-name').addEventListener('blur', e => { e.target.style.borderColor = 'var(--border-color)'; });
@@ -1200,7 +1200,7 @@ function _showGroupEditor(group, ctx) {
 
     panel.querySelector('#ge-save').onclick = () => {
         const name = panel.querySelector('#ge-name').value.trim();
-        if (!name) { showNotification('请输入分组名称', 'warning'); return; }
+        if (!name) { showNotification('請輸入分組名稱', 'warning'); return; }
         if (isNew) {
             groups.push({ id: Date.now(), name, color: selectedColor, disabled: false, items: [] });
         } else {
@@ -1210,7 +1210,7 @@ function _showGroupEditor(group, ctx) {
         throttledSaveData();
         overlay.remove();
         renderReplyLibrary();
-        showNotification(isNew ? '✓ 分组已创建' : '✓ 分组已更新', 'success');
+        showNotification(isNew ? '✓ 分組已建立' : '✓ 分組已更新', 'success');
     };
 }
 
@@ -1218,7 +1218,7 @@ function _showSingleItemGroupPicker(itemText, ctx) {
     ctx = ctx || _getGroupCtx();
     const groups = ctx.groups;
     if (!groups || groups.length === 0) {
-        if (confirm('还没有分组，是否立即创建？')) _showGroupEditor(null, ctx);
+        if (confirm('還沒有分組，是否立即建立？')) _showGroupEditor(null, ctx);
         return;
     }
     const overlay = _makeOverlay();
@@ -1233,24 +1233,24 @@ function _showSingleItemGroupPicker(itemText, ctx) {
     `;
     panel.innerHTML = `
         <style>@keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }</style>
-        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">选择分组</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">選擇分組</div>
         <div style="display:flex;flex-direction:column;gap:7px;max-height:55vh;overflow-y:auto;margin-bottom:14px;">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:11px;border:1.5px solid ${!currentGroup ? 'var(--accent-color)' : 'var(--border-color)'};background:${!currentGroup ? 'rgba(var(--accent-color-rgb),0.06)' : 'var(--primary-bg)'};">
                 <input type="radio" name="sgp" value="" ${!currentGroup ? 'checked' : ''} style="accent-color:var(--accent-color);">
-                <span style="font-size:13px;color:var(--text-secondary);">不分组</span>
+                <span style="font-size:13px;color:var(--text-secondary);">不分組</span>
             </label>
             ${groups.map((g, i) => `
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:11px;border:1.5px solid ${currentGroup?.id === g.id ? g.color : 'var(--border-color)'};background:${currentGroup?.id === g.id ? g.color + '10' : 'var(--primary-bg)'};">
                     <input type="radio" name="sgp" value="${i}" ${currentGroup?.id === g.id ? 'checked' : ''} style="accent-color:${g.color};">
                     <span style="width:9px;height:9px;border-radius:50%;background:${g.color||'#aaa'};flex-shrink:0;"></span>
                     <span style="flex:1;font-size:13px;color:var(--text-primary);font-weight:600;">${g.name}</span>
-                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).length} 条</span>
+                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).length} 條</span>
                 </label>
             `).join('')}
         </div>
         <div style="display:flex;gap:10px;">
             <button id="sgp-cancel" style="flex:1;padding:11px;border:1.5px solid var(--border-color);border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
-            <button id="sgp-save" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">确认</button>
+            <button id="sgp-save" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">確認</button>
         </div>
     `;
     overlay.appendChild(panel);
@@ -1270,7 +1270,7 @@ function _showSingleItemGroupPicker(itemText, ctx) {
         throttledSaveData();
         overlay.remove();
         renderReplyLibrary();
-        showNotification('✓ 分组已更新', 'success');
+        showNotification('✓ 分組已更新', 'success');
     };
 }
 
@@ -1279,7 +1279,7 @@ function _showBatchGroupPicker() {
     const groups = ctx.groups;
     const sourceItems = ctx.items;
     if (!groups || groups.length === 0) {
-        if (confirm('还没有分组，是否立即创建？')) { _showGroupEditor(null, ctx); return; }
+        if (confirm('還沒有分組，是否立即建立？')) { _showGroupEditor(null, ctx); return; }
         return;
     }
     const selectedItems = [..._batchSelectedIndices].map(i => sourceItems[i]);
@@ -1294,25 +1294,25 @@ function _showBatchGroupPicker() {
     `;
     panel.innerHTML = `
         <style>@keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }</style>
-        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">批量分组</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">将 <strong style="color:var(--text-primary);">${selectedItems.length}</strong> 条内容移入分组</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">批次分組</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">將 <strong style="color:var(--text-primary);">${selectedItems.length}</strong> 條內容移入分組</div>
         <div style="display:flex;flex-direction:column;gap:7px;max-height:50vh;overflow-y:auto;margin-bottom:14px;">
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:11px;border:1.5px solid var(--border-color);background:var(--primary-bg);">
                 <input type="radio" name="bgp" value="" checked style="accent-color:var(--accent-color);">
-                <span style="font-size:13px;color:var(--text-secondary);">移出所有分组</span>
+                <span style="font-size:13px;color:var(--text-secondary);">移出所有分組</span>
             </label>
             ${groups.map((g, i) => `
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border-radius:11px;border:1.5px solid var(--border-color);background:var(--primary-bg);">
                     <input type="radio" name="bgp" value="${i}" style="accent-color:${g.color};">
                     <span style="width:9px;height:9px;border-radius:50%;background:${g.color||'#aaa'};flex-shrink:0;"></span>
                     <span style="flex:1;font-size:13px;color:var(--text-primary);font-weight:600;">${g.name}</span>
-                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).length} 条</span>
+                    <span style="font-size:11px;color:var(--text-secondary);">${(g.items||[]).length} 條</span>
                 </label>
             `).join('')}
         </div>
         <div style="display:flex;gap:10px;">
             <button id="bgp-cancel" style="flex:1;padding:11px;border:1.5px solid var(--border-color);border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
-            <button id="bgp-save" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">确认</button>
+            <button id="bgp-save" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">確認</button>
         </div>
     `;
     overlay.appendChild(panel);
@@ -1335,12 +1335,12 @@ function _showBatchGroupPicker() {
         _batchSelectedIndices.clear();
         overlay.remove();
         renderReplyLibrary();
-        showNotification(`✓ 已为 ${selectedItems.length} 条内容分组`, 'success');
+        showNotification(`✓ 已為 ${selectedItems.length} 條內容分組`, 'success');
     };
 }
 
 function deleteItem(index) {
-    if (!confirm('确定删除吗？')) return;
+    if (!confirm('確定刪除嗎？')) return;
     const ctx = _getGroupCtx();
     const item = _tabHasGroups() ? ctx.items[index] : null;
     if (currentMajorTab === 'reply' && currentSubTab === 'custom') customReplies.splice(index, 1);
@@ -1359,13 +1359,13 @@ function editItem(index, oldText) {
     let newText;
     if (currentSubTab === 'intros') {
         const parts = oldText.split('|');
-        const l1 = prompt('修改主标题:', parts[0]);
+        const l1 = prompt('修改主標題:', parts[0]);
         if (l1 === null) return;
-        const l2 = prompt('修改副标题:', parts[1] || '');
+        const l2 = prompt('修改副標題:', parts[1] || '');
         if (l2 === null) return;
         newText = `${l1}|${l2}`;
     } else {
-        newText = prompt('修改内容:', oldText);
+        newText = prompt('修改內容:', oldText);
     }
     if (newText === null || newText.trim() === '') return;
     if (_tabHasGroups()) {
@@ -1396,7 +1396,7 @@ function renderEmptyState(text) {
 }
 
 function _showExportUI() {
-    // 读取公告数据（localStorage）
+    // 讀取公告資料（localStorage）
     let _annCustomData = {};
     let _annStatusPool = [];
     try { _annCustomData = JSON.parse(localStorage.getItem('dg_custom_data') || '{}'); } catch(e) {}
@@ -1408,38 +1408,38 @@ function _showExportUI() {
     const modules = [
         { id: '_re_replies',  icon: ICONS.comment,   label: '主字卡',        count: customReplies.length,                     key: 'customReplies' },
         { id: '_re_pokes',    icon: ICONS.hand,      label: '拍一拍',        count: customPokes.length,                       key: 'customPokes' },
-        { id: '_re_statuses', icon: ICONS.dot,       label: '对方状态',      count: customStatuses.length,                    key: 'customStatuses' },
-        { id: '_re_mottos',   icon: ICONS.quote,     label: '顶部格言',      count: customMottos.length,                      key: 'customMottos' },
-        { id: '_re_intros',   icon: ICONS.play,      label: '开场动画',      count: customIntros.length,                      key: 'customIntros' },
-        { id: '_re_emojis',   icon: ICONS.smile,     label: 'Emoji 库',      count: customEmojis.length,                      key: 'customEmojis' },
+        { id: '_re_statuses', icon: ICONS.dot,       label: '對方狀態',      count: customStatuses.length,                    key: 'customStatuses' },
+        { id: '_re_mottos',   icon: ICONS.quote,     label: '頂部格言',      count: customMottos.length,                      key: 'customMottos' },
+        { id: '_re_intros',   icon: ICONS.play,      label: '開場動畫',      count: customIntros.length,                      key: 'customIntros' },
+        { id: '_re_emojis',   icon: ICONS.smile,     label: 'Emoji 庫',      count: customEmojis.length,                      key: 'customEmojis' },
         { id: '_re_ann',      icon: ICONS.folderBig, label: '今日公告配置',  count: _annTotalCount,                           key: 'announcementConfig' },
-        { id: '_re_groups',   icon: ICONS.folderBig, label: '字卡分组',      count: (customReplyGroups||[]).length,            key: 'customReplyGroups',  extra: true },
-        { id: '_re_pokg',     icon: ICONS.folderBig, label: '拍一拍分组',    count: (window.customPokeGroups||[]).length,     key: 'customPokeGroups',   extra: true },
-        { id: '_re_statg',    icon: ICONS.folderBig, label: '对方状态分组',  count: (window.customStatusGroups||[]).length,   key: 'customStatusGroups', extra: true },
+        { id: '_re_groups',   icon: ICONS.folderBig, label: '字卡分組',      count: (customReplyGroups||[]).length,            key: 'customReplyGroups',  extra: true },
+        { id: '_re_pokg',     icon: ICONS.folderBig, label: '拍一拍分組',    count: (window.customPokeGroups||[]).length,     key: 'customPokeGroups',   extra: true },
+        { id: '_re_statg',    icon: ICONS.folderBig, label: '對方狀態分組',  count: (window.customStatusGroups||[]).length,   key: 'customStatusGroups', extra: true },
     ];
 
-    // 检测当前 tab 决定哪个分组有「按分组导出」选项
+    // 檢測當前 tab 決定哪個分組有「按分組匯出」選項
     const replyGroupsExist  = customReplyGroups        && customReplyGroups.length > 0;
     const pokeGroupsExist   = window.customPokeGroups  && window.customPokeGroups.length > 0;
     const statusGroupsExist = window.customStatusGroups && window.customStatusGroups.length > 0;
     const onAnnTab          = currentMajorTab === 'announcement';
     const anyGroupExists    = replyGroupsExist || pokeGroupsExist || statusGroupsExist || onAnnTab;
 
-    // 根据当前 tab 决定「按分组导出」对应哪个类型
+    // 根據當前 tab 決定「按分組匯出」對應哪個型別
     const onPokeTab   = currentMajorTab === 'atmosphere' && currentSubTab === 'pokes';
     const onStatusTab = currentMajorTab === 'atmosphere' && currentSubTab === 'statuses';
     let groupExportType = null;
     if (onAnnTab)                          groupExportType = 'announcement';
     if (onPokeTab   && pokeGroupsExist)    groupExportType = 'pokes';
     if (onStatusTab && statusGroupsExist)  groupExportType = 'statuses';
-    // 只有在字卡 tab（非拍一拍/状态/公告 tab）时才 fallback 到字卡分组
+    // 只有在字卡 tab（非拍一拍/狀態/公告 tab）時才 fallback 到字卡分組
     if (!groupExportType && !onPokeTab && !onStatusTab && !onAnnTab && replyGroupsExist) groupExportType = 'replies';
 
     const groupDescMap = {
-        replies:      '仅导出指定分组的字卡内容',
-        pokes:        '仅导出指定分组的拍一拍内容',
-        statuses:     '仅导出指定分组的对方状态内容',
-        announcement: '选择要导出的公告内容模块',
+        replies:      '僅匯出指定分組的字卡內容',
+        pokes:        '僅匯出指定分組的拍一拍內容',
+        statuses:     '僅匯出指定分組的對方狀態內容',
+        announcement: '選擇要匯出的公告內容模組',
     };
 
     if (anyGroupExists) {
@@ -1454,9 +1454,9 @@ function _showExportUI() {
         panel.innerHTML = `
             <style>@keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}</style>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-                ${ICONS.export} 导出方式
+                ${ICONS.export} 匯出方式
             </div>
-            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">请选择导出模式</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:18px;">請選擇匯出模式</div>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button id="_exp_all_btn" style="
                     display:flex;align-items:center;gap:12px;padding:14px 16px;
@@ -1465,8 +1465,8 @@ function _showExportUI() {
                 ">
                     <div style="width:38px;height:38px;border-radius:10px;background:rgba(var(--accent-color-rgb),0.12);display:flex;align-items:center;justify-content:center;color:var(--accent-color);flex-shrink:0;">${ICONS.export}</div>
                     <div>
-                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">全量导出</div>
-                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">自由选择要导出的模块</div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">全量匯出</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">自由選擇要匯出的模組</div>
                     </div>
                 </button>
                 ${groupExportType ? `
@@ -1477,8 +1477,8 @@ function _showExportUI() {
                 ">
                     <div style="width:38px;height:38px;border-radius:10px;background:rgba(var(--accent-color-rgb),0.12);display:flex;align-items:center;justify-content:center;color:var(--accent-color);flex-shrink:0;">${ICONS.folderBig}</div>
                     <div>
-                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">按分组导出</div>
-                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${groupDescMap[groupExportType] || '仅导出指定分组内容'}</div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);">按分組匯出</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${groupDescMap[groupExportType] || '僅匯出指定分組內容'}</div>
                     </div>
                 </button>` : ''}
             </div>
@@ -1496,8 +1496,8 @@ function _showExportUI() {
 
         panel.querySelector('#_exp_all_btn').onclick = () => {
             overlay.remove();
-            _showIOSheet('导出字卡', '选择要导出的模块', modules, ICONS.export, (selected) => {
-                if (!selected.length) { showNotification('请至少选择一项', 'error'); return; }
+            _showIOSheet('匯出字卡', '選擇要匯出的模組', modules, ICONS.export, (selected) => {
+                if (!selected.length) { showNotification('請至少選擇一項', 'error'); return; }
                 _doExport(selected);
             });
         };
@@ -1516,8 +1516,8 @@ function _showExportUI() {
         return;
     }
 
-    _showIOSheet('导出字卡', '选择要导出的模块', modules, ICONS.export, (selected) => {
-        if (!selected.length) { showNotification('请至少选择一项', 'error'); return; }
+    _showIOSheet('匯出字卡', '選擇要匯出的模組', modules, ICONS.export, (selected) => {
+        if (!selected.length) { showNotification('請至少選擇一項', 'error'); return; }
         _doExport(selected);
     });
 }
@@ -1544,7 +1544,7 @@ function _doExport(selectedModules) {
     });
     const fileName = `reply-library-${libraryData.modules.join('+')}-${new Date().toISOString().slice(0,10)}.json`;
     exportDataToMobileOrPC(JSON.stringify(libraryData, null, 2), fileName);
-    showNotification('✓ 字卡导出成功', 'success');
+    showNotification('✓ 字卡匯出成功', 'success');
 }
 
 function _showGroupExportPicker(type) {
@@ -1552,9 +1552,9 @@ function _showGroupExportPicker(type) {
     type = type || 'replies';
 
     const cfgMap = {
-        replies:  { groups: window.customReplyGroups  || [], items: customReplies,   groupKey: 'customReplyGroups',  itemKey: 'customReplies',  moduleTag: ['replies','groups'],       filePrefix: 'reply-groups',  label: '字卡',    successUnit: '条字卡' },
-        pokes:    { groups: window.customPokeGroups   || [], items: customPokes,      groupKey: 'customPokeGroups',   itemKey: 'customPokes',    moduleTag: ['pokes','pokeGroups'],     filePrefix: 'poke-groups',   label: '拍一拍',  successUnit: '条拍一拍' },
-        statuses: { groups: window.customStatusGroups || [], items: customStatuses,   groupKey: 'customStatusGroups', itemKey: 'customStatuses', moduleTag: ['statuses','statusGroups'],filePrefix: 'status-groups', label: '对方状态',successUnit: '条状态' },
+        replies:  { groups: window.customReplyGroups  || [], items: customReplies,   groupKey: 'customReplyGroups',  itemKey: 'customReplies',  moduleTag: ['replies','groups'],       filePrefix: 'reply-groups',  label: '字卡',    successUnit: '條字卡' },
+        pokes:    { groups: window.customPokeGroups   || [], items: customPokes,      groupKey: 'customPokeGroups',   itemKey: 'customPokes',    moduleTag: ['pokes','pokeGroups'],     filePrefix: 'poke-groups',   label: '拍一拍',  successUnit: '條拍一拍' },
+        statuses: { groups: window.customStatusGroups || [], items: customStatuses,   groupKey: 'customStatusGroups', itemKey: 'customStatuses', moduleTag: ['statuses','statusGroups'],filePrefix: 'status-groups', label: '對方狀態',successUnit: '條狀態' },
     };
     const cfg = cfgMap[type] || cfgMap.replies;
 
@@ -1570,14 +1570,14 @@ function _showGroupExportPicker(type) {
     panel.innerHTML = `
         <style>@keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}</style>
         <div style="font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-            ${ICONS.folderBig} 选择分组导出
+            ${ICONS.folderBig} 選擇分組匯出
         </div>
-        <div style="font-size:12px;color:var(--text-secondary);">勾选要导出的分组，仅导出这些分组的${cfg.label}</div>
+        <div style="font-size:12px;color:var(--text-secondary);">勾選要匯出的分組，僅匯出這些分組的${cfg.label}</div>
         <div id="_gep_list" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:50vh;"></div>
         <div style="display:flex;gap:10px;">
             <button id="_gep_cancel" style="flex:1;padding:12px;border:1.5px solid var(--border-color);border-radius:13px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
             <button id="_gep_confirm" style="flex:2;padding:12px;border:none;border-radius:13px;background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:8px;">
-                ${ICONS.export} 导出
+                ${ICONS.export} 匯出
             </button>
         </div>
     `;
@@ -1593,7 +1593,7 @@ function _showGroupExportPicker(type) {
             <input type="checkbox" value="${i}" style="width:16px;height:16px;accent-color:${g.color};flex-shrink:0;" checked>
             <span style="width:10px;height:10px;border-radius:50%;background:${g.color||'#aaa'};flex-shrink:0;"></span>
             <span style="flex:1;font-size:13px;font-weight:600;color:var(--text-primary);">${g.name}</span>
-            <span style="font-size:11px;color:var(--text-secondary);">${cnt} 条</span>
+            <span style="font-size:11px;color:var(--text-secondary);">${cnt} 條</span>
         `;
         listEl.appendChild(row);
     });
@@ -1603,7 +1603,7 @@ function _showGroupExportPicker(type) {
 
     panel.querySelector('#_gep_confirm').onclick = () => {
         const checked = [...panel.querySelectorAll('input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
-        if (!checked.length) { showNotification('请至少选择一个分组', 'warning'); return; }
+        if (!checked.length) { showNotification('請至少選擇一個分組', 'warning'); return; }
 
         const selectedGroups = checked.map(i => cfg.groups[i]);
         const allItems = new Set();
@@ -1626,7 +1626,7 @@ function _showGroupExportPicker(type) {
         const fileName = `${cfg.filePrefix}-${groupNames}-${new Date().toISOString().slice(0,10)}.json`;
         exportDataToMobileOrPC(JSON.stringify(libraryData, null, 2), fileName);
         overlay.remove();
-        showNotification(`✓ 已导出 ${checked.length} 个分组，共 ${allItems.size} ${cfg.successUnit}`, 'success');
+        showNotification(`✓ 已匯出 ${checked.length} 個分組，共 ${allItems.size} ${cfg.successUnit}`, 'success');
     };
 }
 
@@ -1639,8 +1639,8 @@ function _showAnnouncementExportPicker() {
     const poolCount = annStatusPool.length;
 
     const options = [
-        { id: '_aep_text', label: '公告文案', desc: `${textCount} 条内容`, key: 'announcementText', hasData: textCount > 0 },
-        { id: '_aep_pool', label: '状态随机库', desc: `${poolCount} 条条目`, key: 'announcementStatusPool', hasData: poolCount > 0 },
+        { id: '_aep_text', label: '公告文案', desc: `${textCount} 條內容`, key: 'announcementText', hasData: textCount > 0 },
+        { id: '_aep_pool', label: '狀態隨機庫', desc: `${poolCount} 條條目`, key: 'announcementStatusPool', hasData: poolCount > 0 },
     ];
 
     const overlay = _makeOverlay();
@@ -1655,9 +1655,9 @@ function _showAnnouncementExportPicker() {
     panel.innerHTML = `
         <style>@keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}</style>
         <div style="font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-            ${ICONS.folderBig} 选择导出内容
+            ${ICONS.folderBig} 選擇匯出內容
         </div>
-        <div style="font-size:12px;color:var(--text-secondary);">勾选要导出的公告模块</div>
+        <div style="font-size:12px;color:var(--text-secondary);">勾選要匯出的公告模組</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
             ${options.map(opt => `
                 <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:13px;border:1.5px solid var(--border-color);background:var(--primary-bg);cursor:pointer;">
@@ -1672,7 +1672,7 @@ function _showAnnouncementExportPicker() {
         <div style="display:flex;gap:10px;">
             <button id="_aep_cancel" style="flex:1;padding:12px;border:1.5px solid var(--border-color);border-radius:13px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
             <button id="_aep_confirm" style="flex:2;padding:12px;border:none;border-radius:13px;background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:8px;">
-                ${ICONS.export} 导出
+                ${ICONS.export} 匯出
             </button>
         </div>
     `;
@@ -1684,7 +1684,7 @@ function _showAnnouncementExportPicker() {
 
     panel.querySelector('#_aep_confirm').onclick = () => {
         const selected = options.filter(opt => panel.querySelector('#' + opt.id)?.checked);
-        if (!selected.length) { showNotification('请至少选择一项', 'warning'); return; }
+        if (!selected.length) { showNotification('請至少選擇一項', 'warning'); return; }
 
         const libraryData = { exportDate: new Date().toISOString(), modules: [] };
         selected.forEach(opt => {
@@ -1699,7 +1699,7 @@ function _showAnnouncementExportPicker() {
         const fileName = `announcement-${libraryData.modules.join('+')}-${new Date().toISOString().slice(0,10)}.json`;
         exportDataToMobileOrPC(JSON.stringify(libraryData, null, 2), fileName);
         overlay.remove();
-        showNotification(`✓ 已导出 ${selected.map(o => o.label).join('、')}`, 'success');
+        showNotification(`✓ 已匯出 ${selected.map(o => o.label).join('、')}`, 'success');
     };
 }
 
@@ -1735,9 +1735,9 @@ function _showImportUI(data) {
                          'customReplyGroups','customPokeGroups','customStatusGroups',
                          'announcementConfig','announcementText','announcementStatusPool'];
     const hasValid = knownFields.some(f => data[f] !== undefined && data[f] !== null);
-    if (!hasValid) { showNotification('无效的字卡备份文件', 'error'); return; }
+    if (!hasValid) { showNotification('無效的字卡備份檔案', 'error'); return; }
 
-    // 计算公告模块的 displayCount
+    // 計算公告模組的 displayCount
     const _annCfg = data.announcementConfig;
     const _annText = data.announcementText;
     const _annPool = data.announcementStatusPool;
@@ -1750,20 +1750,20 @@ function _showImportUI(data) {
     const modules = [
         { id: '_ri_replies',  icon: ICONS.comment,   label: '主字卡',        data: data.customReplies,       key: 'customReplies' },
         { id: '_ri_pokes',    icon: ICONS.hand,      label: '拍一拍',        data: data.customPokes,         key: 'customPokes' },
-        { id: '_ri_statuses', icon: ICONS.dot,       label: '对方状态',      data: data.customStatuses,      key: 'customStatuses' },
-        { id: '_ri_mottos',   icon: ICONS.quote,     label: '顶部格言',      data: data.customMottos,        key: 'customMottos' },
-        { id: '_ri_intros',   icon: ICONS.play,      label: '开场动画',      data: data.customIntros,        key: 'customIntros' },
-        { id: '_ri_emojis',   icon: ICONS.smile,     label: 'Emoji 库',      data: data.customEmojis,        key: 'customEmojis' },
+        { id: '_ri_statuses', icon: ICONS.dot,       label: '對方狀態',      data: data.customStatuses,      key: 'customStatuses' },
+        { id: '_ri_mottos',   icon: ICONS.quote,     label: '頂部格言',      data: data.customMottos,        key: 'customMottos' },
+        { id: '_ri_intros',   icon: ICONS.play,      label: '開場動畫',      data: data.customIntros,        key: 'customIntros' },
+        { id: '_ri_emojis',   icon: ICONS.smile,     label: 'Emoji 庫',      data: data.customEmojis,        key: 'customEmojis' },
         { id: '_ri_ann',      icon: ICONS.folderBig, label: '今日公告配置',  data: [_annCfg],                key: 'announcementConfig',    displayCount: _annCfgCount },
         { id: '_ri_anntext',  icon: ICONS.comment,   label: '公告文案',      data: [_annText],               key: 'announcementText',      displayCount: _annTextCount },
-        { id: '_ri_annpool',  icon: ICONS.dot,       label: '状态随机库',    data: _annPool,                 key: 'announcementStatusPool', displayCount: _annPoolCount },
-        { id: '_ri_groups',   icon: ICONS.folderBig, label: '字卡分组',      data: data.customReplyGroups,   key: 'customReplyGroups',  extra: true },
-        { id: '_ri_pokg',     icon: ICONS.folderBig, label: '拍一拍分组',    data: data.customPokeGroups,    key: 'customPokeGroups',   extra: true },
-        { id: '_ri_statg',    icon: ICONS.folderBig, label: '对方状态分组',  data: data.customStatusGroups,  key: 'customStatusGroups', extra: true },
+        { id: '_ri_annpool',  icon: ICONS.dot,       label: '狀態隨機庫',    data: _annPool,                 key: 'announcementStatusPool', displayCount: _annPoolCount },
+        { id: '_ri_groups',   icon: ICONS.folderBig, label: '字卡分組',      data: data.customReplyGroups,   key: 'customReplyGroups',  extra: true },
+        { id: '_ri_pokg',     icon: ICONS.folderBig, label: '拍一拍分組',    data: data.customPokeGroups,    key: 'customPokeGroups',   extra: true },
+        { id: '_ri_statg',    icon: ICONS.folderBig, label: '對方狀態分組',  data: data.customStatusGroups,  key: 'customStatusGroups', extra: true },
     ].filter(m => m.data !== undefined && m.data !== null && (Array.isArray(m.data) ? m.data.length > 0 && m.data[0] !== undefined : true));
 
-    _showIOSheet(`导入字卡`, `文件中包含 ${modules.length} 个模块`, modules, ICONS.import, (selected, mode) => {
-        if (!selected.length) { showNotification('请至少选择一项', 'error'); return; }
+    _showIOSheet(`匯入字卡`, `檔案中包含 ${modules.length} 個模組`, modules, ICONS.import, (selected, mode) => {
+        if (!selected.length) { showNotification('請至少選擇一項', 'error'); return; }
         try {
             const overwrite = mode === 'overwrite';
             let totalAdded = 0;
@@ -1831,7 +1831,7 @@ function _showImportUI(data) {
                             if (!window.customStatusGroups.find(g => g.name === dg.name)) window.customStatusGroups.push(dg);
                         });
                     } else if (m.key === 'announcementConfig') {
-                        // 追加：合并 titles/notes，pool 去重追加
+                        // 追加：合併 titles/notes，pool 去重追加
                         let cur = {}; try { cur = JSON.parse(localStorage.getItem('dg_custom_data') || '{}'); } catch(e) {}
                         if (_annCfg.customData) {
                             cur.titles = [...new Set([...(cur.titles||[]), ...(_annCfg.customData.titles||[])])];
@@ -1860,10 +1860,10 @@ function _showImportUI(data) {
             throttledSaveData();
             if (typeof renderReplyLibrary === 'function') renderReplyLibrary();
             if (typeof window.renderAnnStatusPool === 'function') window.renderAnnStatusPool();
-            showNotification(`✓ 导入成功（${overwrite ? '覆盖' : '追加'}）${totalAdded > 0 ? `，共 ${totalAdded} 条` : ''}`, 'success', 3000);
+            showNotification(`✓ 匯入成功（${overwrite ? '覆蓋' : '追加'}）${totalAdded > 0 ? `，共 ${totalAdded} 條` : ''}`, 'success', 3000);
         } catch (err) {
-            console.error('字卡导入失败:', err);
-            showNotification('导入过程中发生错误：' + err.message, 'error');
+            console.error('字卡匯入失敗:', err);
+            showNotification('匯入過程中發生錯誤：' + err.message, 'error');
         }
     }, true);
 }
@@ -1926,7 +1926,7 @@ function _showIOSheet(title, subtitle, modules, icon, onConfirm, showMode = fals
                         <div class="io-icon-box">${m.icon}</div>
                         <div style="flex:1;">
                             <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${m.label}</div>
-                            <div style="font-size:11px;color:var(--text-secondary);">${m.displayCount !== undefined ? m.displayCount : (m.data ? m.data.length : m.count)} 条${m.extra ? ' · 含分组结构' : ''}</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">${m.displayCount !== undefined ? m.displayCount : (m.data ? m.data.length : m.count)} 條${m.extra ? ' · 含分組結構' : ''}</div>
                         </div>
                         <div class="io-toggle" data-id="${m.id}"><div class="knob"></div></div>
                         <input type="checkbox" id="${m.id}" checked style="display:none;">
@@ -1937,13 +1937,13 @@ function _showIOSheet(title, subtitle, modules, icon, onConfirm, showMode = fals
             <div style="padding:8px 22px;flex-shrink:0;">
                 <div style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:13px;background:var(--primary-bg);border:1.5px solid var(--border-color);">
                     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="color:var(--accent-color);flex-shrink:0;"><path d="M7.5 1v9M4 6l3.5 3L11 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="2" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    <span style="font-size:13px;color:var(--text-primary);flex:1;">导入方式</span>
+                    <span style="font-size:13px;color:var(--text-primary);flex:1;">匯入方式</span>
                     <div style="display:flex;background:var(--secondary-bg);border-radius:8px;overflow:hidden;border:1px solid var(--border-color);">
                         <label style="display:flex;align-items:center;gap:4px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--text-primary);">
                             <input type="radio" name="_io_mode" id="_io_merge" value="merge" checked style="accent-color:var(--accent-color);"> 追加
                         </label>
                         <label style="display:flex;align-items:center;gap:4px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--text-primary);border-left:1px solid var(--border-color);">
-                            <input type="radio" name="_io_mode" id="_io_overwrite" value="overwrite" style="accent-color:var(--accent-color);"> 覆盖
+                            <input type="radio" name="_io_mode" id="_io_overwrite" value="overwrite" style="accent-color:var(--accent-color);"> 覆蓋
                         </label>
                     </div>
                 </div>
@@ -1951,7 +1951,7 @@ function _showIOSheet(title, subtitle, modules, icon, onConfirm, showMode = fals
             <div style="padding:10px 22px 22px;display:flex;gap:10px;flex-shrink:0;">
                 <button id="_io_cancel" style="flex:1;padding:13px;border:1.5px solid var(--border-color);border-radius:14px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
                 <button id="_io_confirm" style="flex:2;padding:13px;border:none;border-radius:14px;background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:8px;">
-                    <span style="color:#fff;">${icon}</span> 确认
+                    <span style="color:#fff;">${icon}</span> 確認
                 </button>
             </div>
         </div>
@@ -2005,7 +2005,7 @@ function _showBatchAddDialog() {
             padding:5px 13px;border-radius:20px;font-size:12px;font-family:var(--font-family);cursor:pointer;
             border:1.5px solid var(--accent-color);background:var(--accent-color);color:#fff;font-weight:700;
             flex-shrink:0;transition:all .15s;
-        ">不分组</button>
+        ">不分組</button>
         ${groups.map((g, i) => `
         <button class="ba-grp-pill" data-gidx="${i}" style="
             padding:5px 13px;border-radius:20px;font-size:12px;font-family:var(--font-family);cursor:pointer;
@@ -2021,11 +2021,11 @@ function _showBatchAddDialog() {
             @keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
             @keyframes baGroupSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
         </style>
-        <div style="flex-shrink:0;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">批量添加${getCategoryName(currentSubTab)}</div>
-        <div style="flex-shrink:0;font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">每行一条，自动去重</div>
+        <div style="flex-shrink:0;font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">批次新增${getCategoryName(currentSubTab)}</div>
+        <div style="flex-shrink:0;font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">每行一條，自動去重</div>
 
         <div style="flex:1;overflow-y:auto;overflow-x:hidden;min-height:0;">
-            <textarea id="batch-add-input" rows="10" placeholder="在此粘贴内容，每行一条…" style="
+            <textarea id="batch-add-input" rows="10" placeholder="在此貼上內容，每行一條…" style="
                 width:100%;box-sizing:border-box;padding:12px 14px;
                 border:1.5px solid var(--border-color);border-radius:13px;
                 background:var(--primary-bg);color:var(--text-primary);
@@ -2033,7 +2033,7 @@ function _showBatchAddDialog() {
                 line-height:1.6;transition:border 0.18s;
             "></textarea>
             <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;margin-bottom:12px;">
-                <span id="batch-add-count">0 条</span>
+                <span id="batch-add-count">0 條</span>
             </div>
 
             ${hasGroups ? `
@@ -2046,7 +2046,7 @@ function _showBatchAddDialog() {
                     font-weight:600;transition:all .15s;text-align:left;
                 ">
                     <i class="fas fa-folder" style="font-size:12px;color:var(--accent-color);"></i>
-                    <span id="ba-toggle-label">添加到分组</span>
+                    <span id="ba-toggle-label">新增到分組</span>
                     <span id="ba-toggle-arrow" style="margin-left:auto;font-size:10px;transition:transform .2s;">▼</span>
                 </button>
                 <div id="ba-group-drawer" style="display:none;overflow-x:auto;overflow-y:hidden;padding:10px 2px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
@@ -2059,7 +2059,7 @@ function _showBatchAddDialog() {
 
         <div style="flex-shrink:0;padding-top:14px;display:flex;gap:10px;">
             <button id="ba-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border-color);border-radius:13px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
-            <button id="ba-confirm" style="flex:2;padding:12px;border:none;border-radius:13px;background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-family);">添加</button>
+            <button id="ba-confirm" style="flex:2;padding:12px;border:none;border-radius:13px;background:var(--accent-color);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-family);">新增</button>
         </div>
     `;
     overlay.appendChild(panel);
@@ -2069,7 +2069,7 @@ function _showBatchAddDialog() {
     const countEl = panel.querySelector('#batch-add-count');
     ta.addEventListener('input', () => {
         const lines = ta.value.split('\n').filter(l => l.trim());
-        countEl.textContent = `${lines.length} 条`;
+        countEl.textContent = `${lines.length} 條`;
     });
     ta.addEventListener('focus', e => { e.target.style.borderColor = 'var(--accent-color)'; });
     ta.addEventListener('blur', e => { e.target.style.borderColor = 'var(--border-color)'; });
@@ -2106,10 +2106,10 @@ function _showBatchAddDialog() {
             _selectedGroupIdx = parseInt(pill.dataset.gidx);
             if (toggleLabel) {
                 if (_selectedGroupIdx === -1) {
-                    toggleLabel.textContent = '添加到分组';
+                    toggleLabel.textContent = '新增到分組';
                 } else {
                     const g = groups[_selectedGroupIdx];
-                    toggleLabel.textContent = g ? `分组：${g.name}` : '添加到分组';
+                    toggleLabel.textContent = g ? `分組：${g.name}` : '新增到分組';
                 }
             }
             pillContainer.querySelectorAll('.ba-grp-pill').forEach((p, i) => {
@@ -2135,7 +2135,7 @@ function _showBatchAddDialog() {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     panel.querySelector('#ba-confirm').onclick = () => {
         const lines = ta.value.split('\n').map(l => l.trim()).filter(Boolean);
-        if (!lines.length) { showNotification('请输入内容', 'warning'); return; }
+        if (!lines.length) { showNotification('請輸入內容', 'warning'); return; }
         let added = 0, skipped = 0;
         const newItems = [];
         lines.forEach(val => {
@@ -2168,7 +2168,7 @@ function _showBatchAddDialog() {
         renderReplyLibrary();
         const groupHint = _selectedGroupIdx >= 0 && groups?.[_selectedGroupIdx]
             ? `，已加入「${groups[_selectedGroupIdx].name}」` : '';
-        showNotification(`✓ 添加 ${added} 条${skipped ? `，跳过 ${skipped} 条重复` : ''}${groupHint}`, 'success');
+        showNotification(`✓ 新增 ${added} 條${skipped ? `，跳過 ${skipped} 條重複` : ''}${groupHint}`, 'success');
     };
 }
 
@@ -2184,7 +2184,7 @@ function initReplyLibraryListeners() {
             _searchVisible = false;
             _searchQuery = '';
             _activeGroupFilter = null;
-            // 确保公告面板隐藏、列表区域显示
+            // 確保公告面板隱藏、列表區域顯示
             const annPanel = document.getElementById('announcement-panel');
             const listArea = document.getElementById('custom-replies-list');
             const subTabs  = document.getElementById('cr-sub-tabs');
@@ -2210,7 +2210,7 @@ function initReplyLibraryListeners() {
             currentMajorTab = btn.dataset.major;
 
             if (currentMajorTab === 'announcement') {
-                // switchToAnnouncementPanel 内部已处理所有清理，这里不重复操作
+                // switchToAnnouncementPanel 內部已處理所有清理，這裡不重複操作
                 if (typeof window.switchToAnnouncementPanel === 'function') window.switchToAnnouncementPanel();
                 return;
             }
@@ -2226,7 +2226,7 @@ function initReplyLibraryListeners() {
             if (crToolbar) crToolbar.style.display = '';
             if (subTabs) subTabs.style.display = '';
             if (addBtn) addBtn.style.display = '';
-            if (titleEl) titleEl.textContent = '内容管理';
+            if (titleEl) titleEl.textContent = '內容管理';
 
             _batchModeActive = false;
             _batchSelectedIndices.clear();
@@ -2265,20 +2265,20 @@ function initReplyLibraryListeners() {
             const file = e.target.files[0];
             if (!file) return;
             e.target.value = '';
-            if (file.size > 50 * 1024 * 1024) { showNotification('文件过大', 'error'); return; }
+            if (file.size > 50 * 1024 * 1024) { showNotification('檔案過大', 'error'); return; }
             const reader = new FileReader();
             reader.onload = ev => {
                 let data;
                 try {
                     data = _parseFlexibleJSON(ev.target.result);
                 } catch {
-                    showNotification('文件解析失败，请检查文件格式', 'error');
+                    showNotification('檔案解析失敗，請檢查檔案格式', 'error');
                     return;
                 }
                 data = _normalizeImportData(data);
                 _showImportUI(data);
             };
-            reader.onerror = () => showNotification('文件读取失败', 'error');
+            reader.onerror = () => showNotification('檔案讀取失敗', 'error');
             reader.readAsText(file, 'UTF-8');
         });
     }
@@ -2290,11 +2290,11 @@ function initReplyLibraryListeners() {
                 document.getElementById('sticker-file-input')?.click(); return;
             }
             if (currentSubTab === 'emojis') {
-                const input = prompt('请输入要添加的 Emoji（支持组合表情）:');
+                const input = prompt('請輸入要新增的 Emoji（支援組合表情）:');
                 if (input?.trim()) {
                     customEmojis.push(input.trim());
                     throttledSaveData(); renderReplyLibrary();
-                    showNotification('✓ Emoji 已添加', 'success');
+                    showNotification('✓ Emoji 已新增', 'success');
                 }
                 return;
             }
@@ -2303,12 +2303,12 @@ function initReplyLibraryListeners() {
             }
             let input;
             if (currentSubTab === 'intros') {
-                const l1 = prompt('请输入主标题 (如: 𝑳𝒐𝒗𝒆):');
+                const l1 = prompt('請輸入主標題 (如: 𝑳𝒐𝒗𝒆):');
                 if (!l1) return;
-                const l2 = prompt('请输入副标题 (如: 若要由我来谈论爱的话):');
+                const l2 = prompt('請輸入副標題 (如: 若要由我來談論愛的話):');
                 input = `${l1}|${l2}`;
             } else {
-                input = prompt(`请输入新的${getCategoryName(currentSubTab)}:`);
+                input = prompt(`請輸入新的${getCategoryName(currentSubTab)}:`);
             }
             if (input?.trim()) {
                 const val = input.trim();
@@ -2318,20 +2318,20 @@ function initReplyLibraryListeners() {
                 else if (currentSubTab === 'statuses' && customStatuses.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
                 else if (currentSubTab === 'mottos' && customMottos.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
                 else if (currentSubTab === 'intros' && customIntros.some(r => normalizeStringStrict(r) === valNorm)) isDup = true;
-                if (isDup) { showNotification('该内容已存在', 'warning'); return; }
+                if (isDup) { showNotification('該內容已存在', 'warning'); return; }
                 if (currentSubTab === 'pokes') customPokes.unshift(val);
                 else if (currentSubTab === 'statuses') customStatuses.unshift(val);
                 else if (currentSubTab === 'mottos') customMottos.unshift(val);
                 else if (currentSubTab === 'intros') customIntros.unshift(val);
                 throttledSaveData(); renderReplyLibrary();
-                showNotification('✓ 添加成功', 'success');
+                showNotification('✓ 新增成功', 'success');
             }
         });
     }
 }
 
 function getCategoryName(tabId) {
-    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语' }[tabId] || '内容';
+    return { custom: '回覆', pokes: '拍一拍', statuses: '狀態', mottos: '格言', intros: '開場語' }[tabId] || '內容';
 }
 
 function updateTabUI() {
@@ -2435,7 +2435,7 @@ function setupAvatarFrameSettings() {
         fileInput.addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 1024 * 1024) { showNotification('头像框图片大小不能超过1MB', 'error'); return; }
+            if (file.size > 1024 * 1024) { showNotification('頭像框圖片大小不能超過1MB', 'error'); return; }
             const reader = new FileReader();
             reader.onload = ev => {
                 if (!settings[settingsKey]) settings[settingsKey] = { size: 100, offsetX: 0, offsetY: 0 };
@@ -2449,7 +2449,7 @@ function setupAvatarFrameSettings() {
         const urlBtn = document.getElementById(`${type}-frame-url-btn-2`);
         if (urlBtn) {
             urlBtn.addEventListener('click', () => {
-                const url = prompt('请输入头像框图片的URL地址（支持 png/webp/gif）:');
+                const url = prompt('請輸入頭像框圖片的URL地址（支援 png/webp/gif）:');
                 if (!url?.trim()) return;
                 const trimmed = url.trim();
                 const img = new Image();
@@ -2458,9 +2458,9 @@ function setupAvatarFrameSettings() {
                     settings[settingsKey].src = trimmed;
                     applyAvatarFrame(avatarContainer, settings[settingsKey]);
                     updateControls(); throttledSaveData();
-                    showNotification('✓ 头像框已通过URL加载', 'success');
+                    showNotification('✓ 頭像框已透過URL載入', 'success');
                 };
-                img.onerror = () => showNotification('URL无法加载图片，请检查链接', 'error');
+                img.onerror = () => showNotification('URL無法載入圖片，請檢查連結', 'error');
                 img.src = trimmed;
             });
         }

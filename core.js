@@ -1,4 +1,4 @@
-/*核心应用逻辑：数据加载保存、消息渲染、会话管理等*/
+/*核心應用邏輯：資料載入儲存、訊息渲染、會話管理等*/
 
         function clearAllAppData() {
     const overlay = document.createElement('div');
@@ -9,17 +9,17 @@
                 <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,80,80,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
                     <i class="fas fa-trash-alt" style="color:#ff5050;font-size:20px;"></i>
                 </div>
-                <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">重置数据</div>
-                <div style="font-size:12px;color:var(--text-secondary);">请选择要重置的范围</div>
+                <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">重置資料</div>
+                <div style="font-size:12px;color:var(--text-secondary);">請選擇要重置的範圍</div>
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button id="_reset_current" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);color:var(--text-primary);font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all 0.2s;">
                     <i class="fas fa-comment-slash" style="color:var(--accent-color);font-size:15px;width:18px;text-align:center;"></i>
-                    <span>仅清除当前会话消息</span>
+                    <span>僅清除當前會話訊息</span>
                 </button>
                 <button id="_reset_all" style="width:100%;padding:12px 16px;border:1px solid rgba(255,80,80,0.3);border-radius:12px;background:rgba(255,80,80,0.06);color:#ff5050;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:all 0.2s;">
                     <i class="fas fa-bomb" style="font-size:15px;width:18px;text-align:center;"></i>
-                    <span>重置所有数据（完全清空）</span>
+                    <span>重置所有資料（完全清空）</span>
                 </button>
                 <button id="_reset_cancel" style="width:100%;padding:10px 16px;border:none;border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all 0.2s;">取消</button>
             </div>
@@ -36,37 +36,37 @@
 
     if (_resetCurrentBtn) _resetCurrentBtn.onclick = () => {
         closeDialog();
-        if (confirm('确定要清除当前会话的所有消息吗？此操作无法恢复！')) {
+        if (confirm('確定要清除當前會話的所有訊息嗎？此操作無法恢復！')) {
             messages = [];
-            window.messages = messages; // 双保险：同步 window 属性
+            window.messages = messages; // 雙保險：同步 window 屬性
             displayedMessageCount = HISTORY_BATCH_SIZE;
 
-            // 立即清除 localStorage 备份，防止 _tryRecoverFromBackup 在 IndexedDB 写入前恢复旧消息
+            // 立即清除 localStorage 備份，防止 _tryRecoverFromBackup 在 IndexedDB 寫入前恢復舊訊息
             try { localStorage.removeItem('BACKUP_V1_critical'); } catch(e) {}
             try { localStorage.removeItem('BACKUP_V1_timestamp'); } catch(e) {}
 
-            // 直接写入 IndexedDB（跳过 500ms 防抖），确保刷新后不恢复
+            // 直接寫入 IndexedDB（跳過 500ms 防抖），確保重新整理後不恢復
             localforage.setItem(getStorageKey('chatMessages'), []).catch(() => {});
 
             renderMessages();
-            showNotification('当前会话消息已清除', 'success');
+            showNotification('當前會話訊息已清除', 'success');
         }
     };
 
     if (_resetAllBtn) _resetAllBtn.onclick = () => {
         closeDialog();
-        if (confirm('【高危操作】确定要重置所有数据吗？此操作将清除所有本地数据且无法恢复！')) {
+        if (confirm('【高危操作】確定要重置所有資料嗎？此操作將清除所有本地資料且無法恢復！')) {
             window._skipBackup = true;
             messages = [];
             settings = {};
             localforage.clear().then(() => {
                 localStorage.clear();
-                showNotification('所有数据已重置，页面即将刷新', 'info', 2000);
+                showNotification('所有資料已重置，頁面即將重新整理', 'info', 2000);
                 setTimeout(() => { window.location.href = window.location.pathname + '?reset=' + Date.now(); }, 2000);
             }).catch(e => {
                 window._skipBackup = false;
-                showNotification('清除数据时发生错误', 'error');
-                console.error("清除 localforage 失败:", e);
+                showNotification('清除資料時發生錯誤', 'error');
+                console.error("清除 localforage 失敗:", e);
             });
         }
     };
@@ -137,10 +137,10 @@ function loadMoreHistory() {
 
         function getDefaultSettings() {
             return {
-                partnerName: "梦角",
+                partnerName: "夢角",
                 myName: "我",
-                myStatus: "在线",
-                partnerStatus: "在线",
+                myStatus: "線上",
+                partnerStatus: "線上",
                 isDarkMode: false,
                 colorTheme: "gold",
                 soundEnabled: true,
@@ -151,7 +151,7 @@ function loadMoreHistory() {
                 nextStatusChange: 1 + Math.random() * 7,
                 fontSize: 16,
                 bubbleStyle: 'standard',
-                messageFontFamily: "'Noto Serif SC', serif",
+                messageFontFamily: "'Noto Serif TC', 'Noto Serif SC', serif",
                 messageFontWeight: 400,
                 messageLineHeight: 1.5,
                 musicPlayerEnabled: false,
@@ -175,7 +175,7 @@ autoSendInterval: 5,
         readNoReplyChance: 0.2,
         timeFormat: 'HH:mm',
         customSoundUrl: '',
-        // 音效：两方分别可选（若对应 URL 为空则使用内置预设）
+        // 音效：兩方分別可選（若對應 URL 為空則使用內建預設）
         mySendSoundPreset: 'tone_low',
         mySendCustomSoundUrl: '',
         partnerMessageSoundPreset: 'tone_low',
@@ -227,17 +227,17 @@ autoSendInterval: 5,
                     safeSetItem(getStorageKey('chatBackground'), bg.value);
                     localforage.setItem(getStorageKey('chatBackground'), bg.value);
                     renderBackgroundGallery();
-                    showNotification('背景已切换', 'success');
+                    showNotification('背景已切換', 'success');
                 };
 
                 if (bg.id.startsWith('user-')) {
                     const delBtn = document.createElement('div');
                     delBtn.className = 'bg-delete-btn';
                     delBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                    delBtn.title = "删除此背景";
+                    delBtn.title = "刪除此背景";
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
-                        if (confirm('确定删除这张背景图吗？')) {
+                        if (confirm('確定刪除這張背景圖嗎？')) {
                             savedBackgrounds.splice(index, 1);
                             saveBackgroundGallery();
 
@@ -345,7 +345,7 @@ const loadData = async () => {
             if (settings.customFontUrl) applyCustomFont(settings.customFontUrl);
             if (settings.customBubbleCss) applyCustomBubbleCss(settings.customBubbleCss);
             if (settings.customGlobalCss) applyGlobalThemeCss(settings.customGlobalCss);
-        } catch(e) { console.warn("样式应用失败", e); }
+        } catch(e) { console.warn("樣式應用失敗", e); }
         
         if (savedPokes) customPokes = savedPokes;
         else customPokes = [...CONSTANTS.POKE_ACTIONS];
@@ -367,7 +367,7 @@ const loadData = async () => {
             const backup = _tryRecoverFromBackup();
             if (backup && Array.isArray(backup.messages) && backup.messages.length > 0) {
                 const timeSince = Math.round((Date.now() - backup.ts) / 60000);
-                console.warn(`[loadData] 主存储无消息，正在从备份恢复（备份时间：${timeSince} 分钟前）`);
+                console.warn(`[loadData] 主儲存無訊息，正在從備份恢復（備份時間：${timeSince} 分鐘前）`);
                 messages = backup.messages.map(m => ({
                     ...m, timestamp: new Date(m.timestamp)
                 }));
@@ -377,7 +377,7 @@ const loadData = async () => {
                 }
                 setTimeout(() => saveData(), 1000);
                 showNotification(
-                    `已从备份恢复 ${messages.length} 条消息${backup._truncated ? '（备份为最近200条）' : ''}`,
+                    `已從備份恢復 ${messages.length} 條訊息${backup._truncated ? '（備份為最近200條）' : ''}`,
                     'warning', 6000
                 );
             } else {
@@ -419,8 +419,8 @@ const loadData = async () => {
             }
         }
 
-        try { await initMoodData(); } catch(e) { console.warn("心情数据加载失败", e); }
-        try { await loadEnvelopeData(); } catch(e) { console.warn("信封数据加载失败", e); }
+        try { await initMoodData(); } catch(e) { console.warn("心情資料載入失敗", e); }
+        try { await loadEnvelopeData(); } catch(e) { console.warn("信封資料載入失敗", e); }
         
         displayedMessageCount = HISTORY_BATCH_SIZE;
         
@@ -435,7 +435,7 @@ const loadData = async () => {
         }, 100);
 
     } catch (e) {
-        console.error("LoadData 内部致命错误:", e);
+        console.error("LoadData 內部致命錯誤:", e);
         settings = getDefaultSettings();
         messages = [];
         updateUI();
@@ -444,20 +444,20 @@ const loadData = async () => {
 
 const LIBRARY_CONFIG = {
     reply: {
-        title: "回复库管理",
+        title: "回覆庫管理",
         tabs: [
             { id: 'custom', name: '主字卡', mode: 'list' },
             { id: 'emojis', name: 'Emoji', mode: 'grid' },
-            { id: 'stickers', name: '表情库', mode: 'grid' }
+            { id: 'stickers', name: '表情庫', mode: 'grid' }
         ]
     },
     atmosphere: {
-        title: "氛围感配置",
+        title: "氛圍感配置",
         tabs: [
             { id: 'pokes', name: '拍一拍', mode: 'list' },
-            { id: 'statuses', name: '对方状态', mode: 'list' },
-            { id: 'mottos', name: '顶部格言', mode: 'list' },
-            { id: 'intros', name: '开场动画', mode: 'list' }
+            { id: 'statuses', name: '對方狀態', mode: 'list' },
+            { id: 'mottos', name: '頂部格言', mode: 'list' },
+            { id: 'intros', name: '開場動畫', mode: 'list' }
         ]
     }
 };
@@ -491,17 +491,17 @@ window.switchAnnType = function(type) {
     const desc = document.getElementById('ann-type-desc');
     if(desc) {
         desc.textContent = type === 'anniversary' 
-            ? '计算从过去某一天到现在已经过了多少天 (例如: 相识、恋爱)' 
-            : '计算从现在到未来某一天还剩下多少天 (例如: 生日、跨年)';
+            ? '計算從過去某一天到現在已經過了多少天 (例如: 相識、戀愛)' 
+            : '計算從現在到未來某一天還剩下多少天 (例如: 生日、跨年)';
     }
 };
 
 window.deleteAnniversaryItem = function(id) {
-    if(confirm("确定要删除这条记录吗？")) {
+    if(confirm("確定要刪除這條記錄嗎？")) {
         anniversaries = anniversaries.filter(a => a.id !== id);
         throttledSaveData(); 
         renderAnniversariesList();
-        showNotification('已删除', 'success');
+        showNotification('已刪除', 'success');
         if (typeof playSound === 'function') playSound('anniversary');
     }
 };
@@ -543,7 +543,7 @@ function _backupCriticalData() {
         }
         localStorage.setItem(_BACKUP_PREFIX + 'timestamp', String(Date.now()));
     } catch (e) {
-        console.warn('localStorage 备份写入失败（可能存储已满）:', e);
+        console.warn('localStorage 備份寫入失敗（可能儲存已滿）:', e);
     }
 }
 
@@ -559,7 +559,7 @@ function _tryRecoverFromBackup() {
 
 const saveData = async () => {
     if (!SESSION_ID) {
-        console.warn('[saveData] SESSION_ID 尚未初始化，跳过保存以防数据写入临时 key');
+        console.warn('[saveData] SESSION_ID 尚未初始化，跳過儲存以防資料寫入臨時 key');
         return;
     }
 
@@ -616,12 +616,12 @@ const saveData = async () => {
     results.forEach((r, i) => {
         if (r.status === 'rejected') {
             failed.push(promises[i].key);
-            console.error(`[saveData] 保存失败: ${promises[i].key}`, r.reason);
+            console.error(`[saveData] 儲存失敗: ${promises[i].key}`, r.reason);
         }
     });
 
     if (failed.length > 0) {
-        console.warn(`[saveData] ${failed.length} 项写入失败，已触发 localStorage 降级备份`, failed);
+        console.warn(`[saveData] ${failed.length} 項寫入失敗，已觸發 localStorage 降級備份`, failed);
     }
 
     _backupCriticalData();
@@ -763,8 +763,8 @@ if (customIntros && customIntros.length > 0) {
         scrambleText(subEl, line2, 2000);
     }, 600);
 } else {
-    document.getElementById('welcome-title-glitch').textContent = "传讯";
-    document.getElementById('welcome-subtitle-scramble').textContent = "请在设置中添加开场动画";
+    document.getElementById('welcome-title-glitch').textContent = "傳訊";
+    document.getElementById('welcome-subtitle-scramble').textContent = "請在設定中新增開場動畫";
 }
 
 
@@ -773,10 +773,10 @@ if (customIntros && customIntros.length > 0) {
             loaderBar.style.width = '0%';
             const loadingPhases = [
                 { width: '15%', text: 'INITIALIZING · 初始化中' },
-                { width: '40%', text: 'LOADING MEMORIES · 读取记忆' },
-                { width: '70%', text: 'BUILDING WORLD · 构建世界' },
-                { width: '90%', text: 'ALMOST THERE · 即将完成' },
-                { width: '100%', text: 'CONNECTED · 连接成功' }
+                { width: '40%', text: 'LOADING MEMORIES · 讀取記憶' },
+                { width: '70%', text: 'BUILDING WORLD · 構建世界' },
+                { width: '90%', text: 'ALMOST THERE · 即將完成' },
+                { width: '100%', text: 'CONNECTED · 連線成功' }
             ];
             const delays = [100, 700, 1600, 2400, 2900];
             delays.forEach((delay, i) => {
@@ -828,12 +828,12 @@ function manageAutoSendTimer() {
             DOMElements.themeToggle.innerHTML = settings.isDarkMode ? '<i class="fas fa-sun"></i>': '<i class="fas fa-moon"></i>';
             DOMElements.partner.name.textContent = settings.partnerName;
             DOMElements.me.name.textContent = settings.myName;
-            DOMElements.partner.status.textContent = settings.partnerStatus || '在线';
+            DOMElements.partner.status.textContent = settings.partnerStatus || '線上';
             DOMElements.me.statusText.textContent = settings.myStatus;
             if (typeof window.updateDynamicNames === 'function') window.updateDynamicNames();
             document.documentElement.style.setProperty('--font-size', `${settings.fontSize}px`);
             
-            const fontToUse = settings.messageFontFamily || "'Noto Serif SC', serif";
+            const fontToUse = settings.messageFontFamily || "'Noto Serif TC', 'Noto Serif SC', serif";
             
             document.documentElement.style.setProperty('--message-font-family', fontToUse);
             document.documentElement.style.setProperty('--font-family', fontToUse);
@@ -890,7 +890,7 @@ function manageAutoSendTimer() {
             document.body.classList.remove('with-background');
             localforage.removeItem(getStorageKey('chatBackground'));
             safeRemoveItem(getStorageKey('chatBackground'));
-            showNotification('背景图片已移除', 'success');
+            showNotification('背景圖片已移除', 'success');
         };
 
         window.scrollToQuotedMessage = function(el) {
@@ -909,7 +909,7 @@ function manageAutoSendTimer() {
             if (!tryScroll()) {
                 const msgIndex = messages.findIndex(m => String(m.id) === String(id));
                 if (msgIndex === -1) {
-                    if (typeof showNotification === 'function') showNotification('消息可能已被删除', 'info');
+                    if (typeof showNotification === 'function') showNotification('訊息可能已被刪除', 'info');
                     return;
                 }
                 const needed = messages.length - msgIndex;
@@ -918,7 +918,7 @@ function manageAutoSendTimer() {
                     renderMessages(false);
                     setTimeout(tryScroll, 150);
                 } else {
-                    if (typeof showNotification === 'function') showNotification('消息可能已被删除', 'info');
+                    if (typeof showNotification === 'function') showNotification('訊息可能已被刪除', 'info');
                 }
             }
         };
@@ -960,7 +960,7 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         const isRejected = icon === 'fa-phone-slash';
         const colorClass = isRejected ? 'call-event-pill--rejected' : 'call-event-pill--ended';
         const detail = msg.callDetail ? `<span class="call-event-detail">${msg.callDetail}</span>` : '';
-        callEvDiv.innerHTML = `<div class="call-event-pill ${colorClass}"><i class="fas ${icon} call-event-icon"></i><span class="call-event-label">${msg.text.replace(/ · .*/, '')}</span>${detail}<button class="call-event-delete" title="删除" onclick="(function(btn){const id=btn.closest('[data-id]').dataset.id;const idx=messages.findIndex(m=>String(m.id)===String(id));if(idx>-1){messages.splice(idx,1);renderMessages();throttledSaveData();}})(this)"><i class="fas fa-times"></i></button></div>`;
+        callEvDiv.innerHTML = `<div class="call-event-pill ${colorClass}"><i class="fas ${icon} call-event-icon"></i><span class="call-event-label">${msg.text.replace(/ · .*/, '')}</span>${detail}<button class="call-event-delete" title="刪除" onclick="(function(btn){const id=btn.closest('[data-id]').dataset.id;const idx=messages.findIndex(m=>String(m.id)===String(id));if(idx>-1){messages.splice(idx,1);renderMessages();throttledSaveData();}})(this)"><i class="fas fa-times"></i></button></div>`;
         fragment.appendChild(callEvDiv);
         lastSenderRef.current = 'system';
         return fragment;
@@ -1044,21 +1044,21 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         if (!isSameSenderForName) {
             const nameLabel = document.createElement('div');
             nameLabel.className = 'group-sender-name';
-            nameLabel.textContent = settings.partnerName || msg.sender || '对方';
+            nameLabel.textContent = settings.partnerName || msg.sender || '對方';
             contentWrapper.appendChild(nameLabel);
         }
     }
 
     let messageHTML = '';
     if (msg.replyTo) {
-        const repliedText = msg.replyTo.text || (msg.replyTo.image ? '🖼 图片' : '[消息]');
-        const repliedSender = msg.replyTo.sender === 'user' ? (settings.myName || '我') : (settings.partnerName || '对方');
+        const repliedText = msg.replyTo.text || (msg.replyTo.image ? '🖼 圖片' : '[訊息]');
+        const repliedSender = msg.replyTo.sender === 'user' ? (settings.myName || '我') : (settings.partnerName || '對方');
         messageHTML += `<div class="reply-indicator" data-reply-id="${msg.replyTo.id || ''}" style="cursor:pointer;" onclick="scrollToQuotedMessage(this)"><span class="reply-indicator-sender">${repliedSender}</span><span class="reply-indicator-text">${repliedText}</span></div>`;
     }
 
     const isImageOnly = !msg.text && !!msg.image;
     let content = msg.text ? `<div>${msg.text.replace(/\n/g, '<br>')}</div>` : '';
-    if (msg.image) content += `<img src="${msg.image}" class="message-image${isImageOnly ? ' message-image-only' : ''}" alt="图片" style="max-width:${isImageOnly ? '100px' : '100px'}; border-radius: 12px;${!isImageOnly ? ' margin-top: 6px;' : ''} cursor: pointer;" onclick="viewImage('${msg.image}')">`;
+    if (msg.image) content += `<img src="${msg.image}" class="message-image${isImageOnly ? ' message-image-only' : ''}" alt="圖片" style="max-width:${isImageOnly ? '100px' : '100px'}; border-radius: 12px;${!isImageOnly ? ' margin-top: 6px;' : ''} cursor: pointer;" onclick="viewImage('${msg.image}')">`;
     messageHTML += content;
 
     const messageDiv = document.createElement('div');
@@ -1070,10 +1070,10 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
     messageDiv.innerHTML = messageHTML;
 
     let actionsHTML = '';
-    if (settings.replyEnabled) actionsHTML += `<button class="meta-action-btn reply-btn" title="回复"><i class="fas fa-reply"></i></button>`;
+    if (settings.replyEnabled) actionsHTML += `<button class="meta-action-btn reply-btn" title="回覆"><i class="fas fa-reply"></i></button>`;
     const starIcon = msg.favorited ? 'fas fa-star' : 'far fa-star';
     actionsHTML += `<button class="meta-action-btn favorite-action-btn ${msg.favorited ? 'favorited' : ''}" title="${msg.favorited ? '取消收藏' : '收藏'}"><i class="${starIcon}"></i></button>`;
-    actionsHTML += `<button class="meta-action-btn delete-btn" title="删除"><i class="fas fa-trash-alt"></i></button>`;
+    actionsHTML += `<button class="meta-action-btn delete-btn" title="刪除"><i class="fas fa-trash-alt"></i></button>`;
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'message-meta-actions';
     actionsDiv.innerHTML = actionsHTML;
@@ -1099,9 +1099,9 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         const rrStyle = settings.readReceiptStyle || 'icon';
         if (rrStyle === 'text') {
             if (msg.status === 'read') {
-                metaHTML += `<div class="read-receipt read" style="font-size:9px;letter-spacing:0.3px;font-weight:500;">已读</div>`;
+                metaHTML += `<div class="read-receipt read" style="font-size:9px;letter-spacing:0.3px;font-weight:500;">已讀</div>`;
             } else {
-                metaHTML += `<div class="read-receipt" style="font-size:9px;letter-spacing:0.3px;opacity:0.5;">未读</div>`;
+                metaHTML += `<div class="read-receipt" style="font-size:9px;letter-spacing:0.3px;opacity:0.5;">未讀</div>`;
             }
         } else {
             const statusIcon = msg.status === 'read' ? 'fa-check-double' : 'fa-check';
@@ -1146,7 +1146,7 @@ function _updateReadReceiptsDOM() {
         if (!msg || msg.status !== 'read') return;
         if (rrStyle === 'text') {
             receiptEl.classList.add('read');
-            receiptEl.textContent = '已读';
+            receiptEl.textContent = '已讀';
             receiptEl.style.opacity = '1';
         } else {
             receiptEl.classList.add('read');
@@ -1312,13 +1312,13 @@ const addMessage = (message) => {
                 container.style.display = 'none';
                 return;
             }
-            const senderName = currentReplyTo.sender === 'user' ? (settings.myName || '我') : (settings.partnerName || '对方');
-            const previewText = currentReplyTo.text ? currentReplyTo.text.slice(0, 40) : '🖼 图片';
+            const senderName = currentReplyTo.sender === 'user' ? (settings.myName || '我') : (settings.partnerName || '對方');
+            const previewText = currentReplyTo.text ? currentReplyTo.text.slice(0, 40) : '🖼 圖片';
             container.style.display = 'flex';
             container.innerHTML = `
                 <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(var(--accent-color-rgb),0.07);border-left:3px solid var(--accent-color);border-radius:0 8px 8px 0;width:100%;">
                     <div style="flex:1;min-width:0;">
-                        <span style="font-size:11px;color:var(--accent-color);font-weight:600;">回复 ${senderName}</span>
+                        <span style="font-size:11px;color:var(--accent-color);font-weight:600;">回覆 ${senderName}</span>
                         <div style="font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${previewText}</div>
                     </div>
                     <button onclick="currentReplyTo=null;window.updateReplyPreview();" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);padding:2px 4px;font-size:14px;">✕</button>
@@ -1326,7 +1326,7 @@ const addMessage = (message) => {
         };
         function updateReplyPreview() { window.updateReplyPreview(); }
 
-        // ── 对方拍一拍核心逻辑（提取为独立函数，供随机触发和测试指令共用）──
+        // ── 對方拍一拍核心邏輯（提取為獨立函式，供隨機觸發和測試指令共用）──
         window._triggerPartnerPoke = function() {
             let pokeAction = null;
 
@@ -1360,7 +1360,7 @@ const addMessage = (message) => {
                 pokeAction = getRandomItem(CONSTANTS.POKE_ACTIONS);
             }
             if (!pokeAction) {
-                if (typeof showNotification === 'function') showNotification('拍一拍库为空，请先添加内容', 'warning', 2500);
+                if (typeof showNotification === 'function') showNotification('拍一拍庫為空，請先新增內容', 'warning', 2500);
                 return;
             }
 
@@ -1381,21 +1381,21 @@ const addMessage = (message) => {
             const imageFile = DOMElements.imageInput.files[0];
             if (!text && !imageFile && type === 'normal') return;
 
-            // ── 斜杠指令拦截 ──
+            // ── 斜槓指令攔截 ──
             if (text && text.startsWith('/') && type === 'normal') {
                 const cmd = text.replace(/\s+/g, '').toLowerCase();
-                if (cmd === '/测试拍一拍' || cmd === '/testpoke') {
+                if (cmd === '/測試拍一拍' || cmd === '/testpoke') {
                     DOMElements.messageInput.value = '';
                     DOMElements.messageInput.style.height = '46px';
                     if (typeof window._triggerPartnerPoke === 'function') window._triggerPartnerPoke();
-                    if (typeof showNotification === 'function') showNotification('✦ 强制触发对方拍一拍', 'info', 1800);
+                    if (typeof showNotification === 'function') showNotification('✦ 強制觸發對方拍一拍', 'info', 1800);
                     return;
                 }
-                if (cmd === '/测试状态更新' || cmd === '/teststatus') {
+                if (cmd === '/測試狀態更新' || cmd === '/teststatus') {
                     DOMElements.messageInput.value = '';
                     DOMElements.messageInput.style.height = '46px';
                     if (typeof window._triggerStatusChange === 'function') window._triggerStatusChange();
-                    if (typeof showNotification === 'function') showNotification('✦ 强制触发状态更新', 'info', 1800);
+                    if (typeof showNotification === 'function') showNotification('✦ 強制觸發狀態更新', 'info', 1800);
                     return;
                 }
             }
@@ -1403,7 +1403,7 @@ const addMessage = (message) => {
             DOMElements.messageInput.value = '';
             DOMElements.messageInput.style.height = '46px';
             if (imageFile && imageFile.size > MAX_IMAGE_SIZE) {
-                showNotification('图片大小不能超过5MB', 'error'); DOMElements.imageInput.value = ''; return;
+                showNotification('圖片大小不能超過5MB', 'error'); DOMElements.imageInput.value = ''; return;
             }
 
             const createMessage = (imgSrc = null) => {
@@ -1453,7 +1453,7 @@ if (!isBatchMode && type === 'normal') {
             const tiWrapper = document.getElementById('typing-indicator-wrapper');
             const tiLabel = document.getElementById('typing-indicator-label');
             const tiAvatar = document.getElementById('typing-indicator-avatar');
-            if (tiLabel) tiLabel.textContent = (settings.partnerName || '对方') + ' 正在输入';
+            if (tiLabel) tiLabel.textContent = (settings.partnerName || '對方') + ' 正在輸入';
             if (tiWrapper) { 
                 positionTypingIndicator(); 
                 tiWrapper.style.display = 'block'; 
@@ -1473,8 +1473,8 @@ if (!isBatchMode && type === 'normal') {
 };
 
             if (imageFile) {
-                showNotification('正在优化图片...', 'info', 1500);
-                optimizeImage(imageFile).then(createMessage).catch(() => showNotification('图片处理失败', 'error'));
+                showNotification('正在最佳化圖片...', 'info', 1500);
+                optimizeImage(imageFile).then(createMessage).catch(() => showNotification('圖片處理失敗', 'error'));
             } else {
                 createMessage();
             }
@@ -1484,10 +1484,10 @@ if (!isBatchMode && type === 'normal') {
         function toggleBatchMode() {
             isBatchMode = !isBatchMode;
             DOMElements.batchBtn.classList.toggle('active', isBatchMode);
-            DOMElements.batchBtn.title = isBatchMode ? "退出批量模式": "批量发送模式";
+            DOMElements.batchBtn.title = isBatchMode ? "退出批次模式": "批次傳送模式";
             DOMElements.batchPreview.style.display = isBatchMode ? 'flex': 'none';
             const placeholder = "";
-            DOMElements.messageInput.placeholder = isBatchMode ? "此刻，想说的有很多很多...": (placeholder.length > 20 ? placeholder.substring(0, 20) + "...": placeholder);
+            DOMElements.messageInput.placeholder = isBatchMode ? "此刻，想說的有很多很多...": (placeholder.length > 20 ? placeholder.substring(0, 20) + "...": placeholder);
             if (isBatchMode) {
                 batchMessages = []; updateBatchPreview();
             }
@@ -1513,20 +1513,20 @@ if (!isBatchMode && type === 'normal') {
                         : '';
                     const label = msg.text
                         ? `<span class="batch-preview-text">${msg.text}</span>`
-                        : `<span class="batch-preview-text" style="color:var(--text-secondary);font-style:italic;">图片</span>`;
-                    return `<div class="batch-preview-item" data-index="${index}">${preview}${label}<button class="batch-preview-edit" title="编辑"><i class="fas fa-pencil-alt"></i></button><button class="batch-preview-remove"><i class="fas fa-times"></i></button></div>`;
+                        : `<span class="batch-preview-text" style="color:var(--text-secondary);font-style:italic;">圖片</span>`;
+                    return `<div class="batch-preview-item" data-index="${index}">${preview}${label}<button class="batch-preview-edit" title="編輯"><i class="fas fa-pencil-alt"></i></button><button class="batch-preview-remove"><i class="fas fa-times"></i></button></div>`;
                 }).join('');
             } else {
                 listHTML = '<div style="text-align: center; color: var(--text-secondary); font-size: 14px; padding: 10px;">つ♡⊂</div>';
             }
 
             previewContainer.innerHTML = `
-        <div class="batch-preview-title">我有很多的话想说…！</div>
-        <div class="batch-actions-top" style="display:flex;gap:6px;padding:4px 10px 0;"><label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 8px;background:var(--secondary-bg);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text-secondary);"><i class="fas fa-image"></i>添加图片<input type="file" accept="image/*" style="display:none;" id="batch-image-input"></label></div>
+        <div class="batch-preview-title">我有很多的話想說…！</div>
+        <div class="batch-actions-top" style="display:flex;gap:6px;padding:4px 10px 0;"><label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 8px;background:var(--secondary-bg);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:12px;color:var(--text-secondary);"><i class="fas fa-image"></i>新增圖片<input type="file" accept="image/*" style="display:none;" id="batch-image-input"></label></div>
         <div class="batch-preview-list">${listHTML}</div>
         <div class="batch-actions">
         <button class="batch-action-btn batch-cancel-btn">取消</button>
-        <button class="batch-action-btn batch-send-btn" ${batchMessages.length === 0 ? 'disabled': ''}>发送全部 (${batchMessages.length})</button>
+        <button class="batch-action-btn batch-send-btn" ${batchMessages.length === 0 ? 'disabled': ''}>傳送全部 (${batchMessages.length})</button>
         </div>`;
 
             const batchImgInput = document.getElementById('batch-image-input');
@@ -1534,11 +1534,11 @@ if (!isBatchMode && type === 'normal') {
                 batchImgInput.addEventListener('change', async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
-                    if (file.size > MAX_IMAGE_SIZE) { showNotification('图片超过5MB限制', 'warning'); return; }
+                    if (file.size > MAX_IMAGE_SIZE) { showNotification('圖片超過5MB限制', 'warning'); return; }
                     try {
                         const base64 = await optimizeImage(file, 600, 0.8);
                         addToBatch(base64);
-                    } catch(err) { showNotification('图片处理失败', 'error'); }
+                    } catch(err) { showNotification('圖片處理失敗', 'error'); }
                     e.target.value = '';
                 });
             }
@@ -1546,7 +1546,7 @@ if (!isBatchMode && type === 'normal') {
 
         function sendBatchMessages() {
             if (batchMessages.length === 0) return;
-            showNotification(`正在发送 ${batchMessages.length} 条消息...`, 'info', 2000);
+            showNotification(`正在傳送 ${batchMessages.length} 條訊息...`, 'info', 2000);
             batchMessages.forEach((msg, index) => {
                 setTimeout(() => {
                     addMessage({
@@ -1594,7 +1594,7 @@ if (!isBatchMode && type === 'normal') {
                 const tiWrapper = document.getElementById('typing-indicator-wrapper');
                 const tiLabel = document.getElementById('typing-indicator-label');
                 const tiAvatar = document.getElementById('typing-indicator-avatar');
-                if (tiLabel) tiLabel.textContent = (settings.partnerName || '对方') + ' 正在输入';
+                if (tiLabel) tiLabel.textContent = (settings.partnerName || '對方') + ' 正在輸入';
                 if (tiWrapper) { 
                     positionTypingIndicator(); 
                     tiWrapper.style.display = 'block'; 
@@ -1634,14 +1634,14 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                 }
             }
             if (Math.random() < 0.03) {
-                // ── 对方拍一拍：调用提取的通用函数（同时供 /测试拍一拍 指令使用）──
+                // ── 對方拍一拍：呼叫提取的通用函式（同時供 /測試拍一拍 指令使用）──
                 if (typeof window._triggerPartnerPoke === 'function') window._triggerPartnerPoke();
                 return;
             }
 
             const replyCount = Math.random() < 0.75 ? 1: (Math.random() < 0.95 ? 2: 3);
             if (!customReplies || customReplies.length === 0) {
-                showNotification('回复库为空，请先到「自定义回复」中添加内容', 'info', 3500);
+                showNotification('回覆庫為空，請先到「自定義回覆」中新增內容', 'info', 3500);
                 return;
             }
             const disabledItemsOnce = (() => {
@@ -1659,11 +1659,11 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                 .map(r => String(r || '').trim())
                 .filter(Boolean);
             if (!replyPoolOnce.length) {
-                showNotification('回复库可用内容为空（可能被分组禁用或屏蔽），请到「自定义回复」中调整', 'info', 4000);
+                showNotification('回覆庫可用內容為空（可能被分組禁用或遮蔽），請到「自定義回覆」中調整', 'info', 4000);
                 return;
             }
 
-            // 确认有可用回复后再展示“正在输入中”，避免空转
+            // 確認有可用回覆後再展示“正在輸入中”，避免空轉
             showTypingIndicator();
             let delay = 0;
             const recentUserMsgs = settings.replyEnabled
@@ -1675,7 +1675,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                 setTimeout(() => {
                     try {
                     const replyPool = replyPoolOnce;
-                    // 被屏蔽或无效项直接换下一个，尽量保证每次都产出可用回复
+                    // 被遮蔽或無效項直接換下一個，儘量保證每次都產出可用回覆
                     let replyText = '';
                     for (let t = 0; t < 6; t++) {
                         const picked = replyPool[Math.floor(Math.random() * replyPool.length)];
@@ -1712,7 +1712,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
 
                     addMessage({
                         id: Date.now() + i,
-                        sender: settings.partnerName || '对方',
+                        sender: settings.partnerName || '對方',
                         text: finalText,
                         timestamp: new Date(),
                         status: 'received',
@@ -1724,7 +1724,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                         type: 'normal'
                     });
                     if (typeof window._sendPartnerNotification === 'function') {
-                        window._sendPartnerNotification(settings.partnerName || '对方', finalText);
+                        window._sendPartnerNotification(settings.partnerName || '對方', finalText);
                     }
                     playSound('message');
 
@@ -1733,7 +1733,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                         setTimeout(() => {
                             addMessage({
                                 id: Date.now() + i + 2000,
-                                sender: settings.partnerName || '对方',
+                                sender: settings.partnerName || '對方',
                                 text: '',
                                 timestamp: new Date(),
                                 image: randomSticker,
@@ -1744,7 +1744,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                             });
                             playSound('message');
                             if (typeof window._sendPartnerNotification === 'function') {
-                                window._sendPartnerNotification(settings.partnerName || '对方', '[表情]');
+                                window._sendPartnerNotification(settings.partnerName || '對方', '[表情]');
                             }
                         }, 400 + Math.random() * 600);
                     }
@@ -1753,7 +1753,7 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                         setTimeout(() => {
                             addMessage({
                                 id: Date.now() + i + 1000,
-                                sender: settings.partnerName || '对方',
+                                sender: settings.partnerName || '對方',
                                 text: separateEmoji,
                                 timestamp: new Date(),
                                 status: 'received',
@@ -1789,8 +1789,8 @@ if (partnerPersonas && partnerPersonas.length > 0 && Math.random() < 0.3) {
                         })();
                     }
                     } catch (e) {
-                        console.error('[simulateReply] 渲染/回填出错:', e);
-                        // 机制性兜底：出错时至少让“正在输入中”消失，避免假死
+                        console.error('[simulateReply] 渲染/回填出錯:', e);
+                        // 機制性兜底：出錯時至少讓“正在輸入中”消失，避免假死
                         try {
                             (function(){
                                 try { if (window._typingIndicatorAutoHideTimer) { clearTimeout(window._typingIndicatorAutoHideTimer); window._typingIndicatorAutoHideTimer = null; } } catch (e2) {}
@@ -1840,7 +1840,7 @@ function showModal(modalElement, focusElement = null) {
                 <div style="position:relative;max-width:95vw;max-height:92vh;display:flex;align-items:center;justify-content:center;">
                     <img src="${src}" style="max-width:95vw;max-height:88vh;object-fit:contain;display:block;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.6);" draggable="false">
                     <button onclick="this.closest('[style*=fixed]').remove()" style="position:fixed;top:16px;right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);z-index:10;line-height:1;">×</button>
-                    <a href="${src}" download style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 24px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;backdrop-filter:blur(8px);display:flex;align-items:center;gap:6px;"><i class="fas fa-download"></i> 保存图片</a>
+                    <a href="${src}" download style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 24px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;backdrop-filter:blur(8px);display:flex;align-items:center;gap:6px;"><i class="fas fa-download"></i> 儲存圖片</a>
                 </div>`;
             modal.addEventListener('click', (e) => {
                 if (e.target === modal || e.target.tagName === 'IMG') modal.remove();
@@ -1854,40 +1854,40 @@ function showModal(modalElement, focusElement = null) {
             overlay.innerHTML = `
                 <div style="background:var(--secondary-bg);border-radius:20px;padding:24px;width:88%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.4);animation:modalContentSlideIn 0.3s ease forwards;">
                     <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-                        <i class="fas fa-file-export" style="color:var(--accent-color);font-size:14px;"></i>选择导出内容
+                        <i class="fas fa-file-export" style="color:var(--accent-color);font-size:14px;"></i>選擇匯出內容
                     </div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">勾选需要导出的数据模块</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">勾選需要匯出的資料模組</div>
                     <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);transition:border-color 0.2s;">
                             <input type="checkbox" id="_exp_msgs" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-comments" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>聊天记录 <span style="font-size:11px;color:var(--text-secondary);">(${messages.length} 条)</span></span>
+                            <span>聊天記錄 <span style="font-size:11px;color:var(--text-secondary);">(${messages.length} 條)</span></span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);transition:border-color 0.2s;">
                             <input type="checkbox" id="_exp_settings" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-sliders-h" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>外观与聊天设置</span>
+                            <span>外觀與聊天設定</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);transition:border-color 0.2s;">
                             <input type="checkbox" id="_exp_replies" style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-reply" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>字卡回复库</span>
+                            <span>字卡回覆庫</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);transition:border-color 0.2s;">
                             <input type="checkbox" id="_exp_ann" style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-calendar-heart" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>纪念日 / 倒计时</span>
+                            <span>紀念日 / 倒計時</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);transition:border-color 0.2s;">
                             <input type="checkbox" id="_exp_themes" style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-palette" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>自定义主题配色</span>
+                            <span>自定義主題配色</span>
                         </label>
                     </div>
                     <div style="display:flex;gap:10px;">
                         <button id="_exp_cancel" style="flex:1;padding:11px;border:1px solid var(--border-color);border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
                         <button id="_exp_confirm" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:7px;">
-                            <i class="fas fa-download"></i>确认导出
+                            <i class="fas fa-download"></i>確認匯出
                         </button>
                     </div>
                 </div>`;
@@ -1907,7 +1907,7 @@ function showModal(modalElement, focusElement = null) {
                 const inclThemes   = !!document.getElementById('_exp_themes')?.checked;
 
                 if (!inclMsgs && !inclSettings && !inclReplies && !inclAnn && !inclThemes) {
-                    showNotification('请至少选择一项导出内容', 'error');
+                    showNotification('請至少選擇一項匯出內容', 'error');
                     return;
                 }
                 closeDialog();
@@ -1933,7 +1933,7 @@ function showModal(modalElement, focusElement = null) {
                         exportModules: []
                     };
                     if (inclMsgs)     {
-                        // 永远省略图片字段，只导出文字等基础信息，减小体积
+                        // 永遠省略圖片欄位，只匯出文字等基礎資訊，減小體積
                         exportObj.messages = messages.map(m => {
                             const { image, ...rest } = m;
                             return rest;
@@ -1955,7 +1955,7 @@ function showModal(modalElement, focusElement = null) {
                     if (inclAnn)      { exportObj.anniversaries = anniversaries; exportObj.exportModules.push('anniversaries'); }
                     if (inclThemes)   {
                         exportObj.customThemes = customThemes;
-                        // stickerLibrary 体积较大，这里不再随聊天备份导出
+                        // stickerLibrary 體積較大，這裡不再隨聊天備份匯出
                         exportObj.exportModules.push('themes');
                     }
 
@@ -1967,15 +1967,15 @@ function showModal(modalElement, focusElement = null) {
                         const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
                         const file = new File([blob], fileName, { type: 'application/json' });
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                            navigator.share({ files: [file], title: '传讯数据导出', text: `导出日期：${new Date().toLocaleDateString()}` })
+                            navigator.share({ files: [file], title: '傳訊資料匯出', text: `匯出日期：${new Date().toLocaleDateString()}` })
                                 .catch(() => fallbackExport(dataStr, fileName));
                             return;
                         }
                     }
                     fallbackExport(dataStr, fileName);
                 } catch (error) {
-                    console.error('导出失败:', error);
-                    showNotification('导出失败，请重试', 'error');
+                    console.error('匯出失敗:', error);
+                    showNotification('匯出失敗，請重試', 'error');
                 }
             };
         }
@@ -1992,7 +1992,7 @@ function showModal(modalElement, focusElement = null) {
             link.click();
             document.body.removeChild(link);
             setTimeout(() => URL.revokeObjectURL(url), 2000);
-            showNotification('导出成功', 'success');
+            showNotification('匯出成功', 'success');
         }
 
         function importChatHistory(file) {
@@ -2003,8 +2003,8 @@ function showModal(modalElement, focusElement = null) {
                     if (rawText.charCodeAt(0) === 0xFEFF) rawText = rawText.slice(1);
                     let importedData = JSON.parse(rawText);
 
-                    // 兼容全量备份格式（type:'full' 或含 indexedDB/localforage 字段）
-                    // 将其转换为 importChatHistory 能识别的标准字段
+                    // 相容全量備份格式（type:'full' 或含 indexedDB/localforage 欄位）
+                    // 將其轉換為 importChatHistory 能識別的標準欄位
                     if (importedData && typeof importedData === 'object' &&
                         (importedData.type === 'full' || importedData.indexedDB || importedData.localforage) &&
                         !importedData.messages && !importedData.settings) {
@@ -2013,7 +2013,7 @@ function showModal(modalElement, focusElement = null) {
                         const ls  = importedData.localStorage || {};
                         const allKv = Object.assign({}, idb, ls);
 
-                        // 找到 sessionId（取第一个带 _chatMessages 的键前缀）
+                        // 找到 sessionId（取第一個帶 _chatMessages 的鍵字首）
                         let detectedSid = null;
                         const appPfx = importedData.appPrefix || 'CHAT_APP_V3_';
                         for (const k of Object.keys(allKv)) {
@@ -2030,7 +2030,7 @@ function showModal(modalElement, focusElement = null) {
                                 const v = allKv[pfxSid + suffix];
                                 if (v !== undefined && v !== null) return v;
                             }
-                            // 无前缀回退
+                            // 無字首回退
                             return allKv[suffix] !== undefined ? allKv[suffix] : null;
                         };
                         const parseVal = (v) => {
@@ -2054,7 +2054,7 @@ function showModal(modalElement, focusElement = null) {
                             converted.settings = chatSettings;
                             converted.exportModules.push('settings');
                         }
-                        // 额外的 localStorage 设置字段
+                        // 額外的 localStorage 設定欄位
                         const dgCustomData = parseVal(ls['dg_custom_data'] !== undefined ? ls['dg_custom_data'] : null);
                         if (dgCustomData) converted.dgCustomData = dgCustomData;
                         const dgStatusPool = parseVal(ls['dg_status_pool'] !== undefined ? ls['dg_status_pool'] : null);
@@ -2087,7 +2087,7 @@ function showModal(modalElement, focusElement = null) {
                     const hasThemes    = !!importedData.customThemes || !!importedData.stickerLibrary;
 
                     if (!hasMessages && !hasSettings && !hasReplies && !hasAnn && !hasThemes) {
-                        throw new Error('无效的聊天记录文件（未检测到可识别的数据模块）');
+                        throw new Error('無效的聊天記錄檔案（未檢測到可識別的資料模組）');
                     }
 
                     const overlay = document.createElement('div');
@@ -2105,20 +2105,20 @@ function showModal(modalElement, focusElement = null) {
                     overlay.innerHTML = `
                         <div style="background:var(--secondary-bg);border-radius:20px;padding:24px;width:88%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.4);animation:modalContentSlideIn 0.3s ease forwards;">
                             <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-                                <i class="fas fa-file-import" style="color:var(--accent-color);font-size:14px;"></i>选择导入内容
+                                <i class="fas fa-file-import" style="color:var(--accent-color);font-size:14px;"></i>選擇匯入內容
                             </div>
-                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">文件中检测到以下数据，选择要导入的模块</div>
+                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">檔案中檢測到以下資料，選擇要匯入的模組</div>
                             <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
-                                ${makeRow('_imp_msgs', 'fas fa-comments', '聊天记录', hasMessages ? `(${importedData.messages.length} 条)` : '', hasMessages, true)}
-                                ${makeRow('_imp_settings', 'fas fa-sliders-h', '外观与聊天设置', '', hasSettings, true)}
-                                ${makeRow('_imp_replies', 'fas fa-reply', '字卡回复库', '', hasReplies, false)}
-                                ${makeRow('_imp_ann', 'fas fa-calendar-heart', '纪念日 / 倒计时', '', hasAnn, false)}
-                                ${makeRow('_imp_themes', 'fas fa-palette', '自定义主题配色', '', hasThemes, false)}
+                                ${makeRow('_imp_msgs', 'fas fa-comments', '聊天記錄', hasMessages ? `(${importedData.messages.length} 條)` : '', hasMessages, true)}
+                                ${makeRow('_imp_settings', 'fas fa-sliders-h', '外觀與聊天設定', '', hasSettings, true)}
+                                ${makeRow('_imp_replies', 'fas fa-reply', '字卡回覆庫', '', hasReplies, false)}
+                                ${makeRow('_imp_ann', 'fas fa-calendar-heart', '紀念日 / 倒計時', '', hasAnn, false)}
+                                ${makeRow('_imp_themes', 'fas fa-palette', '自定義主題配色', '', hasThemes, false)}
                             </div>
                             <div style="display:flex;gap:10px;">
                                 <button id="_imp_cancel" style="flex:1;padding:11px;border:1px solid var(--border-color);border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
                                 <button id="_imp_confirm" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:7px;">
-                                    <i class="fas fa-upload"></i>确认导入
+                                    <i class="fas fa-upload"></i>確認匯入
                                 </button>
                             </div>
                         </div>`;
@@ -2138,11 +2138,11 @@ function showModal(modalElement, focusElement = null) {
                         const doThemes   = hasThemes    && !!document.getElementById('_imp_themes')?.checked;
 
                         if (!doMsgs && !doSettings && !doReplies && !doAnn && !doThemes) {
-                            showNotification('请至少选择一项导入内容', 'error');
+                            showNotification('請至少選擇一項匯入內容', 'error');
                             return;
                         }
 
-                        if (doMsgs && messages.length > 0 && !confirm('导入将覆盖当前会话的聊天记录，确定继续吗？')) return;
+                        if (doMsgs && messages.length > 0 && !confirm('匯入將覆蓋當前會話的聊天記錄，確定繼續嗎？')) return;
                         closeDialog();
 
                         if (doMsgs) {
@@ -2155,7 +2155,7 @@ function showModal(modalElement, focusElement = null) {
                                     if (settings.customFontUrl) applyCustomFont(settings.customFontUrl);
                                     if (settings.customBubbleCss) applyCustomBubbleCss(settings.customBubbleCss);
                                     if (settings.customGlobalCss) applyGlobalThemeCss(settings.customGlobalCss);
-                                } catch(e2) { console.warn('导入后样式应用失败', e2); }
+                                } catch(e2) { console.warn('匯入後樣式應用失敗', e2); }
                             }
                             if (importedData.dgCustomData) { try { localStorage.setItem('dg_custom_data', JSON.stringify(importedData.dgCustomData)); } catch(e2) {} }
                             if (importedData.dgStatusPool) { try { localStorage.setItem('dg_status_pool', JSON.stringify(importedData.dgStatusPool)); } catch(e2) {} }
@@ -2171,39 +2171,39 @@ function showModal(modalElement, focusElement = null) {
                         if (doMsgs && typeof renderMessages === 'function') renderMessages();
                         if (typeof applySettings === 'function') applySettings();
                         updateUI();
-                        const count = doMsgs ? `${messages.length} 条消息` : '所选数据';
-                        showNotification(`成功导入${count}`, 'success');
+                        const count = doMsgs ? `${messages.length} 條訊息` : '所選資料';
+                        showNotification(`成功匯入${count}`, 'success');
                     };
                 } catch (error) {
-                    console.error('导入失败:', error);
-                    showNotification('文件格式错误或已损坏', 'error');
+                    console.error('匯入失敗:', error);
+                    showNotification('檔案格式錯誤或已損壞', 'error');
                 }
             };
-            reader.onerror = () => showNotification('文件读取失败', 'error');
+            reader.onerror = () => showNotification('檔案讀取失敗', 'error');
             reader.readAsText(file);
         }
 
-        // ── 对方状态更新核心逻辑（提取为独立函数，供定时触发和 /测试状态更新 指令共用）──
+        // ── 對方狀態更新核心邏輯（提取為獨立函式，供定時觸發和 /測試狀態更新 指令共用）──
         window._triggerStatusChange = function() {
             let newStatus = null;
 
             const groups = window.customStatusGroups || [];
             const allStatuses = (typeof customStatuses !== 'undefined' ? customStatuses : []) || [];
 
-            // 只保留「启用」且「有内容」的分组，内容必须也在 allStatuses 里存在
+            // 只保留「啟用」且「有內容」的分組，內容必須也在 allStatuses 裡存在
             const enabledGroups = groups.filter(function(g) {
                 return !g.disabled && Array.isArray(g.items) && g.items.length > 0;
             });
 
-            // 收集所有在分组内的状态文本
+            // 收集所有在分組內的狀態文字
             const groupedItems = new Set();
             enabledGroups.forEach(function(g) { g.items.forEach(function(t) { groupedItems.add(t); }); });
 
-            // 未分组的状态
+            // 未分組的狀態
             const ungroupedStatuses = allStatuses.filter(function(t) { return !groupedItems.has(t); });
 
             if (enabledGroups.length > 0) {
-                // 有启用分组时：随机选一个分组 → 从该分组随机选一条状态
+                // 有啟用分組時：隨機選一個分組 → 從該分組隨機選一條狀態
                 const pickedGroup = enabledGroups[Math.floor(Math.random() * enabledGroups.length)];
                 const groupPool = pickedGroup.items.filter(function(t) { return allStatuses.includes(t); });
                 if (groupPool.length > 0) {
@@ -2211,7 +2211,7 @@ function showModal(modalElement, focusElement = null) {
                 }
             }
 
-            // 分组里没找到内容时，退回到：未分组状态 → 全部 customStatuses → 内置 PARTNER_STATUSES
+            // 分組裡沒找到內容時，退回到：未分組狀態 → 全部 customStatuses → 內建 PARTNER_STATUSES
             if (!newStatus && ungroupedStatuses.length > 0) {
                 newStatus = ungroupedStatuses[Math.floor(Math.random() * ungroupedStatuses.length)];
             }
@@ -2222,7 +2222,7 @@ function showModal(modalElement, focusElement = null) {
                 newStatus = getRandomItem(CONSTANTS.PARTNER_STATUSES);
             }
             if (!newStatus) {
-                if (typeof showNotification === 'function') showNotification('状态库为空，请先添加内容', 'warning', 2500);
+                if (typeof showNotification === 'function') showNotification('狀態庫為空，請先新增內容', 'warning', 2500);
                 return;
             }
 
@@ -2243,8 +2243,8 @@ function showModal(modalElement, focusElement = null) {
 
         function getStorageKey(baseKey) {
             if (!SESSION_ID) {
-                console.error('[getStorageKey] SESSION_ID 尚未初始化，拒绝生成存储键:', baseKey);
-                throw new Error('SESSION_ID 未初始化，存储操作已中止');
+                console.error('[getStorageKey] SESSION_ID 尚未初始化，拒絕生成儲存鍵:', baseKey);
+                throw new Error('SESSION_ID 未初始化，儲存操作已中止');
             }
             return `${APP_PREFIX}${SESSION_ID}_${baseKey}`;
         }
@@ -2266,20 +2266,20 @@ function showModal(modalElement, focusElement = null) {
                                         dataToStore = JSON.parse(val);
                                     }
                                 } catch (e) {
-                                    console.warn(`迁移期间解析数据失败: ${key}，将作为原始字符串存储。`, e);
+                                    console.warn(`遷移期間解析資料失敗: ${key}，將作為原始字串儲存。`, e);
                                 }
                                 await localforage.setItem(key, dataToStore);
                             }
                         } catch (e) {
-                            console.error(`迁移键值 ${key} 时发生错误，已跳过。`, e);
+                            console.error(`遷移鍵值 ${key} 時發生錯誤，已跳過。`, e);
                         }
                     }
                 }
                 
                 await localforage.setItem(APP_PREFIX + 'MIGRATION_V2_DONE', 'true');
             } catch (e) {
-                console.error("数据迁移过程中发生严重错误:", e);
-                showNotification('数据迁移失败，部分旧数据可能丢失', 'error');
+                console.error("資料遷移過程中發生嚴重錯誤:", e);
+                showNotification('資料遷移失敗，部分舊資料可能丟失', 'error');
             }
         }
 

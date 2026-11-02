@@ -1,70 +1,70 @@
 /*
- * 问题箱
- *  · 我问他：写一个问题和几个选项，梦角过一阵子回来选一个。
- *  · 他问我：梦角每隔一阵子在这里放一题，你点选项回答，他再回一句。
- * 数据存在 localforage（和原网站其他功能一样），所以会跟着同步。
- * 随机结果（他选哪个、下一题是什么、什么时候来）都提前决定好存起来，两台设备看到的一定一样。
+ * 問題箱
+ *  · 我問他：寫一個問題和幾個選項，夢角過一陣子回來選一個。
+ *  · 他問我：夢角每隔一陣子在這裡放一題，你點選項回答，他再回一句。
+ * 資料存在 localforage（和原網站其他功能一樣），所以會跟著同步。
+ * 隨機結果（他選哪個、下一題是什麼、什麼時候來）都提前決定好存起來，兩臺裝置看到的一定一樣。
  */
 (function () {
   'use strict';
   var LETTERS = 'ABCDEF';
   var SPEEDS = {
-    fast: { label: '马上（几秒～半分钟）', min: 5e3, max: 30e3 },
-    soon: { label: '稍后（5～30 分钟）', min: 5 * 60e3, max: 30 * 60e3 },
-    slow: { label: '慢慢来（1～6 小时）', min: 60 * 60e3, max: 6 * 60 * 60e3 }
+    fast: { label: '馬上（幾秒～半分鐘）', min: 5e3, max: 30e3 },
+    soon: { label: '稍後（5～30 分鐘）', min: 5 * 60e3, max: 30 * 60e3 },
+    slow: { label: '慢慢來（1～6 小時）', min: 60 * 60e3, max: 6 * 60 * 60e3 }
   };
   var FREQ = {
-    often: { label: '常常（1～3 小时一题）', min: 1, max: 3 },
-    sometimes: { label: '偶尔（3～8 小时一题）', min: 3, max: 8 },
-    rarely: { label: '很少（大约一天一题）', min: 16, max: 30 },
-    off: { label: '先不要问我' }
+    often: { label: '常常（1～3 小時一題）', min: 1, max: 3 },
+    sometimes: { label: '偶爾（3～8 小時一題）', min: 3, max: 8 },
+    rarely: { label: '很少（大約一天一題）', min: 16, max: 30 },
+    off: { label: '先不要問我' }
   };
   var BANK = [
-    ['今天想吃什么？', ['火锅', '拉面', '烤肉', '你做的']],
-    ['周末比较想怎么过？', ['出去走走', '在家窝着', '看电影', '跟你待在一起就好']],
-    ['你更喜欢哪个季节？', ['春天', '夏天', '秋天', '冬天']],
-    ['要是我们去旅行，想去哪里？', ['海边', '雪山', '古镇', '国外的城市']],
-    ['你现在的心情最像哪种天气？', ['晴天', '多云', '下雨', '起风了']],
-    ['睡前喜欢做什么？', ['刷手机', '听歌', '看书', '跟我聊天']],
-    ['你是早起型还是熬夜型？', ['早起型', '熬夜型', '看心情', '都不太行']],
-    ['想要我怎么叫你？', ['名字', '宝宝', '笨蛋', '你来决定']],
-    ['奶茶要几分甜？', ['无糖', '三分', '五分', '全糖']],
-    ['下雨天你会想做什么？', ['睡觉', '听雨声', '看剧', '想我']],
-    ['如果今晚一起看电影，选哪种？', ['爱情片', '恐怖片', '动画', '喜剧']],
-    ['你觉得我最像哪种动物？', ['猫', '狗', '狐狸', '兔子']],
-    ['今天过得怎么样？', ['很好', '还可以', '有点累', '不太好']],
-    ['不开心的时候，你希望我怎么做？', ['安静陪着你', '逗你笑', '听你说', '抱抱你']],
-    ['最想和我一起做的事是？', ['看日出', '逛夜市', '一起做饭', '窝在沙发上']],
-    ['你喜欢收到什么样的礼物？', ['亲手做的', '实用的', '有纪念意义的', '有你在就够了']],
-    ['你更喜欢哪个时段？', ['清晨', '午后', '傍晚', '深夜']],
-    ['猫派还是狗派？', ['猫派', '狗派', '都喜欢', '只喜欢你']],
-    ['第一次约会想去哪里？', ['咖啡店', '游乐园', '水族馆', '公园散步']],
-    ['你最近在听什么类型的歌？', ['抒情', '摇滚', '纯音乐', '随便播']],
-    ['你觉得我们之间最像什么颜色？', ['粉色', '蓝色', '金色', '黑白']],
-    ['现在想见我吗？', ['想', '很想', '超级想', '每天都想']],
-    ['吵架了，你会先找我吗？', ['会', '不会', '看情况', '等你先来']],
-    ['你喜欢我穿什么风格？', ['西装', '卫衣', '居家服', '都喜欢']],
-    ['最喜欢哪种甜点？', ['蛋糕', '冰淇淋', '布丁', '马卡龙']],
-    ['今天有没有好好吃饭？', ['有', '吃了一点', '还没', '忘了']],
-    ['今天有没有好好喝水？', ['喝了很多', '一点点', '只喝了饮料', '忘记了']],
-    ['你觉得自己最可爱的地方是？', ['笑起来', '认真的时候', '撒娇的时候', '全部']],
-    ['如果有一天假期，你想？', ['睡到自然醒', '出门玩一整天', '在家打游戏', '跟我待一整天']],
-    ['你喜欢哪种告白？', ['当面说', '写信', '突然的拥抱', '不用说也知道']],
-    ['我们一起养只宠物好不好？', ['好啊，养猫', '好啊，养狗', '养鱼就好', '养你就够了']],
-    ['你现在最想要什么？', ['钱', '睡觉', '假期', '我']],
-    ['你会记得我们的纪念日吗？', ['当然', '会记在手机里', '靠你提醒', '每一天都是']],
-    ['最怕什么？', ['虫子', '黑暗', '孤单', '失去你']],
-    ['想一起去看什么？', ['烟花', '星星', '海', '雪']],
-    ['如果我突然出现在你面前，你会？', ['抱住我', '愣住', '哭出来', '假装很淡定']],
-    ['喜欢晴天还是雨天？', ['晴天', '雨天', '阴天', '有你的天']],
-    ['想听我说什么？', ['晚安', '我想你', '我爱你', '辛苦了']],
-    ['你最近有在努力的事吗？', ['学习', '工作', '照顾自己', '在想']],
-    ['给今天的自己打几分？', ['100 分', '80 分', '60 分', '不及格也没关系']]
+    ['今天想吃什麼？', ['火鍋', '拉麵', '烤肉', '你做的']],
+    ['週末比較想怎麼過？', ['出去走走', '在家窩著', '看電影', '跟你待在一起就好']],
+    ['你更喜歡哪個季節？', ['春天', '夏天', '秋天', '冬天']],
+    ['要是我們去旅行，想去哪裡？', ['海邊', '雪山', '古鎮', '國外的城市']],
+    ['你現在的心情最像哪種天氣？', ['晴天', '多雲', '下雨', '起風了']],
+    ['睡前喜歡做什麼？', ['刷手機', '聽歌', '看書', '跟我聊天']],
+    ['你是早起型還是熬夜型？', ['早起型', '熬夜型', '看心情', '都不太行']],
+    ['想要我怎麼叫你？', ['名字', '寶寶', '笨蛋', '你來決定']],
+    ['奶茶要幾分甜？', ['無糖', '三分', '五分', '全糖']],
+    ['下雨天你會想做什麼？', ['睡覺', '聽雨聲', '看劇', '想我']],
+    ['如果今晚一起看電影，選哪種？', ['愛情片', '恐怖片', '動畫', '喜劇']],
+    ['你覺得我最像哪種動物？', ['貓', '狗', '狐狸', '兔子']],
+    ['今天過得怎麼樣？', ['很好', '還可以', '有點累', '不太好']],
+    ['不開心的時候，你希望我怎麼做？', ['安靜陪著你', '逗你笑', '聽你說', '抱抱你']],
+    ['最想和我一起做的事是？', ['看日出', '逛夜市', '一起做飯', '窩在沙發上']],
+    ['你喜歡收到什麼樣的禮物？', ['親手做的', '實用的', '有紀念意義的', '有你在就夠了']],
+    ['你更喜歡哪個時段？', ['清晨', '午後', '傍晚', '深夜']],
+    ['貓派還是狗派？', ['貓派', '狗派', '都喜歡', '只喜歡你']],
+    ['第一次約會想去哪裡？', ['咖啡店', '遊樂園', '水族館', '公園散步']],
+    ['你最近在聽什麼型別的歌？', ['抒情', '搖滾', '純音樂', '隨便播']],
+    ['你覺得我們之間最像什麼顏色？', ['粉色', '藍色', '金色', '黑白']],
+    ['現在想見我嗎？', ['想', '很想', '超級想', '每天都想']],
+    ['吵架了，你會先找我嗎？', ['會', '不會', '看情況', '等你先來']],
+    ['你喜歡我穿什麼風格？', ['西裝', '衛衣', '居家服', '都喜歡']],
+    ['最喜歡哪種甜點？', ['蛋糕', '冰淇淋', '布丁', '馬卡龍']],
+    ['今天有沒有好好吃飯？', ['有', '吃了一點', '還沒', '忘了']],
+    ['今天有沒有好好喝水？', ['喝了很多', '一點點', '只喝了飲料', '忘記了']],
+    ['你覺得自己最可愛的地方是？', ['笑起來', '認真的時候', '撒嬌的時候', '全部']],
+    ['如果有一天假期，你想？', ['睡到自然醒', '出門玩一整天', '在家打遊戲', '跟我待一整天']],
+    ['你喜歡哪種告白？', ['當面說', '寫信', '突然的擁抱', '不用說也知道']],
+    ['我們一起養只寵物好不好？', ['好啊，養貓', '好啊，養狗', '養魚就好', '養你就夠了']],
+    ['你現在最想要什麼？', ['錢', '睡覺', '假期', '我']],
+    ['你會記得我們的紀念日嗎？', ['當然', '會記在手機裡', '靠你提醒', '每一天都是']],
+    ['最怕什麼？', ['蟲子', '黑暗', '孤單', '失去你']],
+    ['想一起去看什麼？', ['煙花', '星星', '海', '雪']],
+    ['如果我突然出現在你面前，你會？', ['抱住我', '愣住', '哭出來', '假裝很淡定']],
+    ['喜歡晴天還是雨天？', ['晴天', '雨天', '陰天', '有你的天']],
+    ['想聽我說什麼？', ['晚安', '我想你', '我愛你', '辛苦了']],
+    ['你最近有在努力的事嗎？', ['學習', '工作', '照顧自己', '在想']],
+    ['給今天的自己打幾分？', ['100 分', '80 分', '60 分', '不及格也沒關係']]
   ];
   var data = null, loaded = false, view = 'mine', sub = 'list';
 
   function key() { return getStorageKey('qaBox'); }
-  function pname() { return (typeof settings !== 'undefined' && settings.partnerName) || '梦角'; }
+  function pname() { return (typeof settings !== 'undefined' && settings.partnerName) || '夢角'; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function notify(t, type) { if (typeof showNotification === 'function') showNotification(t, type || 'info'); }
   function rnd(a, b) { return a + Math.random() * (b - a); }
@@ -80,7 +80,7 @@
     return d;
   }
   async function load() { try { data = norm(await localforage.getItem(key())); } catch (e) { data = norm(null); } loaded = true; }
-  function save() { return localforage.setItem(key(), data).catch(function () { notify('问题箱保存失败', 'error'); }); }
+  function save() { return localforage.setItem(key(), data).catch(function () { notify('問題箱儲存失敗', 'error'); }); }
   function pickCard() {
     var pool = (typeof customReplies !== 'undefined' && Array.isArray(customReplies)) ? customReplies : [];
     try { var off = new Set(JSON.parse(localStorage.getItem('disabledReplyItems') || '[]')); pool = pool.filter(function (x) { return !off.has(x); }); } catch (e) {}
@@ -88,11 +88,11 @@
     return pool.length ? pool[Math.floor(Math.random() * pool.length)] : '';
   }
   function fmtLeft(ms) {
-    if (ms <= 0) return '马上就好';
+    if (ms <= 0) return '馬上就好';
     var m = Math.ceil(ms / 60e3);
-    if (m < 2) return '不到一分钟';
-    if (m < 60) return '约 ' + m + ' 分钟后';
-    return '约 ' + Math.round(m / 60 * 10) / 10 + ' 小时后';
+    if (m < 2) return '不到一分鐘';
+    if (m < 60) return '約 ' + m + ' 分鐘後';
+    return '約 ' + Math.round(m / 60 * 10) / 10 + ' 小時後';
   }
   function fmtTime(t) { var d = new Date(t); return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
@@ -136,10 +136,10 @@
       if (it.revealed || now < it.dueAt) return;
       it.revealed = true; it.revealedAt = now; changed = true;
       var letter = LETTERS[it.pick], opt = it.opts[it.pick];
-      notify(pname() + ' 回答了你的问题：选了 ' + letter, 'success');
+      notify(pname() + ' 回答了你的問題：選了 ' + letter, 'success');
       if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} }
       if (it.toChat && typeof addMessage === 'function') {
-        addMessage({ id: Date.now() + i, sender: pname(), text: '【问题箱】' + it.q + '\n我选 ' + letter + '. ' + opt + (it.note ? '\n' + it.note : ''), timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
+        addMessage({ id: Date.now() + i, sender: pname(), text: '【問題箱】' + it.q + '\n我選 ' + letter + '. ' + opt + (it.note ? '\n' + it.note : ''), timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
       }
     });
     if (data.freq !== 'off') {
@@ -147,7 +147,7 @@
       // only one unanswered question at a time; the next is scheduled after you answer
       if (data.next && now >= data.next.at && unansweredIn() === 0) {
         if (deliver(data.next.qid, data.next.at)) {
-          notify(pname() + ' 有个问题想问你，去问题箱看看吧', 'info');
+          notify(pname() + ' 有個問題想問你，去問題箱看看吧', 'info');
           if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} }
         }
         data.next = null; changed = true;
@@ -192,10 +192,10 @@
   /* ---------- modal ---------- */
   var modal = document.createElement('div');
   modal.className = 'modal'; modal.id = 'qa-modal';
-  modal.innerHTML = '<div class="modal-content qa-content"><div class="modal-title"><i class="fas fa-box-open"></i><span>问题箱</span></div>' +
-    '<div class="qa-tabs" id="qa-tabs" role="tablist"><button data-v="mine" role="tab">我问他</button><button data-v="his" role="tab">他问我<span class="qa-dot" hidden></span></button></div>' +
+  modal.innerHTML = '<div class="modal-content qa-content"><div class="modal-title"><i class="fas fa-box-open"></i><span>問題箱</span></div>' +
+    '<div class="qa-tabs" id="qa-tabs" role="tablist"><button data-v="mine" role="tab">我問他</button><button data-v="his" role="tab">他問我<span class="qa-dot" hidden></span></button></div>' +
     '<div id="qa-body"></div>' +
-    '<div class="modal-buttons qa-foot"><button class="modal-btn modal-btn-secondary" id="qa-back"><i class="fas fa-arrow-left"></i> 返回</button><button class="modal-btn modal-btn-secondary" id="qa-close">关闭</button></div></div>';
+    '<div class="modal-buttons qa-foot"><button class="modal-btn modal-btn-secondary" id="qa-back"><i class="fas fa-arrow-left"></i> 返回</button><button class="modal-btn modal-btn-secondary" id="qa-close">關閉</button></div></div>';
   document.body.appendChild(modal);
   var st = document.createElement('style');
   st.textContent =
@@ -269,8 +269,8 @@
   }
   function renderMine() {
     var items = data.items.slice().sort(function (a, b) { return b.askedAt - a.askedAt; });
-    var h = '<button class="qa-new" data-act="new"><i class="fas fa-plus"></i> 问 ' + esc(pname()) + ' 一个问题</button>';
-    if (!items.length) h += '<div class="qa-empty">写一个问题，给几个选项，<br>' + esc(pname()) + ' 会挑一个回答你。</div>';
+    var h = '<button class="qa-new" data-act="new"><i class="fas fa-plus"></i> 問 ' + esc(pname()) + ' 一個問題</button>';
+    if (!items.length) h += '<div class="qa-empty">寫一個問題，給幾個選項，<br>' + esc(pname()) + ' 會挑一個回答你。</div>';
     var now = Date.now();
     items.forEach(function (it) {
       h += '<div class="qa-card"><div class="qa-q">' + esc(it.q) + '</div>';
@@ -278,8 +278,8 @@
       if (it.revealed) { if (it.note) h += '<div class="qa-note">' + esc(it.note) + '</div>'; }
       else h += '<div class="qa-wait"><i class="fas fa-hourglass-half"></i> ' + esc(pname()) + ' 正在想… ' + fmtLeft(it.dueAt - now) + '</div>';
       h += '<div class="qa-meta"><span>' + fmtTime(it.askedAt) + '</span><span>' +
-        (it.revealed ? '<button data-again="' + esc(it.id) + '">再问一次</button>' : '') +
-        '<button data-del="' + esc(it.id) + '">删除</button></span></div></div>';
+        (it.revealed ? '<button data-again="' + esc(it.id) + '">再問一次</button>' : '') +
+        '<button data-del="' + esc(it.id) + '">刪除</button></span></div></div>';
     });
     body.innerHTML = h;
   }
@@ -287,34 +287,34 @@
     var items = data.inbox.slice().sort(function (a, b) { return (a.answer ? 1 : 0) - (b.answer ? 1 : 0) || b.at - a.at; });
     var now = Date.now(), p = esc(pname());
     var h = '<div class="qa-bar"><span>';
-    if (data.freq === 'off') h += '已设定先不要问你';
-    else if (unansweredIn()) h += '回答之后，' + p + ' 才会问下一题';
-    else if (data.next) h += '下一题 ' + fmtLeft(data.next.at - now);
-    h += '</span><span><button class="qa-link" data-act="now">现在问我一题</button> · <button class="qa-link" data-act="bank">题库与频率</button></span></div>';
-    if (!items.length) h += '<div class="qa-empty">' + p + ' 还没有问你问题。<br>可以等他来问，或点「现在问我一题」。</div>';
+    if (data.freq === 'off') h += '已設定先不要問你';
+    else if (unansweredIn()) h += '回答之後，' + p + ' 才會問下一題';
+    else if (data.next) h += '下一題 ' + fmtLeft(data.next.at - now);
+    h += '</span><span><button class="qa-link" data-act="now">現在問我一題</button> · <button class="qa-link" data-act="bank">題庫與頻率</button></span></div>';
+    if (!items.length) h += '<div class="qa-empty">' + p + ' 還沒有問你問題。<br>可以等他來問，或點「現在問我一題」。</div>';
     items.forEach(function (it) {
-      h += '<div class="qa-card' + (it.answer ? '' : ' ask') + '"><div class="qa-from">' + p + ' 问你</div><div class="qa-q">' + esc(it.q) + '</div>';
+      h += '<div class="qa-card' + (it.answer ? '' : ' ask') + '"><div class="qa-from">' + p + ' 問你</div><div class="qa-q">' + esc(it.q) + '</div>';
       if (!it.answer) {
         it.opts.forEach(function (o, i) { h += '<button class="qa-opt" data-ans="' + esc(it.id) + '" data-i="' + i + '"><b>' + LETTERS[i] + '.</b><span>' + esc(o) + '</span></button>'; });
-        h += '<div class="qa-own"><input type="text" id="own-' + esc(it.id) + '" placeholder="都不是？自己写" maxlength="80"><button data-own="' + esc(it.id) + '">回答</button></div>';
+        h += '<div class="qa-own"><input type="text" id="own-' + esc(it.id) + '" placeholder="都不是？自己寫" maxlength="80"><button data-own="' + esc(it.id) + '">回答</button></div>';
       } else {
         it.opts.forEach(function (o, i) { h += '<div class="qa-opt' + (it.answer.i === i ? ' on' : '') + '"><b>' + LETTERS[i] + '.</b><span>' + esc(o) + '</span></div>'; });
         if (it.answer.text) h += '<div class="qa-opt on"><b>✎</b><span>' + esc(it.answer.text) + '</span></div>';
         if (it.react) h += '<div class="qa-note">' + esc(it.react) + '</div>';
       }
-      h += '<div class="qa-meta"><span>' + fmtTime(it.at) + (it.answer ? ' · 已回答' : '') + '</span><span><button data-delin="' + esc(it.id) + '">删除</button></span></div></div>';
+      h += '<div class="qa-meta"><span>' + fmtTime(it.at) + (it.answer ? ' · 已回答' : '') + '</span><span><button data-delin="' + esc(it.id) + '">刪除</button></span></div></div>';
     });
     body.innerHTML = h;
   }
   function renderBank() {
     var all = bankAll();
-    var h = '<div class="qa-form"><label class="t" for="qa-freq">' + esc(pname()) + ' 多久问你一次</label><select class="qa-sel" id="qa-freq">' +
+    var h = '<div class="qa-form"><label class="t" for="qa-freq">' + esc(pname()) + ' 多久問你一次</label><select class="qa-sel" id="qa-freq">' +
       Object.keys(FREQ).map(function (k) { return '<option value="' + k + '"' + (data.freq === k ? ' selected' : '') + '>' + FREQ[k].label + '</option>'; }).join('') + '</select></div>' +
-      '<button class="qa-new" data-act="addq"><i class="fas fa-plus"></i> 新增题目</button>' +
-      '<div class="qa-bar"><span>题库共 ' + all.length + ' 题，会轮流问，问完一轮再重来</span>' + (data.bank.off.length ? '<button class="qa-link" data-act="restore">恢复内置题目</button>' : '') + '</div><div class="qa-bank">';
+      '<button class="qa-new" data-act="addq"><i class="fas fa-plus"></i> 新增題目</button>' +
+      '<div class="qa-bar"><span>題庫共 ' + all.length + ' 題，會輪流問，問完一輪再重來</span>' + (data.bank.off.length ? '<button class="qa-link" data-act="restore">恢復內建題目</button>' : '') + '</div><div class="qa-bank">';
     all.slice().reverse().forEach(function (q) {
       h += '<div class="qa-bi"><div><div class="q">' + esc(q.q) + (q.builtIn ? '' : '<span class="tag">我加的</span>') + '</div><div class="o">' + q.opts.map(function (o, i) { return LETTERS[i] + '. ' + esc(o); }).join('　') + '</div></div>' +
-        '<button data-rmq="' + esc(q.id) + '" aria-label="删除这题"><i class="fas fa-xmark"></i></button></div>';
+        '<button data-rmq="' + esc(q.id) + '" aria-label="刪除這題"><i class="fas fa-xmark"></i></button></div>';
     });
     h += '</div>';
     body.innerHTML = h;
@@ -324,20 +324,20 @@
   function renderForm() {
     var asking = sub === 'new';
     if (!draft) draft = { q: '', opts: ['', '', ''], speed: 'soon', toChat: true, withCard: true };
-    var h = '<div class="qa-form"><label class="t" for="qa-q">' + (asking ? '问题' : '题目（' + esc(pname()) + ' 会问你这题）') + '</label><textarea id="qa-q" placeholder="' + (asking ? '例如：周末想和我去哪里？' : '例如：今天想吃什么？') + '">' + esc(draft.q) + '</textarea>' +
-      '<label class="t">选项</label>';
+    var h = '<div class="qa-form"><label class="t" for="qa-q">' + (asking ? '問題' : '題目（' + esc(pname()) + ' 會問你這題）') + '</label><textarea id="qa-q" placeholder="' + (asking ? '例如：週末想和我去哪裡？' : '例如：今天想吃什麼？') + '">' + esc(draft.q) + '</textarea>' +
+      '<label class="t">選項</label>';
     draft.opts.forEach(function (o, i) {
-      h += '<div class="qa-orow"><span>' + LETTERS[i] + '</span><input type="text" id="qa-o' + i + '" data-i="' + i + '" value="' + esc(o) + '" placeholder="选项 ' + LETTERS[i] + '">' +
-        (draft.opts.length > 2 ? '<button data-rm="' + i + '" aria-label="删除选项 ' + LETTERS[i] + '"><i class="fas fa-xmark"></i></button>' : '') + '</div>';
+      h += '<div class="qa-orow"><span>' + LETTERS[i] + '</span><input type="text" id="qa-o' + i + '" data-i="' + i + '" value="' + esc(o) + '" placeholder="選項 ' + LETTERS[i] + '">' +
+        (draft.opts.length > 2 ? '<button data-rm="' + i + '" aria-label="刪除選項 ' + LETTERS[i] + '"><i class="fas fa-xmark"></i></button>' : '') + '</div>';
     });
-    if (draft.opts.length < 6) h += '<button class="qa-add" data-act="addopt"><i class="fas fa-plus"></i> 添加选项</button>';
+    if (draft.opts.length < 6) h += '<button class="qa-add" data-act="addopt"><i class="fas fa-plus"></i> 新增選項</button>';
     if (asking) {
-      h += '<label class="t" for="qa-speed">回答时间</label><select id="qa-speed">' +
+      h += '<label class="t" for="qa-speed">回答時間</label><select id="qa-speed">' +
         Object.keys(SPEEDS).map(function (k) { return '<option value="' + k + '"' + (draft.speed === k ? ' selected' : '') + '>' + SPEEDS[k].label + '</option>'; }).join('') + '</select>' +
-        '<label class="qa-chk"><input type="checkbox" id="qa-chat"' + (draft.toChat ? ' checked' : '') + '>同时发送到聊天记录</label>' +
-        '<label class="qa-chk"><input type="checkbox" id="qa-card"' + (draft.withCard ? ' checked' : '') + '>回答时附上一句字卡</label>';
+        '<label class="qa-chk"><input type="checkbox" id="qa-chat"' + (draft.toChat ? ' checked' : '') + '>同時傳送到聊天記錄</label>' +
+        '<label class="qa-chk"><input type="checkbox" id="qa-card"' + (draft.withCard ? ' checked' : '') + '>回答時附上一句字卡</label>';
     }
-    h += '<div class="qa-send"><button class="modal-btn modal-btn-secondary" data-act="cancel">取消</button><button class="modal-btn modal-btn-primary" data-act="' + (asking ? 'submit' : 'saveq') + '">' + (asking ? '送出问题' : '加入题库') + '</button></div></div>';
+    h += '<div class="qa-send"><button class="modal-btn modal-btn-secondary" data-act="cancel">取消</button><button class="modal-btn modal-btn-primary" data-act="' + (asking ? 'submit' : 'saveq') + '">' + (asking ? '送出問題' : '加入題庫') + '</button></div></div>';
     body.innerHTML = h;
     var q = body.querySelector('#qa-q'); setTimeout(function () { if (!draft.q) q.focus(); }, 50);
   }
@@ -351,14 +351,14 @@
   }
   function cleanDraft() {
     var q = draft.q.trim(), opts = draft.opts.map(function (x) { return x.trim(); }).filter(Boolean);
-    if (!q) { notify('请先写下问题', 'warning'); return null; }
-    if (opts.length < 2) { notify('至少需要两个选项', 'warning'); return null; }
+    if (!q) { notify('請先寫下問題', 'warning'); return null; }
+    if (opts.length < 2) { notify('至少需要兩個選項', 'warning'); return null; }
     return { q: q, opts: opts };
   }
   body.addEventListener('input', syncDraft);
   body.addEventListener('change', async function (e) {
     syncDraft();
-    if (e.target.id === 'qa-freq') { data.freq = e.target.value; scheduleNext(); await save(); notify(FREQ[data.freq].min ? '已设定：' + FREQ[data.freq].label : '好的，' + pname() + ' 先不问你了', 'success'); }
+    if (e.target.id === 'qa-freq') { data.freq = e.target.value; scheduleNext(); await save(); notify(FREQ[data.freq].min ? '已設定：' + FREQ[data.freq].label : '好的，' + pname() + ' 先不問你了', 'success'); }
   });
   body.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.isComposing && e.target.id && e.target.id.indexOf('own-') === 0) { e.preventDefault(); var b = body.querySelector('[data-own="' + e.target.id.slice(4) + '"]'); if (b) b.click(); }
@@ -374,31 +374,31 @@
     if (act === 'saveq') {
       syncDraft(); var c = cleanDraft(); if (!c) return;
       data.bank.custom.push({ id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), q: c.q, opts: c.opts });
-      await save(); draft = null; sub = 'bank'; render(); notify('已加入题库', 'success'); return;
+      await save(); draft = null; sub = 'bank'; render(); notify('已加入題庫', 'success'); return;
     }
     if (act === 'bank') { sub = 'bank'; render(); return; }
     if (act === 'restore') { data.bank.off = []; await save(); render(); return; }
     if (act === 'now') {
-      if (unansweredIn()) { notify('先回答 ' + pname() + ' 现在的问题吧', 'info'); return; }
-      if (!bankAll().length) { notify('题库是空的，先新增题目吧', 'warning'); return; }
+      if (unansweredIn()) { notify('先回答 ' + pname() + ' 現在的問題吧', 'info'); return; }
+      if (!bankAll().length) { notify('題庫是空的，先新增題目吧', 'warning'); return; }
       var it = deliver((data.next && data.next.qid) || pickQid(), Date.now()); data.next = null;
-      await save(); render(); badge(); if (!it) notify('出了点问题，再试一次', 'warning'); return;
+      await save(); render(); badge(); if (!it) notify('出了點問題，再試一次', 'warning'); return;
     }
     if (b.dataset.ans || b.dataset.own) {
       var id = b.dataset.ans || b.dataset.own, item = data.inbox.find(function (x) { return x.id === id; }); if (!item || item.answer) return;
       if (b.dataset.own) {
         var inp = body.querySelector('#own-' + CSS.escape(id)); var t = inp ? inp.value.trim() : '';
-        if (!t) { notify('写下你的回答', 'warning'); return; }
+        if (!t) { notify('寫下你的回答', 'warning'); return; }
         item.answer = { text: t, at: Date.now() };
       } else item.answer = { i: +b.dataset.i, at: Date.now() };
       scheduleNext(); await save(); render(); badge(); return;
     }
     if (b.dataset.del) {
-      if (!(await confirmAsync('删除这个问题？'))) return;
+      if (!(await confirmAsync('刪除這個問題？'))) return;
       data.items = data.items.filter(function (x) { return x.id !== b.dataset.del; }); await save(); render(); return;
     }
     if (b.dataset.delin) {
-      if (!(await confirmAsync('删除这条记录？'))) return;
+      if (!(await confirmAsync('刪除這條記錄？'))) return;
       var wasOpen = data.inbox.find(function (x) { return x.id === b.dataset.delin && !x.answer; });
       data.inbox = data.inbox.filter(function (x) { return x.id !== b.dataset.delin; });
       if (wasOpen) scheduleNext();
@@ -430,11 +430,11 @@
       toChat: draft.toChat, withCard: draft.withCard, revealed: false
     };
     if (it.toChat && typeof addMessage === 'function') {
-      addMessage({ id: now, sender: 'user', text: '【问题箱】' + c.q + '\n' + c.opts.map(function (o, i) { return LETTERS[i] + '. ' + o; }).join('\n'), timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
+      addMessage({ id: now, sender: 'user', text: '【問題箱】' + c.q + '\n' + c.opts.map(function (o, i) { return LETTERS[i] + '. ' + o; }).join('\n'), timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
     }
     data.items.push(it); await save();
     draft = null; sub = 'list'; render();
-    notify('问题已送出，' + pname() + ' ' + fmtLeft(it.dueAt - now) + '回答', 'success');
+    notify('問題已送出，' + pname() + ' ' + fmtLeft(it.dueAt - now) + '回答', 'success');
   }
 
   /* ---------- menu entry ---------- */
@@ -444,7 +444,7 @@
     var list = anchor ? anchor.parentNode : document.querySelector('#advanced-modal .settings-item-list');
     if (!list) return;
     var el = document.createElement('div'); el.className = 'settings-item'; el.id = 'qa-function';
-    el.innerHTML = '<i class="fas fa-box-open"></i><span>问题箱</span>';
+    el.innerHTML = '<i class="fas fa-box-open"></i><span>問題箱</span>';
     el.addEventListener('click', function () { var adv = document.getElementById('advanced-modal'); if (adv) hideModal(adv); open(); });
     if (anchor && anchor.nextSibling) list.insertBefore(el, anchor.nextSibling); else list.appendChild(el);
   }

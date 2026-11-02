@@ -383,12 +383,12 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
     <div class="call-inc-ring">
       <div class="call-inc-avatar" id="call-inc-avatar"><i class="fas fa-user" id="call-inc-av-icon"></i></div>
     </div>
-    <div class="call-inc-name" id="call-inc-name">对方</div>
-    <div class="call-inc-sub"><span class="call-inc-sub-dot"></span><span>邀请您进行视频通话</span></div>
+    <div class="call-inc-name" id="call-inc-name">對方</div>
+    <div class="call-inc-sub"><span class="call-inc-sub-dot"></span><span>邀請您進行視訊通話</span></div>
     <div class="call-inc-actions">
       <button class="call-inc-btn call-inc-reject" id="call-inc-reject">
         <div class="call-inc-circle">${SVG_HU}</div>
-        <span class="call-inc-lbl">拒绝</span>
+        <span class="call-inc-lbl">拒絕</span>
       </button>
       <button class="call-inc-btn call-inc-accept" id="call-inc-accept">
         <div class="call-inc-circle">
@@ -396,7 +396,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
             <path d="M6.6 10.8c1.4 2.8 3.7 5.1 6.5 6.5l2.2-2.2c.28-.27.68-.36 1.03-.24 1.1.37 2.3.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.56 21 3 13.44 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.28.2 2.5.57 3.57.11.35.03.74-.24 1.02L6.6 10.8z" fill="white"/>
           </svg>
         </div>
-        <span class="call-inc-lbl">接听</span>
+        <span class="call-inc-lbl">接聽</span>
       </button>
     </div>
   </div>
@@ -419,7 +419,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         <span class="call-timer-txt" id="call-timer-display">00:00</span>
       </div>
       <div class="call-top-btns">
-        <button class="call-top-btn" id="call-size-preset-toggle" title="调整大小"><i class="fas fa-expand-alt"></i></button>
+        <button class="call-top-btn" id="call-size-preset-toggle" title="調整大小"><i class="fas fa-expand-alt"></i></button>
         <button class="call-top-btn" id="call-minimize-btn" title="最小化"><i class="fas fa-minus"></i></button>
       </div>
     </div>
@@ -430,9 +430,9 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         <div class="call-av-pulse2"></div>
         <div class="call-avatar" id="call-conn-avatar"><i class="fas fa-user" id="call-conn-av-icon"></i></div>
       </div>
-      <div class="call-name" id="call-conn-name">对方</div>
+      <div class="call-name" id="call-conn-name">對方</div>
       <div style="font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:5px;">
-        <i class="fas fa-video" style="font-size:9px;"></i> 正在连接
+        <i class="fas fa-video" style="font-size:9px;"></i> 正在連線
       </div>
       <div class="call-conn-dots"><span></span><span></span><span></span></div>
     </div>
@@ -443,12 +443,12 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         <div class="call-av-pulse2"></div>
         <div class="call-avatar" id="call-win-avatar"><i class="fas fa-user" id="call-win-av-icon"></i></div>
       </div>
-      <div class="call-name" id="call-win-name">通话中</div>
+      <div class="call-name" id="call-win-name">通話中</div>
       <div class="call-wave"><span></span><span></span><span></span><span></span><span></span></div>
     </div>
 
     <button class="call-util-btn" id="call-immersive-btn" title="沉浸模式"><i class="fas fa-eye-slash"></i></button>
-    <button class="call-util-btn" id="call-bg-btn" title="更换背景"><i class="fas fa-image"></i></button>
+    <button class="call-util-btn" id="call-bg-btn" title="更換背景"><i class="fas fa-image"></i></button>
     <input type="file" id="call-bg-file-input" accept="image/*,.gif">
 
     <div id="call-window-controls">
@@ -461,14 +461,14 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
 <div id="call-size-presets">
   <button class="call-size-btn" data-w="160" data-h="240"><i class="fas fa-compress-alt"></i>迷你</button>
   <button class="call-size-btn" data-w="220" data-h="350"><i class="fas fa-minus-square"></i>小</button>
-  <button class="call-size-btn" data-w="280" data-h="440"><i class="fas fa-square"></i>标准</button>
+  <button class="call-size-btn" data-w="280" data-h="440"><i class="fas fa-square"></i>標準</button>
   <button class="call-size-btn" data-w="360" data-h="560"><i class="fas fa-expand"></i>大</button>
 </div>
 
 <div id="call-mini-pill">
   <div class="call-mini-av" id="call-mini-av"><i class="fas fa-user" id="call-mini-av-icon"></i></div>
   <div class="call-mini-info">
-    <div class="call-mini-name" id="call-mini-name">通话中</div>
+    <div class="call-mini-name" id="call-mini-name">通話中</div>
     <div class="call-mini-time" id="call-mini-timer">00:00</div>
   </div>
   <span class="call-mini-dot"></span>
@@ -484,7 +484,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         if (!anchor) return;
         const btn = document.createElement('button');
         btn.id = 'call-toolbar-btn';
-        btn.title = '视频通话';
+        btn.title = '視訊通話';
         btn.className = 'input-btn collapse-hideable';
         btn.style.display = S.enabled ? '' : 'none';
         btn.innerHTML = '<i class="fas fa-video"></i>';
@@ -506,7 +506,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         const img = document.querySelector('#partner-avatar img,[id*="partner-avatar"] img,.partner-avatar img');
         return img ? img.src : null;
     };
-    const getName = () => window.settings?.partnerName || document.getElementById('partner-name')?.textContent.trim() || '对方';
+    const getName = () => window.settings?.partnerName || document.getElementById('partner-name')?.textContent.trim() || '對方';
 
     function fillAv(avId) {
         const av = document.getElementById(avId), src = getAvSrc();
@@ -573,7 +573,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
 
     function sendCallMsg(dur) {
         if (dur < 2000) return;
-        sendCallEvent('fa-video', '视频通话已结束', fmt(dur));
+        sendCallEvent('fa-video', '視訊通話已結束', fmt(dur));
     }
 
     function startCall(isPartner) {
@@ -593,7 +593,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         if (win)    win.classList.add('visible');
         if (conn)   conn.classList.add('visible');
         if (body)   body.style.display = 'none';
-        if (timerEl) timerEl.textContent = '连接中';
+        if (timerEl) timerEl.textContent = '連線中';
 
         clearTimeout(S.connectingTimer);
 
@@ -610,10 +610,10 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
                 const bodyEl = document.getElementById('call-window-body');
                 if (bodyEl) bodyEl.style.display = '';
                 const rejectLabels = [
-                    getName() + ' 未接听',
-                    getName() + ' 正在忙，无法接听',
-                    getName() + ' 拒绝了通话',
-                    getName() + ' 暂时无法接听',
+                    getName() + ' 未接聽',
+                    getName() + ' 正在忙，無法接聽',
+                    getName() + ' 拒絕了通話',
+                    getName() + ' 暫時無法接聽',
                 ];
                 const lbl = rejectLabels[Math.floor(Math.random() * rejectLabels.length)];
                 sendCallEvent('fa-phone-slash', lbl, null);
@@ -654,9 +654,9 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         localStorage.setItem(KEY_SIZE, JSON.stringify(S.size));
         sendCallMsg(dur);
         if (typeof showNotification === 'function' && dur > 1500)
-            showNotification(`通话结束 · ${fmt(dur)}`, 'info', 3000);
+            showNotification(`通話結束 · ${fmt(dur)}`, 'info', 3000);
         else if (typeof showNotification === 'function' && dur <= 1500 && dur > 0)
-            showNotification('通话已挂断', 'info', 2000);
+            showNotification('通話已結束通話', 'info', 2000);
     }
 
     function showIncomingCall() {
@@ -676,10 +676,10 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
                 const myName = (typeof settings !== 'undefined' && settings.myName) || '我';
                 const partnerName = getName();
                 const rejectLabels = [
-                    `${partnerName} 的来电，${myName}未接听`,
-                    `${myName}拒绝了 ${partnerName} 的通话`,
-                    `错过了 ${partnerName} 的来电`,
-                    `${myName}暂时无法接听 ${partnerName} 的通话`,
+                    `${partnerName} 的來電，${myName}未接聽`,
+                    `${myName}拒絕了 ${partnerName} 的通話`,
+                    `錯過了 ${partnerName} 的來電`,
+                    `${myName}暫時無法接聽 ${partnerName} 的通話`,
                 ];
                 const label = rejectLabels[Math.floor(Math.random() * rejectLabels.length)];
                 sendCallEvent('fa-phone-slash', label, null);
@@ -689,7 +689,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
                 if (!ov.classList.contains('visible')) return;
                 ov.classList.remove('visible');
                 const myName = (typeof settings !== 'undefined' && settings.myName) || '我';
-                sendCallEvent('fa-phone-slash', `${myName}未接听 ${getName()} 的来电`, null);
+                sendCallEvent('fa-phone-slash', `${myName}未接聽 ${getName()} 的來電`, null);
             }, 22000);
         }
     }
@@ -831,7 +831,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
             document.getElementById('call-incoming-overlay')?.classList.remove('visible');
             clearTimeout(S.incomingTimer);
             const myName = (typeof settings !== 'undefined' && settings.myName) || '我';
-            sendCallEvent('fa-phone-slash', `${myName}拒绝了 ${getName()} 的通话`, null);
+            sendCallEvent('fa-phone-slash', `${myName}拒絕了 ${getName()} 的通話`, null);
         });
         document.getElementById('call-inc-accept')?.addEventListener('click', () => {
             document.getElementById('call-incoming-overlay')?.classList.remove('visible');
@@ -873,7 +873,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         document.getElementById('call-bg-file-input')?.addEventListener('change', e => {
             const f = e.target.files?.[0]; if (!f) return;
             const r = new FileReader();
-            r.onload = ev => { S.bgImage = ev.target.result; saveBg(S.bgImage); applyBg(); showNotification?.('通话背景已更新 ✓','success',2000); };
+            r.onload = ev => { S.bgImage = ev.target.result; saveBg(S.bgImage); applyBg(); showNotification?.('通話背景已更新 ✓','success',2000); };
             r.readAsDataURL(f); e.target.value = '';
         });
 

@@ -1,6 +1,6 @@
 /**
  * state.js - Application State Variables & DOM Elements
- * 应用状态变量与DOM元素引用
+ * 應用狀態變數與DOM元素引用
  * NOTE: This must be loaded after the DOM is ready (or wrapped in DOMContentLoaded)
  */
 

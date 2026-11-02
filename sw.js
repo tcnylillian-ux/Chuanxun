@@ -1,10 +1,10 @@
 /*
- * 传讯 · 离线支持
- * 把网站本身和它用到的程式库存在手机/电脑里，没有网络也能打开。
- * 聊天数据本来就存在本机（IndexedDB），同步数据（Firebase）不经过这里。
- * 更新网站后，把下面的 VERSION 改一下（例如 v7），所有设备会自动换成新版本。
+ * 傳訊 · 離線支援
+ * 把網站本身和它用到的程式庫存在手機/電腦裡，沒有網路也能開啟。
+ * 聊天資料本來就存在本機（IndexedDB），同步資料（Firebase）不經過這裡。
+ * 更新網站後，把下面的 VERSION 改一下（例如 v8），所有裝置會自動換成新版本。
  */
-const VERSION = 'v6';
+const VERSION = 'v7-tw';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
@@ -79,5 +79,5 @@ async function staleWhileRevalidate(event, key, realReq) {
   }).catch(() => null);
   if (hit) { event.waitUntil(fresh); return hit; }
   const res = await fresh;
-  return res || new Response('离线中，且这台设备还没有存下网站。请先连网打开一次。', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+  return res || new Response('離線中，且這臺裝置還沒有存下網站。請先連網開啟一次。', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }

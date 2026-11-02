@@ -10,7 +10,7 @@ async function loadEnvelopeData() {
     if (oldPending && envelopeData.outbox.length === 0) {
         envelopeData.outbox.push({
             id: 'legacy_' + Date.now(),
-            content: '（历史寄出的信件）',
+            content: '（歷史寄出的信件）',
             sentTime: oldPending.sentTime,
             replyTime: oldPending.replyTime,
             status: 'pending'
@@ -66,21 +66,21 @@ function showEnvelopeReplyPopup(letter) {
             <span style="font-size:26px;">💌</span>
             <div>
                 <div style="font-size:14px;font-weight:700;color:var(--text-primary);">收到了一封回信</div>
-                <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;opacity:0.8;">Ta 给你写了回信，快去看看吧~</div>
+                <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;opacity:0.8;">Ta 給你寫了回信，快去看看吧~</div>
             </div>
         </div>
         <div style="display:flex;gap:8px;">
-            <button onclick="document.getElementById('envelope-reply-popup').remove();" style="flex:1;padding:8px 0;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font-size:13px;cursor:pointer;">稍后查看</button>
-            <button onclick="openEnvelopeAndViewReply('${letter.id}');" style="flex:2;padding:8px 0;border-radius:12px;border:none;background:var(--accent-color);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">立即阅读 ✉</button>
+            <button onclick="document.getElementById('envelope-reply-popup').remove();" style="flex:1;padding:8px 0;border-radius:12px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font-size:13px;cursor:pointer;">稍後檢視</button>
+            <button onclick="openEnvelopeAndViewReply('${letter.id}');" style="flex:2;padding:8px 0;border-radius:12px;border:none;background:var(--accent-color);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">立即閱讀 ✉</button>
         </div>`;
     document.body.appendChild(popup);
     setTimeout(() => { if (popup.parentNode) popup.remove(); }, 8000);
 }
 
 const APPEARANCE_PANEL_TITLES = {
-    'theme': '主题配色', 'font': '字体设置', 'background': '聊天背景',
-    'bubble': '气泡样式', 'avatar': '聊天头像', 'css': '自定义CSS',
-    'font-bg': '背景 & 字体', 'bubble-css': '气泡 & CSS'
+    'theme': '主題配色', 'font': '字型設定', 'background': '聊天背景',
+    'bubble': '氣泡樣式', 'avatar': '聊天頭像', 'css': '自定義CSS',
+    'font-bg': '背景 & 字型', 'bubble-css': '氣泡 & CSS'
 };
 window.showAppearancePanel = function(panel) {
     const panelMap = {
@@ -170,8 +170,8 @@ function renderOutboxList() {
     if (envelopeData.outbox.length === 0) {
         list.innerHTML = `<div class="env-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
-            <div style="font-size:14px;font-weight:500;margin-top:4px;">还没有寄出任何信件</div>
-            <div style="font-size:12px;margin-top:6px;opacity:0.6;">提笔写下心意，寄送给Ta吧~</div>
+            <div style="font-size:14px;font-weight:500;margin-top:4px;">還沒有寄出任何信件</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6;">提筆寫下心意，寄送給Ta吧~</div>
         </div>`;
         return;
     }
@@ -182,7 +182,7 @@ function renderOutboxList() {
         const statusIcon = isPending
             ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
             : `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
-        const statusText = isPending ? `${statusIcon} 预计 ${replyTime} 回信` : `${statusIcon} 已收到回信`;
+        const statusText = isPending ? `${statusIcon} 預計 ${replyTime} 回信` : `${statusIcon} 已收到回信`;
         const preview = letter.content.length > 38 ? letter.content.substring(0, 38) + '…' : letter.content;
         return `
         <div class="env-letter-item" onclick="viewEnvLetter('outbox','${letter.id}')">
@@ -212,8 +212,8 @@ function renderInboxList() {
     if (envelopeData.inbox.length === 0) {
         list.innerHTML = `<div class="env-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/><polyline points="22 13 12 13"/><path d="M19 16l-5-3-5 3"/></svg>
-            <div style="font-size:14px;font-weight:500;margin-top:4px;">还没有收到回信</div>
-            <div style="font-size:12px;margin-top:6px;opacity:0.6;">对方正在认真回复中，请稍候~</div>
+            <div style="font-size:14px;font-weight:500;margin-top:4px;">還沒有收到回信</div>
+            <div style="font-size:12px;margin-top:6px;opacity:0.6;">對方正在認真回覆中，請稍候~</div>
         </div>`;
         return;
     }
@@ -276,13 +276,13 @@ window.viewEnvLetter = function(section, id) {
     const toLine = document.getElementById('env-view-to-line');
     const greetingLine = document.getElementById('env-view-greeting-line');
     if (section === 'outbox') {
-        const partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '亲爱的';
+        const partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '親愛的';
         if (toLine) toLine.textContent = `致 ${partnerName}：`;
-        if (greetingLine) greetingLine.textContent = '见字如面，望君安好。';
+        if (greetingLine) greetingLine.textContent = '見字如面，望君安好。';
     } else {
         const myName = (typeof settings !== 'undefined' && settings.myName) || '你';
         if (toLine) toLine.textContent = `致 ${myName}：`;
-        if (greetingLine) greetingLine.textContent = '见字如面，一切皆好。';
+        if (greetingLine) greetingLine.textContent = '見字如面，一切皆好。';
     }
 
     const textEl = document.getElementById('env-view-text');
@@ -295,7 +295,7 @@ window.viewEnvLetter = function(section, id) {
         const myName = (typeof settings !== 'undefined' && settings.myName) || '你';
         if (signNameEl) signNameEl.textContent = myName;
     } else {
-        const partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '对方';
+        const partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '對方';
         if (signNameEl) signNameEl.textContent = partnerName;
     }
 
@@ -314,7 +314,7 @@ window.viewEnvLetter = function(section, id) {
             origCtx.style.display = 'block';
             if (origExpand) {
                 origExpand.style.display = letter.originalContent.length > 120 ? 'block' : 'none';
-                origExpand.textContent = '展开查看全文';
+                origExpand.textContent = '展開檢視全文';
             }
         } else {
             origCtx.style.display = 'none';
@@ -332,7 +332,7 @@ window.toggleEnvEdit = function() {
     if (isEditing) {
         contentEl.style.display = 'block';
         editEl.style.display = 'none';
-        editBtn.textContent = '编辑';
+        editBtn.textContent = '編輯';
         saveBtn.style.display = 'none';
     } else {
         contentEl.style.display = 'none';
@@ -344,7 +344,7 @@ window.toggleEnvEdit = function() {
 
 window.saveEnvEdit = function() {
     const newContent = document.getElementById('env-edit-input').value.trim();
-    if (!newContent) { showNotification('内容不能为空', 'warning'); return; }
+    if (!newContent) { showNotification('內容不能為空', 'warning'); return; }
     const letters = editingEnvSection === 'outbox' ? envelopeData.outbox : envelopeData.inbox;
     const letter = letters.find(l => l.id === editingEnvId);
     if (letter) {
@@ -352,7 +352,7 @@ window.saveEnvEdit = function() {
         saveEnvelopeData();
         const textEl = document.getElementById('env-view-text');
         if (textEl) textEl.textContent = newContent;
-        showNotification('已保存修改', 'success');
+        showNotification('已儲存修改', 'success');
         toggleEnvEdit();
     }
 };
@@ -363,7 +363,7 @@ window.closeEnvViewModal = function() {
 
 window.deleteEnvLetter = function(event, section, id) {
     event.stopPropagation();
-    if (!confirm('确定要删除这封信吗？')) return;
+    if (!confirm('確定要刪除這封信嗎？')) return;
     if (section === 'outbox') {
         envelopeData.outbox = envelopeData.outbox.filter(l => l.id !== id);
     } else {
@@ -371,14 +371,14 @@ window.deleteEnvLetter = function(event, section, id) {
     }
     saveEnvelopeData();
     renderEnvelopeLists();
-    showNotification('已删除', 'success');
+    showNotification('已刪除', 'success');
 };
 
 window.openNewEnvelopeForm = function() {
     document.getElementById('env-outbox-section').style.display = 'none';
     document.getElementById('env-inbox-section').style.display = 'none';
     document.getElementById('env-main-close-btn').style.display = 'none';
-    document.getElementById('env-compose-title').textContent = '写一封信';
+    document.getElementById('env-compose-title').textContent = '寫一封信';
     document.getElementById('envelope-input').value = '';
     document.getElementById('env-send-to-chat').checked = false;
     document.getElementById('env-compose-form').style.display = 'block';
@@ -396,7 +396,7 @@ window.cancelEnvelopeCompose = function() {
 
 function handleSendEnvelope() {
     const text = document.getElementById('envelope-input').value.trim();
-    if (!text) { showNotification('信件内容不能为空', 'warning'); return; }
+    if (!text) { showNotification('信件內容不能為空', 'warning'); return; }
 
     const sendToChat = document.getElementById('env-send-to-chat').checked;
     if (sendToChat) {
@@ -416,6 +416,6 @@ function handleSendEnvelope() {
 
     cancelEnvelopeCompose();
     switchEnvTab('outbox');
-    showNotification(`信件已寄出，预计 ${Math.floor(randomHours)} 小时后收到回信 ✉️`, 'success');
+    showNotification(`信件已寄出，預計 ${Math.floor(randomHours)} 小時後收到回信 ✉️`, 'success');
 }
 

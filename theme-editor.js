@@ -63,7 +63,7 @@ function applyAvatarShapeToDOM(type, shape) {
                 uploadBtn.addEventListener('click', () => fileInput && fileInput.click());
                 if (fileInput) fileInput.addEventListener('change', (e) => {
                     const file = e.target.files[0]; if (!file) return;
-                    if (file.size > 1024 * 1024) { showNotification('图片大小不能超过1MB', 'error'); return; }
+                    if (file.size > 1024 * 1024) { showNotification('圖片大小不能超過1MB', 'error'); return; }
                     const reader = new FileReader();
                     reader.onload = (ev) => {
                         if (!settings[settingsKey]) settings[settingsKey] = { size: 100, offsetX: 0, offsetY: 0 };
@@ -97,30 +97,30 @@ function applyAvatarShapeToDOM(type, shape) {
         }
         const themeColorMappings = {
             '--primary-bg':        '主背景（聊天底色）',
-            '--secondary-bg':      '卡片 / 弹窗背景',
-            '--header-bg':         '顶栏背景色',
-            '--input-area-bg':     '输入框区域背景',
-            '--text-primary':      '主要文字颜色',
-            '--text-secondary':    '次要文字 / 说明文字',
-            '--border-color':      '边框 / 分割线颜色',
-            '--accent-color':      '强调色（全局图标/高亮/链接，影响广泛）',
-            '--accent-color-dark': '强调色深色变体（深色模式专用）',
-            '--message-sent-bg':   '【我方气泡】背景色',
-            '--message-sent-text': '【我方气泡】文字 & 图标色（气泡内所有颜色）',
-            '--message-received-bg':   '【对方气泡】背景色',
-            '--message-received-text': '【对方气泡】文字色',
-            '--toolbar-btn-bg':        '工具栏按钮背景（附件/拍照等）',
-            '--toolbar-btn-color':     '工具栏按钮图标色',
-            '--send-btn-bg':        '发送按钮 背景色',
-            '--send-btn-icon-color':'发送按钮 图标色',
-            '--favorite-color':    '收藏星标颜色',
-            '--timestamp-color':   '时间戳颜色',
+            '--secondary-bg':      '卡片 / 彈窗背景',
+            '--header-bg':         '頂欄背景色',
+            '--input-area-bg':     '輸入框區域背景',
+            '--text-primary':      '主要文字顏色',
+            '--text-secondary':    '次要文字 / 說明文字',
+            '--border-color':      '邊框 / 分割線顏色',
+            '--accent-color':      '強調色（全域性圖示/高亮/連結，影響廣泛）',
+            '--accent-color-dark': '強調色深色變體（深色模式專用）',
+            '--message-sent-bg':   '【我方氣泡】背景色',
+            '--message-sent-text': '【我方氣泡】文字 & 圖示色（氣泡內所有顏色）',
+            '--message-received-bg':   '【對方氣泡】背景色',
+            '--message-received-text': '【對方氣泡】文字色',
+            '--toolbar-btn-bg':        '工具欄按鈕背景（附件/拍照等）',
+            '--toolbar-btn-color':     '工具欄按鈕圖示色',
+            '--send-btn-bg':        '傳送按鈕 背景色',
+            '--send-btn-icon-color':'傳送按鈕 圖示色',
+            '--favorite-color':    '收藏星標顏色',
+            '--timestamp-color':   '時間戳顏色',
         };
 
         const themeExtraMappings = {
-            '--radius': { label: '圆角半径', type: 'range', min: 0, max: 32, unit: 'px', default: '16px' },
-            '--message-font-weight': { label: '消息粗细', type: 'select', options: ['300','400','500','600','700'], default: '400' },
-            '--message-line-height': { label: '消息行高', type: 'range', min: 1.0, max: 2.5, step: 0.05, unit: '', default: '1.5' },
+            '--radius': { label: '圓角半徑', type: 'range', min: 0, max: 32, unit: 'px', default: '16px' },
+            '--message-font-weight': { label: '訊息粗細', type: 'select', options: ['300','400','500','600','700'], default: '400' },
+            '--message-line-height': { label: '訊息行高', type: 'range', min: 1.0, max: 2.5, step: 0.05, unit: '', default: '1.5' },
         };
 
 
@@ -134,7 +134,7 @@ function initThemeEditor() {
         newBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("自定义主题编辑器按钮被点击！");
+            console.log("自定義主題編輯器按鈕被點選！");
             
             const appearanceModal = document.getElementById('appearance-modal');
             const editorModal = document.getElementById('theme-editor-modal');
@@ -159,14 +159,14 @@ function initThemeEditor() {
     const resetThemeBtn = document.getElementById('reset-theme-editor');
     if (resetThemeBtn) {
         resetThemeBtn.onclick = () => {
-            if (!confirm('重置将清除当前编辑器中的自定义颜色，恢复当前主题方案的默认色彩。\n\n已保存的自定义主题方案不受影响，确定重置吗？')) return;
+            if (!confirm('重置將清除當前編輯器中的自定義顏色，恢復當前主題方案的預設色彩。\n\n已儲存的自定義主題方案不受影響，確定重置嗎？')) return;
             settings.customThemeColors = {};
             const root = document.documentElement;
             const allVars = Object.keys(Object.assign({}, themeColorMappings || {}, themeExtraMappings || {}));
             allVars.forEach(v => root.style.removeProperty(v));
             updateUI();
             populateThemeEditor();
-            showNotification('已重置为当前主题默认色彩', 'success');
+            showNotification('已重置為當前主題預設色彩', 'success');
         };
     }
     
@@ -197,7 +197,7 @@ function initThemeEditor() {
                 try { applyCustomBubbleCss(settings.customBubbleCss); } catch(e) {}
             }
             hideModal(document.getElementById('theme-editor-modal'));
-            showNotification('主题已应用 ✓', 'success');
+            showNotification('主題已應用 ✓', 'success');
         };
     }
     
@@ -209,12 +209,12 @@ function initThemeEditor() {
         const selector = document.getElementById('theme-preset-selector');
         const selectedId = selector && selector.value;
         if (!selectedId || !selectedId.startsWith('custom-')) {
-            showNotification('请先选择一个自定义方案再覆盖', 'warning');
+            showNotification('請先選擇一個自定義方案再覆蓋', 'warning');
             return;
         }
         const theme = customThemes.find(t => t.id === selectedId);
         if (!theme) return;
-        if (!confirm(`确定要用当前编辑内容覆盖「${theme.name}」吗？`)) return;
+        if (!confirm(`確定要用當前編輯內容覆蓋「${theme.name}」嗎？`)) return;
         const root = document.documentElement;
         theme.colors = {};
         for (const variable of Object.keys(themeColorMappings)) {
@@ -226,7 +226,7 @@ function initThemeEditor() {
             if (val) theme.colors[variable] = val.trim();
         }
         saveCustomThemes();
-        showNotification(`已覆盖「${theme.name}」`, 'success');
+        showNotification(`已覆蓋「${theme.name}」`, 'success');
     };
     
     const renameBtn = document.getElementById('rename-theme-preset-btn');
@@ -234,17 +234,17 @@ function initThemeEditor() {
         const selector = document.getElementById('theme-preset-selector');
         const selectedId = selector && selector.value;
         if (!selectedId || !selectedId.startsWith('custom-')) {
-            showNotification('请先选择一个自定义方案再重命名', 'warning');
+            showNotification('請先選擇一個自定義方案再重新命名', 'warning');
             return;
         }
         const theme = customThemes.find(t => t.id === selectedId);
         if (!theme) return;
-        const newName = prompt('输入新名称：', theme.name);
+        const newName = prompt('輸入新名稱：', theme.name);
         if (!newName || !newName.trim()) return;
         theme.name = newName.trim();
         saveCustomThemes();
         populateThemeSelector();
-        showNotification(`已重命名为「${newName}」`, 'success');
+        showNotification(`已重新命名為「${newName}」`, 'success');
     };
 
     const delBtn = document.getElementById('delete-theme-preset-btn');
@@ -298,13 +298,13 @@ function initThemeEditor() {
             const rootStyle = getComputedStyle(document.documentElement);
 
             const groups = [
-                { label: '🖼 背景颜色',  vars: ['--primary-bg','--secondary-bg','--header-bg','--input-area-bg'] },
-                { label: '✏️ 文字 & 线条', vars: ['--text-primary','--text-secondary','--timestamp-color','--border-color'] },
-                { label: '✨ 强调色（影响全局）', vars: ['--accent-color','--accent-color-dark'] },
-                { label: '💬 我方气泡',  vars: ['--message-sent-bg','--message-sent-text'] },
-                { label: '💬 对方气泡',  vars: ['--message-received-bg','--message-received-text'] },
-                { label: '🔧 工具栏按钮', vars: ['--toolbar-btn-bg','--toolbar-btn-color'] },
-                { label: '📤 发送按钮',  vars: ['--send-btn-bg','--send-btn-icon-color'] },
+                { label: '🖼 背景顏色',  vars: ['--primary-bg','--secondary-bg','--header-bg','--input-area-bg'] },
+                { label: '✏️ 文字 & 線條', vars: ['--text-primary','--text-secondary','--timestamp-color','--border-color'] },
+                { label: '✨ 強調色（影響全域性）', vars: ['--accent-color','--accent-color-dark'] },
+                { label: '💬 我方氣泡',  vars: ['--message-sent-bg','--message-sent-text'] },
+                { label: '💬 對方氣泡',  vars: ['--message-received-bg','--message-received-text'] },
+                { label: '🔧 工具欄按鈕', vars: ['--toolbar-btn-bg','--toolbar-btn-color'] },
+                { label: '📤 傳送按鈕',  vars: ['--send-btn-bg','--send-btn-icon-color'] },
                 { label: '⭐ 其他',       vars: ['--favorite-color'] },
             ];
 
@@ -355,7 +355,7 @@ function initThemeEditor() {
 
             const extraHeading = document.createElement('div');
             extraHeading.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-secondary);letter-spacing:1.5px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid var(--border-color);margin-top:6px;';
-            extraHeading.textContent = '⚙️ 数值 & 字重';
+            extraHeading.textContent = '⚙️ 數值 & 字重';
             grid.appendChild(extraHeading);
 
             for (const [variable, cfg] of Object.entries(themeExtraMappings)) {
@@ -394,7 +394,7 @@ function initThemeEditor() {
 
             const previewHeading = document.createElement('div');
             previewHeading.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-secondary);letter-spacing:1.5px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid var(--border-color);margin-top:6px;';
-            previewHeading.textContent = '👁 实时预览';
+            previewHeading.textContent = '👁 實時預覽';
             grid.appendChild(previewHeading);
 
             const previewBox = document.createElement('div');
@@ -404,10 +404,10 @@ function initThemeEditor() {
                     <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-color);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
                         <i class="fas fa-user" style="font-size:12px;color:#fff;"></i>
                     </div>
-                    <div class="message message-received" style="max-width:180px;">你是我朝夕相伴触手可及的虚拟</div>
+                    <div class="message message-received" style="max-width:180px;">你是我朝夕相伴觸手可及的虛擬</div>
                 </div>
                 <div style="display:flex;align-items:flex-end;gap:8px;justify-content:flex-end;">
-                    <div class="message message-sent" style="max-width:180px;">你是我未曾拥有无法捕捉的亲昵</div>
+                    <div class="message message-sent" style="max-width:180px;">你是我未曾擁有無法捕捉的親暱</div>
                     <div style="width:32px;height:32px;border-radius:50%;background:var(--send-btn-bg,var(--accent-color));flex-shrink:0;display:flex;align-items:center;justify-content:center;">
                         <i class="fas fa-paper-plane" style="font-size:11px;color:var(--send-btn-icon-color,#fff);"></i>
                     </div>
@@ -430,7 +430,7 @@ function initThemeEditor() {
         }
         
         function saveCurrentThemeAsPreset() {
-            const presetName = prompt("请输入新主题方案的名称：");
+            const presetName = prompt("請輸入新主題方案的名稱：");
             if (!presetName || !presetName.trim()) return;
 
             const newTheme = {
@@ -451,24 +451,24 @@ function initThemeEditor() {
             settings.colorTheme = newTheme.id;
             saveCustomThemes();
             populateThemeSelector();
-            showNotification(`主题 "${presetName}" 已保存`, "success");
+            showNotification(`主題 "${presetName}" 已儲存`, "success");
         }
 
         function deleteCurrentPreset() {
             const selector = document.getElementById('theme-preset-selector');
             const selectedId = selector.value;
             if (!selectedId.startsWith('custom-')) {
-                showNotification('无法删除预设主题', 'warning');
+                showNotification('無法刪除預設主題', 'warning');
                 return;
             }
-            if (confirm(`确定要删除主题 "${selector.options[selector.selectedIndex].text}" 吗？`)) {
+            if (confirm(`確定要刪除主題 "${selector.options[selector.selectedIndex].text}" 嗎？`)) {
                 customThemes = customThemes.filter(t => t.id !== selectedId);
                 settings.colorTheme = 'gold'; 
                 saveCustomThemes();
                 updateUI();
                 populateThemeSelector();
                 populateThemeEditor(); 
-                showNotification('主题已删除', 'success');
+                showNotification('主題已刪除', 'success');
             }
         }
 
@@ -478,12 +478,12 @@ function populateThemeSelector() {
 
     const defaultOption = document.createElement('option');
     defaultOption.value = "current-editing";
-    defaultOption.textContent = "当前编辑中...";
+    defaultOption.textContent = "當前編輯中...";
     selector.appendChild(defaultOption);
 
     if (customThemes.length > 0) {
         const customGroup = document.createElement('optgroup');
-        customGroup.label = "我的自定义主题";
+        customGroup.label = "我的自定義主題";
         customThemes.forEach(theme => {
             const option = document.createElement('option');
             option.value = theme.id;
@@ -507,11 +507,11 @@ function populateThemeSelector() {
         }
 
         const THEME_COLOR_NAMES = {
-            'gold': '金色', 'blue': '蓝色', 'purple': '紫色', 'green': '绿色',
-            'pink': '粉色', 'black-white': '黑白', 'pastel': '柔蓝', 
-            'sunset': '夕阳', 'forest': '森林', 'ocean': '深蓝'
+            'gold': '金色', 'blue': '藍色', 'purple': '紫色', 'green': '綠色',
+            'pink': '粉色', 'black-white': '黑白', 'pastel': '柔藍', 
+            'sunset': '夕陽', 'forest': '森林', 'ocean': '深藍'
         };
-        const BUBBLE_STYLE_NAMES_SCM = { standard: '标准', rounded: '圆角', 'rounded-large': '大圆角', square: '方形' };
+        const BUBBLE_STYLE_NAMES_SCM = { standard: '標準', rounded: '圓角', 'rounded-large': '大圓角', square: '方形' };
 
         async function captureCurrentSchemeAsync() {
             const root = document.documentElement;
@@ -606,8 +606,8 @@ function populateThemeSelector() {
             if (scheme.customFontUrl) {
                 try { applyCustomFont(scheme.customFontUrl); } catch(e) {}
             } else {
-                document.documentElement.style.setProperty('--message-font-family', scheme.messageFontFamily || "'Noto Serif SC', serif");
-                document.documentElement.style.setProperty('--font-family', scheme.messageFontFamily || "'Noto Serif SC', serif");
+                document.documentElement.style.setProperty('--message-font-family', scheme.messageFontFamily || "'Noto Serif TC', 'Noto Serif SC', serif");
+                document.documentElement.style.setProperty('--font-family', scheme.messageFontFamily || "'Noto Serif TC', 'Noto Serif SC', serif");
             }
             
             if (scheme.customBubbleCss) {
@@ -660,8 +660,8 @@ function populateThemeSelector() {
             
             themeSchemes.forEach(scheme => {
                 const dots = getSchemePreviewColors(scheme);
-                const bubbleName = BUBBLE_STYLE_NAMES_SCM[scheme.bubbleStyle] || '标准';
-                const darkLabel = scheme.isDarkMode ? '夜' : '昼';
+                const bubbleName = BUBBLE_STYLE_NAMES_SCM[scheme.bubbleStyle] || '標準';
+                const darkLabel = scheme.isDarkMode ? '夜' : '晝';
                 const themeName = THEME_COLOR_NAMES[scheme.colorTheme] || scheme.colorTheme;
                 const meta = `${darkLabel} · ${themeName} · ${bubbleName} · ${scheme.fontSize}px`;
                 
@@ -677,13 +677,13 @@ function populateThemeSelector() {
                         <div class="scheme-meta">${meta}</div>
                     </div>
                     <div class="scheme-actions">
-                        <button class="scheme-action-btn" title="应用方案" onclick="applyThemeScheme('${scheme.id}')">
+                        <button class="scheme-action-btn" title="應用方案" onclick="applyThemeScheme('${scheme.id}')">
                             <i class="fas fa-check"></i>
                         </button>
-                        <button class="scheme-action-btn" title="在编辑器中编辑" onclick="editThemeScheme('${scheme.id}', event)" style="color:var(--accent-color);">
+                        <button class="scheme-action-btn" title="在編輯器中編輯" onclick="editThemeScheme('${scheme.id}', event)" style="color:var(--accent-color);">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="scheme-action-btn delete" title="删除方案" onclick="deleteThemeScheme('${scheme.id}', event)">
+                        <button class="scheme-action-btn delete" title="刪除方案" onclick="deleteThemeScheme('${scheme.id}', event)">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -696,18 +696,18 @@ function populateThemeSelector() {
             const scheme = themeSchemes.find(s => s.id === id);
             if (!scheme) return;
             applyScheme(scheme);
-            showNotification(`✨ 已应用方案「${scheme.name}」`, 'success');
+            showNotification(`✨ 已應用方案「${scheme.name}」`, 'success');
         };
 
         window.deleteThemeScheme = function(id, event) {
             if (event) event.stopPropagation();
             const scheme = themeSchemes.find(s => s.id === id);
             if (!scheme) return;
-            if (confirm(`确定要删除方案「${scheme.name}」吗？`)) {
+            if (confirm(`確定要刪除方案「${scheme.name}」嗎？`)) {
                 themeSchemes = themeSchemes.filter(s => s.id !== id);
                 localforage.setItem(`${APP_PREFIX}themeSchemes`, themeSchemes);
                 renderThemeSchemesList();
-                showNotification('方案已删除', 'success');
+                showNotification('方案已刪除', 'success');
             }
         };
 
@@ -724,14 +724,14 @@ function populateThemeSelector() {
             if (editorModal) showModal(editorModal);
             const selector = document.getElementById('theme-preset-selector');
             if (selector && scheme.id.startsWith('custom-')) selector.value = scheme.id;
-            showNotification(`正在编辑方案「${scheme.name}」，修改后点击💾保存`, 'info');
+            showNotification(`正在編輯方案「${scheme.name}」，修改後點選💾儲存`, 'info');
         };
 
         function initThemeSchemes() {
             const saveBtn = document.getElementById('save-theme-scheme-btn');
             if (saveBtn) {
                 saveBtn.onclick = async () => {
-                    const name = prompt('请为当前主题方案命名：', `方案 ${themeSchemes.length + 1}`);
+                    const name = prompt('請為當前主題方案命名：', `方案 ${themeSchemes.length + 1}`);
                     if (!name || !name.trim()) return;
                     const scheme = await captureCurrentSchemeAsync();
                     scheme.id = `scheme-${Date.now()}`;
@@ -740,7 +740,7 @@ function populateThemeSelector() {
                     themeSchemes.push(scheme);
                     localforage.setItem(`${APP_PREFIX}themeSchemes`, themeSchemes);
                     renderThemeSchemesList();
-                    showNotification(`✨ 方案「${name}」已保存（含背景图）！`, 'success');
+                    showNotification(`✨ 方案「${name}」已儲存（含背景圖）！`, 'success');
                 };
             }
             renderThemeSchemesList();

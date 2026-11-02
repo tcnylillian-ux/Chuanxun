@@ -12,8 +12,8 @@
 
     function getTiLabel() {
         if (tiCustomText) return tiCustomText;
-        var name = (window.settings && settings.partnerName) ? settings.partnerName : '对方';
-        return name + ' 正在输入';
+        var name = (window.settings && settings.partnerName) ? settings.partnerName : '對方';
+        return name + ' 正在輸入';
     }
 
     function updatePreview() {
@@ -112,8 +112,8 @@
         tiCustomText = input.value.trim();
         localStorage.setItem(TI_TEXT_KEY, tiCustomText);
         updatePreview();
-        e.target.textContent = '已保存 ✓';
-        setTimeout(function() { e.target.textContent = '保存'; }, 1200);
+        e.target.textContent = '已儲存 ✓';
+        setTimeout(function() { e.target.textContent = '儲存'; }, 1200);
     });
 
     document.addEventListener('click', function(e) {
@@ -133,8 +133,8 @@
 (function() {
     var PLEDGE_KEY = 'splashPledgeSigned_v5';
     var TOTAL = 7;
-    var PLEDGE_TEXT = '我绝不盈利、造谣、污蔑或嘲讽，并对自己的使用行为负完全责任';
-    var CHAPTERS = ['字卡', '谣言', '盈利', '看法', '通话', '年龄', '承诺'];
+    var PLEDGE_TEXT = '我絕不盈利、造謠、污衊或嘲諷，並對自己的使用行為負完全責任';
+    var CHAPTERS = ['字卡', '謠言', '盈利', '看法', '通話', '年齡', '承諾'];
     var cur = 0;
 
     function initSplash() {
@@ -192,16 +192,17 @@
             pledgeInp.addEventListener('input', function() {
                 var val = pledgeInp.value;
                 var hint = document.getElementById('splash-pledge-hint');
-                if (val === PLEDGE_TEXT) {
+                var _n = function (x) { return String(x).replace(/\s+/g, '').replace(/汙/g, '污').replace(/[，,]/g, '，'); };
+                if (_n(val) === _n(PLEDGE_TEXT) || _n(val) === _n('我绝不盈利、造谣、污蔑或嘲讽，并对自己的使用行为负完全责任')) {
                     pledgeInp.classList.add('correct');
-                    if (hint) { hint.textContent = '✓ 承诺已确认，可以进入了'; hint.className = 'splash-pledge-hint ok'; }
+                    if (hint) { hint.textContent = '✓ 承諾已確認，可以進入了'; hint.className = 'splash-pledge-hint ok'; }
                     if (enterBtn) {
                         enterBtn.classList.add('ready');
                         enterBtn.disabled = false;
                     }
                 } else {
                     pledgeInp.classList.remove('correct');
-                    if (hint) { hint.textContent = '请完整输入上方承诺后方可进入'; hint.className = 'splash-pledge-hint'; }
+                    if (hint) { hint.textContent = '請完整輸入上方承諾後方可進入'; hint.className = 'splash-pledge-hint'; }
                     if (enterBtn) {
                         enterBtn.classList.remove('ready');
                         enterBtn.disabled = true;
@@ -311,141 +312,141 @@ let isTourActive = false;
 
 const tourSteps = [
     {
-        title: "✨ 欢迎来到「传讯」",
-        content: "这里是你们专属的私密空间。<br><br>这个教程共 <b>20 步</b>，带你从头到尾认识每一个功能，建议完整看完哦🥺<br><br>点击「下一步」开始吧！",
+        title: "✨ 歡迎來到「傳訊」",
+        content: "這裡是你們專屬的私密空間。<br><br>這個教程共 <b>20 步</b>，帶你從頭到尾認識每一個功能，建議完整看完哦🥺<br><br>點選「下一步」開始吧！",
         position: 'center'
     },
     {
         element: '#my-avatar',
-        title: "📷 你的头像",
-        content: "这是<b>你的头像</b>。<br><br>点击它可以上传图片作为你的头像。",
+        title: "📷 你的頭像",
+        content: "這是<b>你的頭像</b>。<br><br>點選它可以上傳圖片作為你的頭像。",
         position: 'bottom'
     },
     {
         element: '#my-name',
-        title: "✏️ 你的昵称",
-        content: "这里显示的是<b>你的名字</b>。<br><br>点击名字可以直接修改。",
+        title: "✏️ 你的暱稱",
+        content: "這裡顯示的是<b>你的名字</b>。<br><br>點選名字可以直接修改。",
         position: 'bottom'
     },
     {
         element: '#my-status-container',
-        title: "💬 你的状态签名",
-        content: "这里是你的<b>状态签名</b>。<br><br>点击可以编辑，一般而言对方是能看见的哦～",
+        title: "💬 你的狀態簽名",
+        content: "這裡是你的<b>狀態簽名</b>。<br><br>點選可以編輯，一般而言對方是能看見的哦～",
         position: 'bottom'
     },
     {
         element: '#partner-avatar',
-        title: "Ta 的头像",
-        content: "这里是<b>梦角的头像</b>，同样点击可以上传更换。",
+        title: "Ta 的頭像",
+        content: "這裡是<b>夢角的頭像</b>，同樣點選可以上傳更換。",
         position: 'bottom'
     },
     {
         element: '#partner-name',
-        title: "Ta 的昵称",
-        content: "这是<b>梦角的昵称</b>，同样点击可以修改。",
+        title: "Ta 的暱稱",
+        content: "這是<b>夢角的暱稱</b>，同樣點選可以修改。",
         position: 'bottom'
     },
     {
         element: '.header-motto',
-        title: "🌸 顶部格言",
-        content: "这里显示着格言～自定义回复里可修改。",
+        title: "🌸 頂部格言",
+        content: "這裡顯示著格言～自定義回覆裡可修改。",
         position: 'bottom'
     },
     {
         element: '#message-input',
-        title: "⌨️ 消息输入框",
-        content: "在这里<b>输入你想说的话</b>，按回车键或点击右边的发送按钮就能发出去。",
+        title: "⌨️ 訊息輸入框",
+        content: "在這裡<b>輸入你想說的話</b>，按回車鍵或點選右邊的傳送按鈕就能發出去。",
         position: 'top'
     },
     {
         element: '#send-btn',
-        title: "🚀 发送消息",
-        content: "点击这个<b>纸飞机按钮</b>就能发送消息。<br><br>发送后对方会在几秒内给你回复，你可以在「聊天设置」里调整回复的速度快慢哦。",
+        title: "🚀 傳送訊息",
+        content: "點選這個<b>紙飛機按鈕</b>就能傳送訊息。<br><br>傳送後對方會在幾秒內給你回覆，你可以在「聊天設定」裡調整回覆的速度快慢哦。",
         position: 'top'
     },
     {
         element: '#attachment-btn',
-        title: "🖼️ 发送图片 / 表情包",
-        content: "点击这里可以<b>发送图片</b>，支持相册图片和表情包。<br><br>你还可以在「高级功能 → 回复库」中上传自定义的表情，到时候对方也会发给你！",
+        title: "🖼️ 傳送圖片 / 表情包",
+        content: "點選這裡可以<b>傳送圖片</b>，支援相簿圖片和表情包。<br><br>你還可以在「高階功能 → 回覆庫」中上傳自定義的表情，到時候對方也會發給你！",
         position: 'top'
     },
     {
         element: '#poke-btn',
-        title: "👋 拍一拍互动",
-        content: "这是「<b>拍一拍</b>」功能，发出后会显示一条互动消息，比如「轻拍了你一下」。<br><br>可以在「高级功能 → 自定义拍一拍」里添加更多的动作！",
+        title: "👋 拍一拍互動",
+        content: "這是「<b>拍一拍</b>」功能，發出後會顯示一條互動訊息，比如「輕拍了你一下」。<br><br>可以在「高階功能 → 自定義拍一拍」裡新增更多的動作！",
         position: 'top'
     },
     {
         element: '#continue-btn',
-        title: "让 Ta 继续说",
-        content: "不知道说什么了？或者想让 Ta 多说几句？<br><br>点击这个按钮，<b>梦角会主动找你说话。",
+        title: "讓 Ta 繼續說",
+        content: "不知道說什麼了？或者想讓 Ta 多說幾句？<br><br>點選這個按鈕，<b>夢角會主動找你說話。",
         position: 'top'
     },
     {
         element: '#batch-btn',
-        title: "📦 批量发送模式",
-        content: "开启<b>批量模式</b>后，你可以先写好多条消息，再一次性全部发出去<br><br>点击按钮开启，编辑完成后再次点击「发送全部」即可。",
+        title: "📦 批次傳送模式",
+        content: "開啟<b>批次模式</b>後，你可以先寫好多條訊息，再一次性全部發出去<br><br>點選按鈕開啟，編輯完成後再次點選「傳送全部」即可。",
         position: 'top'
     },
     {
         element: '#settings-btn',
-        title: "⚙️ 设置中心",
-        content: "所有个性化配置都在这个<b>设置按钮</b>里，我们点进去看一下！<br>",
+        title: "⚙️ 設定中心",
+        content: "所有個性化配置都在這個<b>設定按鈕</b>裡，我們點進去看一下！<br>",
         position: 'bottom',
         onBefore: () => { if (isTourActive) document.querySelectorAll('.modal').forEach(m => hideModal(m)); }
     },
     {
         element: '#appearance-settings',
-        title: "🎨 外观设置",
-        content: "<b>外观设置</b>里可以：<br>• 切换 10 款主题配色（金/蓝/粉…）<br>• 调整字体大小<br>• 更换聊天背景图<br>• 自定义气泡样式 CSS<br>",
+        title: "🎨 外觀設定",
+        content: "<b>外觀設定</b>裡可以：<br>• 切換 10 款主題配色（金/藍/粉…）<br>• 調整字型大小<br>• 更換聊天背景圖<br>• 自定義氣泡樣式 CSS<br>",
         position: 'bottom',
         onBefore: () => { if (isTourActive) showModal(DOMElements.settingsModal.modal); }
     },
     {
         element: '#chat-settings',
-        title: "💬 聊天设置",
-        content: "<b>聊天设置</b>里可以调整：<br>• 消息音效开关<br>• 已读回执显示<br>• 对方回复速度（快/慢）<br>• 消息气泡样式（圆角/方形）",
+        title: "💬 聊天設定",
+        content: "<b>聊天設定</b>裡可以調整：<br>• 訊息音效開關<br>• 已讀回執顯示<br>• 對方回覆速度（快/慢）<br>• 訊息氣泡樣式（圓角/方形）",
         position: 'bottom'
     },
     {
         element: '#advanced-settings',
-        title: "🚀 高级功能 — 必看！",
-        content: "<b>高级功能</b>是整个应用最强大的板块，里面有：<br>• <b>心晴手账</b>：记录每天的心情<br>• <b>信封投递</b>：给梦角写一封信<br>• <b>纪念日</b>：倒计时 / 纪念天数<br>• <b>运势占卜</b>：每日运势<br>• <b>自定义回复</b>：让梦角说你想听的话<br>• <b>音乐播放器</b>：背景音乐",
+        title: "🚀 高階功能 — 必看！",
+        content: "<b>高階功能</b>是整個應用最強大的板塊，裡面有：<br>• <b>心晴手帳</b>：記錄每天的心情<br>• <b>信封投遞</b>：給夢角寫一封信<br>• <b>紀念日</b>：倒計時 / 紀念天數<br>• <b>運勢占卜</b>：每日運勢<br>• <b>自定義回覆</b>：讓夢角說你想聽的話<br>• <b>音樂播放器</b>：背景音樂",
         position: 'bottom'
     },
     {
         element: '#data-settings',
-        title: "💾 数据管理",
-        content: "<b>数据管理</b>里可以：<br>• 导出聊天记录（备份到本地）<br>• 导入之前备份的记录<br>• 查看存储空间占用<br>• 开启后台消息通知推送<br>• 重置所有数据<br>• 重放本教程",
+        title: "💾 資料管理",
+        content: "<b>資料管理</b>裡可以：<br>• 匯出聊天記錄（備份到本地）<br>• 匯入之前備份的記錄<br>• 檢視儲存空間佔用<br>• 開啟後臺訊息通知推送<br>• 重置所有資料<br>• 重放本教程",
         position: 'top'
     },
     {
         element: '#theme-toggle',
-        title: "🌙 日 / 夜模式切换",
-        content: "这个按钮可以快速<b>切换白天 / 夜晚</b>模式。<br><br>夜晚模式下整体变成深色背景，对眼睛更友好，睡前聊天必备！✨",
+        title: "🌙 日 / 夜模式切換",
+        content: "這個按鈕可以快速<b>切換白天 / 夜晚</b>模式。<br><br>夜晚模式下整體變成深色背景，對眼睛更友好，睡前聊天必備！✨",
         position: 'bottom',
         onBefore: () => { if (isTourActive) hideModal(DOMElements.settingsModal.modal); }
     },
     {
         element: '#favorites-btn',
-        title: "⭐ 收藏夹",
-        content: "长按或点击一条消息，会弹出操作菜单，可以把消息<b>收藏</b>起来。<br><br>所有收藏的消息都会保存在这个收藏夹里，随时可以翻阅回味～",
+        title: "⭐ 收藏夾",
+        content: "長按或點選一條訊息，會彈出操作選單，可以把訊息<b>收藏</b>起來。<br><br>所有收藏的訊息都會儲存在這個收藏夾裡，隨時可以翻閱回味～",
         position: 'bottom'
     },
     {
         element: '#session-manager-btn',
-        title: "📂 会话管理",
-        content: "你可以创建<b>多个独立的聊天会话</b>，每个会话都有独立的聊天记录。<br>",
+        title: "📂 會話管理",
+        content: "你可以建立<b>多個獨立的聊天會話</b>，每個會話都有獨立的聊天記錄。<br>",
         position: 'bottom'
     },
     {
-        title: "✋ 消息操作提示",
-        content: "点击任意一条消息，会出现操作菜单：<br>• ⭐ <b>收藏</b>：保存到收藏夹<br>• ↩️ <b>回复</b>：引用这条消息回复<br>• 📝 <b>注释</b>：给消息添加备注<br>• 🗑️ <b>删除</b>：删除这条消息",
+        title: "✋ 訊息操作提示",
+        content: "點選任意一條訊息，會出現操作選單：<br>• ⭐ <b>收藏</b>：儲存到收藏夾<br>• ↩️ <b>回覆</b>：引用這條訊息回覆<br>• 📝 <b>註釋</b>：給訊息新增備註<br>• 🗑️ <b>刪除</b>：刪除這條訊息",
         position: 'center'
     },
     {
         title: "🎉 你已掌握所有功能！",
-        content: "恭喜你完成了新手引导！现在你已经了解了「传讯」的全部功能。<br><br>希望你们在这里收获满满的爱与幸福 🥺💕",
+        content: "恭喜你完成了新手引導！現在你已經瞭解了「傳訊」的全部功能。<br><br>希望你們在這裡收穫滿滿的愛與幸福 🥺💕",
         position: 'center'
     }
 ];
@@ -569,7 +570,7 @@ async function createNewSession(switchToIt = true) {
     const newId = Date.now().toString(36) + Math.random().toString(36).substr(2);
     const newSession = {
         id: newId,
-        name: `会话 ${new Date().toLocaleDateString()}`,
+        name: `會話 ${new Date().toLocaleDateString()}`,
         createdAt: Date.now()
     };
 
@@ -598,19 +599,19 @@ window.selectAnnType = function(type) {
     const hint = document.getElementById('ann-type-desc');
     if(hint) {
         hint.textContent = type === 'anniversary' 
-            ? '计算从过去某一天到现在已经过了多少天 (例如: 恋爱纪念日)' 
-            : '计算从现在到未来某一天还剩下多少天 (例如: 对方生日)';
+            ? '計算從過去某一天到現在已經過了多少天 (例如: 戀愛紀念日)' 
+            : '計算從現在到未來某一天還剩下多少天 (例如: 對方生日)';
     }
 };
 
 window.deleteAnniversary = function(id, event) {
     if(event) event.stopPropagation();
     
-    if(confirm('确定要删除这个纪念日吗？')) {
+    if(confirm('確定要刪除這個紀念日嗎？')) {
         anniversaries = anniversaries.filter(a => a.id !== id);
         throttledSaveData();
         renderAnniversariesList();
-        showNotification('纪念日已删除', 'success');
+        showNotification('紀念日已刪除', 'success');
     }
 };
 
@@ -666,29 +667,29 @@ async function fillAnnHeaderCard(ann) {
 
         if (!isCountdown) {
             if (diffDays > 0 && diffDays < 100) {
-                pushChip(`💫 距 100 天还有 ${100 - diffDays} 天`);
+                pushChip(`💫 距 100 天還有 ${100 - diffDays} 天`);
             }
             const centPassed = Math.floor(diffDays / 100) * 100;
             if (centPassed > 0) pushChip(`🎉 已到第 ${centPassed} 天`);
 
             const yearsPassed = Math.floor(diffDays / 365);
-            if (yearsPassed > 0) pushChip(`🎊 已过 ${yearsPassed} 周年`);
+            if (yearsPassed > 0) pushChip(`🎊 已過 ${yearsPassed} 週年`);
 
             if (diffDays >= 100 && diffDays < 365) {
                 const nextCent = 100 * (Math.floor(diffDays / 100) + 1);
-                pushChip(`⏳ 距下一段百天还有 ${nextCent - diffDays} 天`);
+                pushChip(`⏳ 距下一段百天還有 ${nextCent - diffDays} 天`);
             }
         } else {
             const daysLeft = diffDays;
             if (daysLeft > 0 && daysLeft < 100) {
-                pushChip(`⏳ 距 100 天还有 ${100 - daysLeft} 天`);
+                pushChip(`⏳ 距 100 天還有 ${100 - daysLeft} 天`);
             }
             if (daysLeft >= 100) {
                 const nextCent = 100 * Math.ceil(daysLeft / 100);
-                pushChip(`🎉 达到第 ${nextCent} 天段`);
+                pushChip(`🎉 達到第 ${nextCent} 天段`);
             }
             const yearsLeft = Math.floor(daysLeft / 365);
-            if (yearsLeft > 0) pushChip(`🎊 距 ${yearsLeft} 年段还有…`);
+            if (yearsLeft > 0) pushChip(`🎊 距 ${yearsLeft} 年段還有…`);
         }
 
         dataMilestonesEl.innerHTML = chips.join('') || `<span style="font-size:12px;opacity:0.65;color:var(--text-secondary);">—</span>`;
@@ -725,7 +726,7 @@ function renderAnniversariesList() {
         listContainer.innerHTML = `
             <div class="ann-empty">
                 <div class="ann-empty-icon">💝</div>
-                <p>还没有纪念日<br>去添加一个属于你们的日子吧~</p>
+                <p>還沒有紀念日<br>去新增一個屬於你們的日子吧~</p>
             </div>`;
         return;
     }
@@ -747,13 +748,13 @@ function renderAnniversariesList() {
 
         if (ann.type === 'countdown') {
             typeClass = 'type-future';
-            typeLabel = '倒数';
+            typeLabel = '倒數';
             dayLabel = '天后';
             diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
             if(diffDays < 0) diffDays = 0;
         } else {
             typeClass = 'type-past';
-            typeLabel = '已过';
+            typeLabel = '已過';
             dayLabel = '天';
             diffDays = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
         }
@@ -793,7 +794,7 @@ window.clearAnnCardBg = async function() {
     await localforage.removeItem(getStorageKey(`annHeaderBg_${activeAnnId}`));
     const bgEl = document.getElementById('ann-header-card-bg');
     if (bgEl) bgEl.style.backgroundImage = '';
-    showNotification('封面图已清除', 'success');
+    showNotification('封面圖已清除', 'success');
 };
 
 window.switchAnnDataTab = function(tab) {
@@ -803,7 +804,7 @@ window.switchAnnDataTab = function(tab) {
     if (!panel || !cardBtn || !dataBtn) return;
     const showData = tab === 'data';
     panel.style.display = showData ? 'block' : 'none';
-    // 保持按钮配色不变，用透明度表达当前页
+    // 保持按鈕配色不變，用透明度表達當前頁
     cardBtn.style.opacity = showData ? '0.75' : '1';
     dataBtn.style.opacity = showData ? '1' : '0.75';
 };
@@ -819,7 +820,7 @@ function initAnniversaryModule() {
         newBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('重要日按钮被点击');
+            console.log('重要日按鈕被點選');
             
             const advancedModal = document.getElementById('advanced-modal');
             const annModal = document.getElementById('anniversary-modal');
@@ -872,14 +873,14 @@ function initAnniversaryModule() {
         annBgInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            if (!activeAnnId) { showNotification('请先选择一个纪念日', 'warning'); return; }
+            if (!activeAnnId) { showNotification('請先選擇一個紀念日', 'warning'); return; }
             const reader = new FileReader();
             reader.onload = async (ev) => {
                 const dataUrl = ev.target.result;
                 const bgEl = document.getElementById('ann-header-card-bg');
                 if (bgEl) bgEl.style.backgroundImage = `url(${dataUrl})`;
                 await localforage.setItem(getStorageKey(`annHeaderBg_${activeAnnId}`), dataUrl);
-                showNotification('封面图已更新 ', 'success');
+                showNotification('封面圖已更新 ', 'success');
             };
             reader.readAsDataURL(file);
             e.target.value = '';
@@ -901,7 +902,7 @@ function setupTutorialListeners() {
         replayBtn.addEventListener('click', () => {
             hideModal(DOMElements.dataModal.modal);
             setTimeout(() => {
-                if (confirm('确定要重新开始新手引导教程吗？')) {
+                if (confirm('確定要重新開始新手引導教程嗎？')) {
                     startTour();
                 }
             }, 300);

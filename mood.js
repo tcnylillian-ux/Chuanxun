@@ -5,11 +5,11 @@ function toggleBatchFavoriteMode() {
             if (isBatchFavoriteMode) {
                 document.body.classList.add('batch-favorite-mode');
                 showBatchFavoriteActions();
-                showNotification('批量收藏模式已开启，点击消息进行选择', 'info');
+                showNotification('批次收藏模式已開啟，點選訊息進行選擇', 'info');
             } else {
                 document.body.classList.remove('batch-favorite-mode');
                 hideBatchFavoriteActions();
-                showNotification('批量收藏模式已关闭', 'info');
+                showNotification('批次收藏模式已關閉', 'info');
             }
 
             renderMessages(true);
@@ -39,7 +39,7 @@ function toggleBatchFavoriteMode() {
         <i class="fas fa-times"></i> 取消
         </button>
         <button class="batch-action-btn-pill batch-btn-confirm" id="confirm-batch-favorite">
-        <i class="fas fa-check"></i> 确认收藏 (0)
+        <i class="fas fa-check"></i> 確認收藏 (0)
         </button>
         `;
             document.body.appendChild(actions);
@@ -51,7 +51,7 @@ function toggleBatchFavoriteMode() {
 
         function confirmBatchFavorite() {
             if (selectedMessages.length === 0) {
-                showNotification('请先选择要收藏的消息', 'warning');
+                showNotification('請先選擇要收藏的訊息', 'warning');
                 return;
             }
 
@@ -73,14 +73,14 @@ function toggleBatchFavoriteMode() {
             toggleBatchFavoriteMode();
 
 
-            showNotification(`已成功收藏 ${count} 条消息`, 'success');
+            showNotification(`已成功收藏 ${count} 條訊息`, 'success');
         }
 
 
         function renderAnniversaries() {
     const list = DOMElements.anniversaryModal.list;
     if (anniversaries.length === 0) {
-        list.innerHTML = '<div class="no-favorites" style="padding:20px 0;"><i class="fas fa-heart" style="font-size:24px;margin-bottom:10px;"></i><p>还没有记录纪念日</p></div>';
+        list.innerHTML = '<div class="no-favorites" style="padding:20px 0;"><i class="fas fa-heart" style="font-size:24px;margin-bottom:10px;"></i><p>還沒有記錄紀念日</p></div>';
         return;
     }
 
@@ -97,7 +97,7 @@ function toggleBatchFavoriteMode() {
         }
 
         const typeClass = anniversary.type === 'countdown' ? 'type-future' : 'type-past';
-        const tagText = anniversary.type === 'countdown' ? '倒数' : '纪念';
+        const tagText = anniversary.type === 'countdown' ? '倒數' : '紀念';
 
         return `
         <div class="anniversary-card ${typeClass}" data-id="${anniversary.id}">
@@ -131,7 +131,7 @@ function toggleBatchFavoriteMode() {
     const date = dateInput ? dateInput.value : (DOMElements.anniversaryModal.dateInput ? DOMElements.anniversaryModal.dateInput.value : '');
 
     if (!name || !date) {
-        showNotification('请填写名称和日期', 'error');
+        showNotification('請填寫名稱和日期', 'error');
         return;
     }
 
@@ -159,7 +159,7 @@ function toggleBatchFavoriteMode() {
     if (annFormWrapper) annFormWrapper.classList.remove('active');
     if (annToggleBtn) annToggleBtn.classList.remove('active');
 
-    showNotification('纪念日已添加', 'success');
+    showNotification('紀念日已新增', 'success');
     if (typeof playSound === 'function') playSound('anniversary');
 }
 
@@ -172,12 +172,12 @@ function toggleBatchFavoriteMode() {
             if (anniversary.type === 'countdown') {
 
                 diffDays = Math.ceil((startDate - now) / (1000 * 60 * 60 * 24));
-                title = "倒数日";
-                message = `即将到来`;
+                title = "倒數日";
+                message = `即將到來`;
             } else {
 
                 diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-                title = "纪念日快乐！";
+                title = "紀念日快樂！";
                 message = `相伴至今`;
             }
 
@@ -204,18 +204,18 @@ function toggleBatchFavoriteMode() {
 
 
 const MOOD_OPTIONS = [
-    { key: 'happy', kaomoji: '😆', label: '开心', color: '#FFD93D' },
-    { key: 'excited', kaomoji: '🥰', label: '兴奋', color: '#FF6B6B' },
+    { key: 'happy', kaomoji: '😆', label: '開心', color: '#FFD93D' },
+    { key: 'excited', kaomoji: '🥰', label: '興奮', color: '#FF6B6B' },
     { key: 'peace', kaomoji: '☺️', label: '平淡', color: '#6BCB77' },
-    { key: 'sad', kaomoji: '😕', label: '难过', color: '#4D96FF' },
-    { key: 'tired', kaomoji: '😞', label: '疲惫', color: '#8D9EFF' },
-    { key: 'angry', kaomoji: '😠', label: '生气', color: '#FF4757' },
+    { key: 'sad', kaomoji: '😕', label: '難過', color: '#4D96FF' },
+    { key: 'tired', kaomoji: '😞', label: '疲憊', color: '#8D9EFF' },
+    { key: 'angry', kaomoji: '😠', label: '生氣', color: '#FF4757' },
     { key: 'love', kaomoji: '🥰', label: '想你', color: '#FF9A8B' },
     { key: 'busy', kaomoji: '😵‍💫', label: '忙碌', color: '#A8D8EA' },
     { key: 'sleepy', kaomoji: '😴', label: '困困', color: '#E0C3FC' },
-{ key: 'lonely', kaomoji: '🥹', label: '孤单', color: '#B8A9C9' }, 
-{ key: 'cool', kaomoji: '😎', label: '潇洒', color: '#2C3E50' },
-    { key: 'cute', kaomoji: '🥺', label: '撒娇', color: '#FFB6C1' }
+{ key: 'lonely', kaomoji: '🥹', label: '孤單', color: '#B8A9C9' }, 
+{ key: 'cool', kaomoji: '😎', label: '瀟灑', color: '#2C3E50' },
+    { key: 'cute', kaomoji: '🥺', label: '撒嬌', color: '#FFB6C1' }
 ];
 
 let moodData = {}; 
@@ -414,7 +414,7 @@ function updateDualMoodStats(stats) {
     if (!container) return;
 
     const mName = (typeof settings !== 'undefined' && settings.myName) ? settings.myName : '我';
-    const pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '梦角';
+    const pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '夢角';
 
     const myTotal = stats.me.total;
     const partnerTotal = stats.partner.total;
@@ -423,7 +423,7 @@ function updateDualMoodStats(stats) {
     const myPercent = daysInMonth > 0 ? (myTotal / daysInMonth) * 100 : 0;
     const partnerPercent = daysInMonth > 0 ? (partnerTotal / daysInMonth) * 100 : 0;
 
-    let myDominant = { label: '无', kaomoji: '😶', color: '#ccc' };
+    let myDominant = { label: '無', kaomoji: '😶', color: '#ccc' };
     let myMaxCount = 0;
     Object.keys(stats.me.counts).forEach(key => {
         if (stats.me.counts[key] > myMaxCount) {
@@ -433,7 +433,7 @@ function updateDualMoodStats(stats) {
         }
     });
 
-    let partnerDominant = { label: '无', kaomoji: '😶', color: '#ccc' };
+    let partnerDominant = { label: '無', kaomoji: '😶', color: '#ccc' };
     let partnerMaxCount = 0;
     Object.keys(stats.partner.counts).forEach(key => {
         if (stats.partner.counts[key] > partnerMaxCount) {
@@ -445,7 +445,7 @@ function updateDualMoodStats(stats) {
     
     const createMoodBarHTML = (moodCounts, totalCount) => {
         if (totalCount <= 0) {
-            return `<div class="mood-bar-container" style="justify-content: center; align-items: center; font-size: 10px; color: var(--text-secondary); background: var(--message-received-bg);">无数据</div>`;
+            return `<div class="mood-bar-container" style="justify-content: center; align-items: center; font-size: 10px; color: var(--text-secondary); background: var(--message-received-bg);">無資料</div>`;
         }
 
         const segments = Object.keys(moodCounts)
@@ -479,8 +479,8 @@ function updateDualMoodStats(stats) {
                 <div class="mood-circle-label">
                     <span class="mood-marker me" style="width:8px;height:8px;"></span> ${mName}
                 </div>
-                <div class="stats-weather-tag" onclick="editStatsWeather(this,'me')" title="点击编辑天气">
-                    ${myWeatherVal ? `<span>${myWeatherVal}</span>` : `<span style="opacity:0.4;">+ 天气</span>`}
+                <div class="stats-weather-tag" onclick="editStatsWeather(this,'me')" title="點選編輯天氣">
+                    ${myWeatherVal ? `<span>${myWeatherVal}</span>` : `<span style="opacity:0.4;">+ 天氣</span>`}
                 </div>
             </div>
             <div class="mood-circle-item">
@@ -490,8 +490,8 @@ function updateDualMoodStats(stats) {
                 <div class="mood-circle-label">
                     <span class="mood-marker partner" style="width:8px;height:8px;"></span> ${pName}
                 </div>
-                <div class="stats-weather-tag" onclick="editStatsWeather(this,'partner')" title="点击编辑天气">
-                    ${partnerWeatherVal ? `<span>${partnerWeatherVal}</span>` : `<span style="opacity:0.4;">+ 天气</span>`}
+                <div class="stats-weather-tag" onclick="editStatsWeather(this,'partner')" title="點選編輯天氣">
+                    ${partnerWeatherVal ? `<span>${partnerWeatherVal}</span>` : `<span style="opacity:0.4;">+ 天氣</span>`}
                 </div>
             </div>
         </div>
@@ -504,7 +504,7 @@ function updateDualMoodStats(stats) {
                 </div>
             </div>
             <div style="font-size:11px; color:var(--text-secondary); display:flex; justify-content:space-between;">
-                <span>记录天数: ${myTotal}</span>
+                <span>記錄天數: ${myTotal}</span>
             </div>
             ${myBarHTML}
         </div>
@@ -517,7 +517,7 @@ function updateDualMoodStats(stats) {
                 </div>
             </div>
             <div style="font-size:11px; color:var(--text-secondary); display:flex; justify-content:space-between;">
-                <span>记录天数: ${partnerTotal}</span>
+                <span>記錄天數: ${partnerTotal}</span>
             </div>
             ${partnerBarHTML}
         </div>
@@ -533,7 +533,7 @@ window.editStatsWeather = function(el, who) {
     input.type = 'text';
     input.value = current;
     input.maxLength = 20;
-    input.placeholder = '今日天气…';
+    input.placeholder = '今日天氣…';
     input.style.cssText = 'width:100%;padding:3px 7px;border:1px solid var(--accent-color);border-radius:8px;font-size:12px;background:var(--primary-bg);color:var(--text-primary);outline:none;text-align:center;';
     el.innerHTML = '';
     el.appendChild(input);
@@ -543,12 +543,12 @@ window.editStatsWeather = function(el, who) {
         if (who === 'me') moodData[todayStr].myWeather = val;
         else moodData[todayStr].partnerWeather = val;
         saveMoodData();
-        el.innerHTML = val ? `<span>${val}</span>` : `<span style="opacity:0.4;">+ 天气</span>`;
+        el.innerHTML = val ? `<span>${val}</span>` : `<span style="opacity:0.4;">+ 天氣</span>`;
     }
     input.addEventListener('blur', save);
     input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); save(); }
-        if (e.key === 'Escape') { el.innerHTML = current ? `<span>${current}</span>` : `<span style="opacity:0.4;">+ 天气</span>`; }
+        if (e.key === 'Escape') { el.innerHTML = current ? `<span>${current}</span>` : `<span style="opacity:0.4;">+ 天氣</span>`; }
     });
 };
 
@@ -618,14 +618,14 @@ function renderMoodTrashList() {
         return;
     }
     const mName = (typeof settings !== 'undefined' && settings.myName) ? settings.myName : '我';
-    const pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '梦角';
+    const pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '夢角';
     const allMoods = getAllMoodOptions();
 
     list.innerHTML = moodTrash.map(item => {
         const whoLabel = item.who === 'me' ? mName : pName;
         const moodKey = item.who === 'me' ? item.payload.user : item.payload.partner;
         const moodObj = moodKey ? allMoods.find(o => o.key === moodKey) : null;
-        const moodText = moodObj ? `${moodObj.kaomoji} ${moodObj.label}` : '（无心情）';
+        const moodText = moodObj ? `${moodObj.kaomoji} ${moodObj.label}` : '（無心情）';
 
         return `
             <div style="
@@ -643,10 +643,10 @@ function renderMoodTrashList() {
                 </div>
                 <div style="display:flex; gap:8px; flex-shrink:0;">
                     <button class="modal-btn modal-btn-secondary" onclick="restoreMoodTrashItem('${item.id}')" style="padding:7px 10px; font-size:12px; flex-shrink:0;">
-                        恢复
+                        恢復
                     </button>
                     <button class="modal-btn modal-btn-secondary" onclick="deleteMoodTrashItem('${item.id}')" style="padding:7px 10px; font-size:12px; color:#ff6b6b; border-color:rgba(255,107,107,0.4); flex-shrink:0;">
-                        彻底删除
+                        徹底刪除
                     </button>
                 </div>
             </div>
@@ -675,7 +675,7 @@ window.restoreMoodTrashItem = function(trashId) {
     saveMoodData();
     renderMoodCalendar();
     renderMoodTrashList();
-    showNotification('已从回收站恢复', 'success');
+    showNotification('已從回收站恢復', 'success');
     if (typeof playSound === 'function') playSound('mood');
 };
 
@@ -683,11 +683,11 @@ window.deleteMoodTrashItem = function(trashId) {
     const idStr = String(trashId);
     const item = (moodTrash || []).find(t => String(t.id) === idStr);
     if (!item) return;
-    if (!confirm('确定要彻底删除这一条回收站记录吗？')) return;
+    if (!confirm('確定要徹底刪除這一條回收站記錄嗎？')) return;
     moodTrash = moodTrash.filter(t => String(t.id) !== idStr);
     saveMoodTrash();
     renderMoodTrashList();
-    showNotification('已彻底删除', 'success');
+    showNotification('已徹底刪除', 'success');
     if (typeof playSound === 'function') playSound('error');
 };
 
@@ -702,11 +702,11 @@ function exportMoodBackup() {
         };
         const fileName = `mood-backup-${new Date().toISOString().slice(0, 10)}.json`;
         exportDataToMobileOrPC(JSON.stringify(payload, null, 2), fileName);
-        showNotification('✓ 心晴手账已导出', 'success');
+        showNotification('✓ 心晴手帳已匯出', 'success');
         if (typeof playSound === 'function') playSound('export');
     } catch (e) {
-        console.error('心晴手账导出失败:', e);
-        showNotification('心晴手账导出失败', 'error');
+        console.error('心晴手帳匯出失敗:', e);
+        showNotification('心晴手帳匯出失敗', 'error');
     }
 }
 
@@ -723,12 +723,12 @@ async function importMoodBackupFile(file) {
     try {
         data = JSON.parse(text);
     } catch (e) {
-        showNotification('导入文件格式不正确', 'error');
+        showNotification('匯入檔案格式不正確', 'error');
         return;
     }
 
     if (!data || typeof data !== 'object') {
-        showNotification('导入文件无效', 'error');
+        showNotification('匯入檔案無效', 'error');
         return;
     }
 
@@ -741,7 +741,7 @@ function _showMoodImportPicker(data) {
     const hasTrash = Array.isArray(data.moodTrash);
 
     if (!hasCalendar && !hasCustom && !hasTrash) {
-        showNotification('文件不包含可导入的心晴手账数据', 'error');
+        showNotification('檔案不包含可匯入的心晴手帳資料', 'error');
         return;
     }
 
@@ -757,13 +757,13 @@ function _showMoodImportPicker(data) {
             padding:16px 18px env(safe-area-inset-bottom,0);
         ">
             <div style="width:36px;height:4px;border-radius:2px;background:var(--border-color);margin:0 auto 14px;"></div>
-            <div style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">选择导入内容</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">選擇匯入內容</div>
             <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;border:1.5px solid var(--border-color);border-radius:16px;background:var(--primary-bg);margin-bottom:10px;opacity:${hasCalendar ? 1 : 0.45};">
-                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">心情日历</span>
+                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">心情日曆</span>
                 <input type="checkbox" id="mood-imp-cal" ${hasCalendar ? 'checked' : ''} ${hasCalendar ? '' : 'disabled'} style="transform:scale(1.1); accent-color:var(--accent-color);">
             </label>
             <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;border:1.5px solid var(--border-color);border-radius:16px;background:var(--primary-bg);margin-bottom:10px;opacity:${hasCustom ? 1 : 0.45};">
-                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">自定义心情</span>
+                <span style="font-size:13px;font-weight:700;color:var(--text-primary);">自定義心情</span>
                 <input type="checkbox" id="mood-imp-custom" ${hasCustom ? 'checked' : ''} ${hasCustom ? '' : 'disabled'} style="transform:scale(1.1); accent-color:var(--accent-color);">
             </label>
             <label style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px;border:1.5px solid var(--border-color);border-radius:16px;background:var(--primary-bg);margin-bottom:10px;opacity:${hasTrash ? 1 : 0.45};">
@@ -772,7 +772,7 @@ function _showMoodImportPicker(data) {
             </label>
             <div style="display:flex;gap:10px;margin-top:14px;">
                 <button id="mood-imp-cancel" class="modal-btn modal-btn-secondary" style="flex:1;padding:12px 0;">取消</button>
-                <button id="mood-imp-confirm" class="modal-btn modal-btn-primary" style="flex:1;padding:12px 0;">确认导入</button>
+                <button id="mood-imp-confirm" class="modal-btn modal-btn-primary" style="flex:1;padding:12px 0;">確認匯入</button>
             </div>
         </div>
     `;
@@ -787,7 +787,7 @@ function _showMoodImportPicker(data) {
         const selTrash = document.getElementById('mood-imp-trash').checked;
 
         if (!selCal && !selCustom && !selTrash) {
-            showNotification('请至少选择一项', 'error');
+            showNotification('請至少選擇一項', 'error');
             return;
         }
 
@@ -824,12 +824,12 @@ function _showMoodImportPicker(data) {
 
             renderMoodCalendar();
             renderMoodTrashList();
-            showNotification('✓ 导入成功', 'success');
+            showNotification('✓ 匯入成功', 'success');
             if (typeof playSound === 'function') playSound('import');
             overlay.remove();
         } catch (err) {
-            console.error('心晴手账导入失败:', err);
-            showNotification('导入失败', 'error');
+            console.error('心晴手帳匯入失敗:', err);
+            showNotification('匯入失敗', 'error');
         }
     };
 
@@ -849,8 +849,8 @@ function renderMoodOptionsGrid(targetKey) {
             <div class="mood-kaomoji" style="${isSelected ? 'color:#fff' : `color:${mood.color}`}">${mood.kaomoji}</div>
             <div class="mood-label">${mood.label}</div>
             ${(isCustom && currentMoodEditTarget === 'me') ? `<div class="mood-custom-actions" onclick="event.stopPropagation()">
-                <button class="mood-custom-action-btn" onclick="editCustomMood('${mood.key}')" title="编辑">✏️</button>
-                <button class="mood-custom-action-btn" onclick="deleteCustomMood('${mood.key}')" title="删除">🗑</button>
+                <button class="mood-custom-action-btn" onclick="editCustomMood('${mood.key}')" title="編輯">✏️</button>
+                <button class="mood-custom-action-btn" onclick="deleteCustomMood('${mood.key}')" title="刪除">🗑</button>
             </div>` : ''}
         </div>
     `}).join('');
@@ -865,14 +865,14 @@ function switchMoodPage(dir) {
     const nextBtn = document.getElementById('mood-page-next');
     if (currentMoodPage === 1) {
         page1.style.display = 'block'; page2.style.display = 'none';
-        indicator.textContent = '第 1 页 · 心情';
+        indicator.textContent = '第 1 頁 · 心情';
         prevBtn.disabled = true; nextBtn.disabled = false;
     } else {
         page1.style.display = 'none'; page2.style.display = 'block';
         const isPartner = currentMoodEditTarget === 'partner';
-        indicator.textContent = '第 2 页 · 随记';
-        document.getElementById('mood-note-label').textContent = isPartner ? '对方随记:' : '随记:';
-        document.getElementById('mood-note-input').placeholder = isPartner ? '记录对方今天发生的事...' : '记录下今天发生的小事...';
+        indicator.textContent = '第 2 頁 · 隨記';
+        document.getElementById('mood-note-label').textContent = isPartner ? '對方隨記:' : '隨記:';
+        document.getElementById('mood-note-input').placeholder = isPartner ? '記錄對方今天發生的事...' : '記錄下今天發生的小事...';
         prevBtn.disabled = false; nextBtn.disabled = true;
     }
 }
@@ -943,14 +943,14 @@ function openMoodSelector(dateStr, editTarget) {
     if (weatherInput) weatherInput.value = weatherVal;
     const weatherLabel = document.getElementById('mood-weather-label');
     if (weatherLabel) {
-        var pNameW = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '梦角';
+        var pNameW = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '夢角';
         var mNameW = (typeof settings !== 'undefined' && settings.myName) ? settings.myName : '我';
-        if (weatherLabel.firstChild) weatherLabel.firstChild.textContent = currentMoodEditTarget === 'me' ? mNameW + '的天气\u00a0' : pNameW + '的天气\u00a0';
+        if (weatherLabel.firstChild) weatherLabel.firstChild.textContent = currentMoodEditTarget === 'me' ? mNameW + '的天氣\u00a0' : pNameW + '的天氣\u00a0';
     }
 
     document.getElementById('mood-page-1').style.display = 'block';
     document.getElementById('mood-page-2').style.display = 'none';
-    document.getElementById('mood-page-indicator').textContent = '第 1 页 · 心情';
+    document.getElementById('mood-page-indicator').textContent = '第 1 頁 · 心情';
     document.getElementById('mood-page-prev').disabled = true;
     document.getElementById('mood-page-next').disabled = false;
 
@@ -973,7 +973,7 @@ window.tempSelectMood = function(key) {
 document.getElementById('confirm-mood-save').addEventListener('click', () => {
     if (!selectedDateStr) return;
     if (!currentMoodSelection && currentMoodPage === 1) {
-        showNotification('请先选择一个心情图标', 'warning');
+        showNotification('請先選擇一個心情圖示', 'warning');
         return;
     }
     if (!moodData[selectedDateStr]) moodData[selectedDateStr] = {};
@@ -990,7 +990,7 @@ document.getElementById('confirm-mood-save').addEventListener('click', () => {
     
     saveMoodData();
     closeMoodOverlay();
-    showNotification('记录已保存 ✦', 'success');
+    showNotification('記錄已儲存 ✦', 'success');
     if (typeof playSound === 'function') playSound('mood');
 });
 
@@ -1013,7 +1013,7 @@ function showDayDetails(dateStr, data) {
         document.getElementById('detail-kaomoji').textContent = moodObj.kaomoji;
         document.getElementById('detail-label').textContent = moodObj.label;
         document.getElementById('detail-label').style.color = moodObj.color;
-        document.getElementById('detail-text').textContent = data.note || "（这天没有写下随记...）";
+        document.getElementById('detail-text').textContent = data.note || "（這天沒有寫下隨記...）";
         detailView.style.borderLeftColor = moodObj.color;
         const myWeatherEl = document.getElementById('detail-my-weather');
         if (myWeatherEl) {
@@ -1034,7 +1034,7 @@ function showDayDetails(dateStr, data) {
             document.getElementById('detail-partner-kaomoji').textContent = partnerMoodObj.kaomoji;
             document.getElementById('detail-partner-label').textContent = partnerMoodObj.label;
             document.getElementById('detail-partner-label').style.color = partnerMoodObj.color;
-            document.getElementById('detail-partner-text').textContent = data.partnerNote || "（Ta 这天没有写下任何随记）";
+            document.getElementById('detail-partner-text').textContent = data.partnerNote || "（Ta 這天沒有寫下任何隨記）";
             const partnerWeatherEl = document.getElementById('detail-partner-weather');
             if (partnerWeatherEl) {
                 if (data.partnerWeather) { partnerWeatherEl.style.display = 'block'; document.getElementById('detail-partner-weather-val').textContent = data.partnerWeather; }
@@ -1110,13 +1110,13 @@ window.closeCustomMoodDialog = function() {
 window.saveCustomMood = function() {
     const emoji = document.getElementById('custom-mood-emoji').value.trim();
     const label = document.getElementById('custom-mood-label').value.trim();
-    if (!emoji || !label) { showNotification('请填写表情和名称', 'warning'); return; }
+    if (!emoji || !label) { showNotification('請填寫表情和名稱', 'warning'); return; }
     const key = 'custom_' + Date.now();
     customMoodOptions.push({ key, kaomoji: emoji, label, color: customMoodSelectedColor });
     saveCustomMoodOptions();
     closeCustomMoodDialog();
     renderMoodOptionsGrid(currentMoodSelection);
-    showNotification('自定义心情已添加 ✦', 'success');
+    showNotification('自定義心情已新增 ✦', 'success');
     if (typeof playSound === 'function') playSound('mood');
 };
 
@@ -1124,7 +1124,7 @@ window.deleteCustomMood = function(key) {
     customMoodOptions = customMoodOptions.filter(m => m.key !== key);
     saveCustomMoodOptions();
     renderMoodOptionsGrid(currentMoodSelection);
-    showNotification('已删除自定义心情', 'success');
+    showNotification('已刪除自定義心情', 'success');
     if (typeof playSound === 'function') playSound('mood');
 };
 
@@ -1145,14 +1145,14 @@ window.editCustomMood = function(key) {
     saveBtn.onclick = function() {
         const emoji = document.getElementById('custom-mood-emoji').value.trim();
         const label = document.getElementById('custom-mood-label').value.trim();
-        if (!emoji || !label) { showNotification('请填写表情和名称', 'warning'); return; }
+        if (!emoji || !label) { showNotification('請填寫表情和名稱', 'warning'); return; }
         const idx = customMoodOptions.findIndex(m => m.key === key);
         if (idx !== -1) customMoodOptions[idx] = { key, kaomoji: emoji, label, color: customMoodSelectedColor };
         saveCustomMoodOptions();
         closeCustomMoodDialog();
         saveBtn.onclick = null;
         renderMoodOptionsGrid(currentMoodSelection);
-        showNotification('自定义心情已更新 ✦', 'success');
+        showNotification('自定義心情已更新 ✦', 'success');
         if (typeof playSound === 'function') playSound('mood');
     };
 };

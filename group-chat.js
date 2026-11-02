@@ -70,13 +70,13 @@ function saveGroupChatSettings() {
     try {
         localStorage.setItem('groupChatSettings', JSON.stringify(toSave));
     } catch(e) {
-        console.warn('groupChatSettings localStorage保存失败:', e);
+        console.warn('groupChatSettings localStorage儲存失敗:', e);
     }
     if (window.localforage) {
         members.forEach(function(m) {
             if (!m.id) m.id = 'gcm_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
             localforage.setItem('gca_' + m.id, m.avatar || null).catch(function(e) {
-                console.warn('头像存储失败 id=' + m.id, e);
+                console.warn('頭像儲存失敗 id=' + m.id, e);
             });
         });
     }
@@ -86,7 +86,7 @@ function renderGroupMembersList() {
     var list = document.getElementById('group-members-list');
     if (!list) return;
     if (!groupChatSettings.members || groupChatSettings.members.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">暂无成员，点击添加按钮添加</div>';
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px;">暫無成員，點選新增按鈕新增</div>';
         return;
     }
     list.innerHTML = groupChatSettings.members.map(function(m, i) {
@@ -95,7 +95,7 @@ function renderGroupMembersList() {
             : '<div style="width:36px;height:36px;border-radius:50%;background:rgba(var(--accent-color-rgb),0.15);display:flex;align-items:center;justify-content:center;"><i class="fas fa-user" style="font-size:14px;color:var(--accent-color);"></i></div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--primary-bg);border:1px solid var(--border-color);border-radius:10px;">'
             + avatarHtml
-            + '<span style="flex:1;font-size:13px;font-weight:500;">' + (m.name || '成员' + (i+1)) + '</span>'
+            + '<span style="flex:1;font-size:13px;font-weight:500;">' + (m.name || '成員' + (i+1)) + '</span>'
             + '<button onclick="openEditGroupMember(' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--accent-color);font-size:14px;padding:4px 8px;"><i class="fas fa-edit"></i></button>'
             + '<button onclick="deleteGroupMember(' + i + ')" style="background:none;border:none;cursor:pointer;color:#ff4757;font-size:14px;padding:4px 8px;"><i class="fas fa-trash-alt"></i></button>'
             + '</div>';
@@ -112,13 +112,13 @@ function updateGroupModeUI() {
     if (groupChatSettings.enabled) {
         pill.style.background = 'var(--accent-color)';
         knob.style.left = '22px';
-        status.textContent = '已开启 — 收到的消息随机显示成员';
+        status.textContent = '已開啟 — 收到的訊息隨機顯示成員';
         displaySection.style.display = 'block';
         membersSection.style.display = 'block';
     } else {
         pill.style.background = 'var(--border-color)';
         knob.style.left = '3px';
-        status.textContent = '已关闭 — 点击开启';
+        status.textContent = '已關閉 — 點選開啟';
         displaySection.style.display = 'none';
         membersSection.style.display = 'none';
     }
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.openAddGroupMember = function() {
     _groupMemberAvatarDataUrl = null;
-    document.getElementById('group-member-edit-title').textContent = '添加成员';
+    document.getElementById('group-member-edit-title').textContent = '新增成員';
     document.getElementById('group-member-name-input').value = '';
     document.getElementById('group-member-edit-index').value = '';
     var preview = document.getElementById('group-member-avatar-preview');
@@ -187,7 +187,7 @@ window.openEditGroupMember = function(idx) {
     var member = groupChatSettings.members[idx];
     if (!member) return;
     _groupMemberAvatarDataUrl = member.avatar || null;
-    document.getElementById('group-member-edit-title').textContent = '编辑成员';
+    document.getElementById('group-member-edit-title').textContent = '編輯成員';
     document.getElementById('group-member-name-input').value = member.name || '';
     document.getElementById('group-member-edit-index').value = idx;
     var preview = document.getElementById('group-member-avatar-preview');
@@ -219,7 +219,7 @@ window.previewGroupMemberAvatar = function(input) {
 
 window.saveGroupMember = function() {
     var name = (document.getElementById('group-member-name-input').value || '').trim();
-    if (!name) { alert('请输入成员名字'); return; }
+    if (!name) { alert('請輸入成員名字'); return; }
     var idxVal = document.getElementById('group-member-edit-index').value;
     var member = { name: name, avatar: _groupMemberAvatarDataUrl };
     if (idxVal !== '') {
@@ -234,7 +234,7 @@ window.saveGroupMember = function() {
 };
 
 window.deleteGroupMember = function(idx) {
-    if (!confirm('确定删除该成员吗？')) return;
+    if (!confirm('確定刪除該成員嗎？')) return;
     groupChatSettings.members.splice(idx, 1);
     saveGroupChatSettings();
     renderGroupMembersList();
@@ -258,50 +258,50 @@ if (exportAllBtn) {
             overlay.innerHTML = `
                 <div style="background:var(--secondary-bg);border-radius:20px;padding:24px;width:88%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.4);animation:modalContentSlideIn 0.3s ease forwards;">
                     <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:4px;display:flex;align-items:center;gap:8px;">
-                        <i class="fas fa-archive" style="color:var(--accent-color);font-size:14px;"></i>全量备份导出
+                        <i class="fas fa-archive" style="color:var(--accent-color);font-size:14px;"></i>全量備份匯出
                     </div>
-                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">默认导出为 <strong>ZIP</strong>：<code style="font-size:11px;">backup.json</code> 仅存结构与引用，大图在 <code style="font-size:11px;">media/</code>，避免单文件 JSON 过大导致无法解析。</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">預設匯出為 <strong>ZIP</strong>：<code style="font-size:11px;">backup.json</code> 僅存結構與引用，大圖在 <code style="font-size:11px;">media/</code>，避免單檔案 JSON 過大導致無法解析。</div>
                     <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px;">
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_msgs" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-comments" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>聊天记录 <span style="font-size:11px;color:var(--text-secondary);">(${messages.length} 条)</span></span>
+                            <span>聊天記錄 <span style="font-size:11px;color:var(--text-secondary);">(${messages.length} 條)</span></span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_settings" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-sliders-h" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>外观与聊天设置</span>
+                            <span>外觀與聊天設定</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_custom" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-reply" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>字卡 / 拍一拍 / 状态 / 格言</span>
+                            <span>字卡 / 拍一拍 / 狀態 / 格言</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_ann" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-calendar-heart" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>纪念日 / 倒计时</span>
+                            <span>紀念日 / 倒計時</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_themes" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-palette" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>自定义主题 / 方案</span>
+                            <span>自定義主題 / 方案</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_dg" checked style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-sun" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>每日公告 / 心情数据</span>
+                            <span>每日公告 / 心情資料</span>
                         </label>
                         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-primary);">
                             <input type="checkbox" id="_bk_stickers" style="accent-color:var(--accent-color);width:15px;height:15px;">
                             <i class="fas fa-sticky-note" style="color:var(--accent-color);width:16px;text-align:center;"></i>
-                            <span>表情库 <span style="font-size:11px;color:var(--text-secondary);">(默认关，勾选后去重打包)</span></span>
+                            <span>表情庫 <span style="font-size:11px;color:var(--text-secondary);">(預設關，勾選後去重打包)</span></span>
                         </label>
                     </div>
                     <div style="display:flex;gap:10px;">
                         <button id="_bk_cancel" style="flex:1;padding:11px;border:1px solid var(--border-color);border-radius:12px;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>
                         <button id="_bk_confirm" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-family);display:flex;align-items:center;justify-content:center;gap:7px;">
-                            <i class="fas fa-download"></i>导出备份
+                            <i class="fas fa-download"></i>匯出備份
                         </button>
                     </div>
                 </div>`;
@@ -323,7 +323,7 @@ if (exportAllBtn) {
                 const inclStickers = document.getElementById('_bk_stickers') && document.getElementById('_bk_stickers').checked;
 
                 if (!inclMsgs && !inclSet && !inclCustom && !inclAnn && !inclThemes && !inclDg && !inclStickers) {
-                    showNotification('请至少选择一项', 'error');
+                    showNotification('請至少選擇一項', 'error');
                     return;
                 }
                 closeBkDialog();
@@ -344,13 +344,13 @@ if (exportAllBtn) {
                         const fileName = `chatapp-backup-${dateStr}.json`;
                         const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
                         downloadFileFallback(blob, fileName);
-                        if (typeof showNotification === 'function') showNotification('已导出 JSON 备份', 'success');
+                        if (typeof showNotification === 'function') showNotification('已匯出 JSON 備份', 'success');
                     } else {
-                        if (typeof showNotification === 'function') showNotification('备份模块或函数未加载，请刷新页面', 'error');
+                        if (typeof showNotification === 'function') showNotification('備份模組或函式未載入，請重新整理頁面', 'error');
                     }
                 } catch(e) {
-                    console.error('全量备份导出失败:', e);
-                    if (typeof showNotification === 'function') showNotification('导出失败，请重试', 'error');
+                    console.error('全量備份匯出失敗:', e);
+                    if (typeof showNotification === 'function') showNotification('匯出失敗，請重試', 'error');
                 }
             };
         });
@@ -365,13 +365,13 @@ if (importAllBtn) {
                 if (!file) return;
 
                 if (file.size > 220 * 1024 * 1024) {
-                    if (typeof showNotification === 'function') showNotification('文件过大，请检查是否是正确的备份文件', 'error');
+                    if (typeof showNotification === 'function') showNotification('檔案過大，請檢查是否是正確的備份檔案', 'error');
                     return;
                 }
 
                 try {
                     if (typeof ChatBackup === 'undefined' || !ChatBackup.loadBackupFromFile || !ChatBackup.applyBackupToStorage) {
-                        throw new Error('备份模块未加载，请刷新页面');
+                        throw new Error('備份模組未載入，請重新整理頁面');
                     }
                     var backup = await ChatBackup.loadBackupFromFile(file);
 
@@ -382,18 +382,18 @@ if (importAllBtn) {
                         backup.formatVersion === 5 ||
                         backup.localforage ||
                         backup.indexedDB;
-                    if (!okShape) throw new Error('不是有效的传讯备份文件');
+                    if (!okShape) throw new Error('不是有效的傳訊備份檔案');
 
-                    if (!confirm('导入全量备份将覆盖备份文件中包含的数据（按文件内容写入）。\n\nv5 ZIP：从 media/ 还原图片；v4 JSON：从 mediaStore 还原。\n\n确定继续吗？')) return;
+                    if (!confirm('匯入全量備份將覆蓋備份檔案中包含的資料（按檔案內容寫入）。\n\nv5 ZIP：從 media/ 還原圖片；v4 JSON：從 mediaStore 還原。\n\n確定繼續嗎？')) return;
 
                     await ChatBackup.applyBackupToStorage(backup, { selective: false });
 
-                    if (typeof showNotification === 'function') showNotification('数据恢复成功，即将刷新页面应用更改', 'success', 2000);
+                    if (typeof showNotification === 'function') showNotification('資料恢復成功，即將重新整理頁面應用更改', 'success', 2000);
                     setTimeout(function() { location.reload(); }, 2000);
                 } catch (err) {
-                    var msg = err && err.message ? err.message : '未知错误';
-                    if (typeof showNotification === 'function') showNotification('导入失败：' + msg, 'error', 5000);
-                    console.error('导入报错:', err);
+                    var msg = err && err.message ? err.message : '未知錯誤';
+                    if (typeof showNotification === 'function') showNotification('匯入失敗：' + msg, 'error', 5000);
+                    console.error('匯入報錯:', err);
                 }
             };
             document.body.appendChild(input);
@@ -465,12 +465,12 @@ window._runMsgSearch = function() {
     });
 
     if (!q && !from && !to) {
-        resultsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">输入关键词或选择日期开始搜索</div>';
+        resultsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">輸入關鍵詞或選擇日期開始搜尋</div>';
         return;
     }
 
     if (filtered.length === 0) {
-        resultsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">未找到相关消息</div>';
+        resultsEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px;">未找到相關訊息</div>';
         return;
     }
 
@@ -479,7 +479,7 @@ window._runMsgSearch = function() {
     var myAvatar = myAvatarEl ? myAvatarEl.src : '';
     var partnerAvatar = partnerAvatarEl ? partnerAvatarEl.src : '';
     var myName = (typeof settings !== 'undefined' && settings.myName) || '我';
-    var partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '对方';
+    var partnerName = (typeof settings !== 'undefined' && settings.partnerName) || '對方';
 
     function highlight(text) {
         if (!q || !text) return (text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -525,7 +525,7 @@ window._runMsgSearch = function() {
     }).join('');
 
     resultsEl.insertAdjacentHTML('afterbegin',
-        '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;padding:0 2px;">共找到 ' + filtered.length + ' 条结果</div>'
+        '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;padding:0 2px;">共找到 ' + filtered.length + ' 條結果</div>'
     );
 };
 

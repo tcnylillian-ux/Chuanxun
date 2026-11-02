@@ -1,6 +1,6 @@
 /**
- * 统一备份/恢复：v5 默认 ZIP（结构 JSON + media/ 二进制），避免单文件巨型 JSON 无法解析；
- * v4 单文件 JSON 仍可导入。依赖：localforage、JSZip（CDN）、全局 APP_PREFIX / SESSION_ID。
+ * 統一備份/恢復：v5 預設 ZIP（結構 JSON + media/ 二進位制），避免單檔案巨型 JSON 無法解析；
+ * v4 單檔案 JSON 仍可匯入。依賴：localforage、JSZip（CDN）、全域性 APP_PREFIX / SESSION_ID。
  */
 (function (global) {
     'use strict';
@@ -73,7 +73,7 @@
     }
 
     /**
-     * 将大树中的 data: 媒体字符串抽离到 store，原处替换为 { __mRef: id }（导入时再展开）
+     * 將大樹中的 data: 媒體字串抽離到 store，原處替換為 { __mRef: id }（匯入時再展開）
      */
     function extractMediaTree(node, state) {
         if (!state) state = { store: {}, map: new Map(), n: 0 };
@@ -174,7 +174,7 @@
         return key.replace(re, newSid);
     }
 
-    /** 与 group-chat 导出勾选项一致：未勾选的模块对应键名子串会被排除 */
+    /** 與 group-chat 匯出勾選項一致：未勾選的模組對應鍵名子串會被排除 */
     function buildModuleSkipPatterns(flags) {
         flags = flags || {};
         var p = [];
@@ -198,7 +198,7 @@
     }
 
     /**
-     * 从当前环境收集备份数据并打包为 v4（紧凑 JSON + mediaStore）
+     * 從當前環境收集備份資料並打包為 v4（緊湊 JSON + mediaStore）
      */
     async function buildBackupPayload(flags) {
         flags = flags || {
@@ -214,7 +214,7 @@
                 var rawVal = await localforage.getItem(key);
                 if (rawVal === null || rawVal === undefined) continue;
                 lfData[key] = deepCloneJsonSafe(rawVal);
-            } catch (e) { console.warn('[backup] 读取失败', key, e); }
+            } catch (e) { console.warn('[backup] 讀取失敗', key, e); }
         }
         var lsData = {};
         for (var j = 0; j < localStorage.length; j++) {
@@ -271,10 +271,10 @@
     }
 
     /**
-     * 从 ZIP 解析备份（v5）；若包内为旧版单 JSON（仅改扩展名等）则按其中 JSON 原样返回。
+     * 從 ZIP 解析備份（v5）；若包內為舊版單 JSON（僅改副檔名等）則按其中 JSON 原樣返回。
      */
     async function parseZipBackup(arrayBuffer) {
-        if (typeof JSZip === 'undefined') throw new Error('JSZip 未加载，无法读取 ZIP 备份，请检查网络后刷新页面');
+        if (typeof JSZip === 'undefined') throw new Error('JSZip 未載入，無法讀取 ZIP 備份，請檢查網路後重新整理頁面');
         var zip = await JSZip.loadAsync(arrayBuffer);
         var jsonFile = zip.file('backup.json');
         if (!jsonFile) {
@@ -284,7 +284,7 @@
             });
             if (names.length === 1) jsonFile = zip.file(names[0]);
         }
-        if (!jsonFile) throw new Error('ZIP 内未找到 backup.json');
+        if (!jsonFile) throw new Error('ZIP 內未找到 backup.json');
         var raw = await jsonFile.async('string');
         if (raw.length && raw.charCodeAt(0) === 0xFEFF) raw = raw.slice(1);
         var data = JSON.parse(raw);
@@ -298,7 +298,7 @@
                 var path = (meta && meta.path) ? meta.path : ('media/' + id);
                 var zf = zip.file(path);
                 if (!zf) {
-                    console.warn('[backup] ZIP 缺少媒体文件', path);
+                    console.warn('[backup] ZIP 缺少媒體檔案', path);
                     continue;
                 }
                 var mimeMeta = (meta && meta.mime) ? meta.mime : 'application/octet-stream';
@@ -331,7 +331,7 @@
     }
 
     async function exportBackupToFile(flags) {
-        if (typeof showNotification === 'function') showNotification('正在打包备份（ZIP：结构与媒体分离）…', 'info', 4000);
+        if (typeof showNotification === 'function') showNotification('正在打包備份（ZIP：結構與媒體分離）…', 'info', 4000);
         var payload = await buildBackupPayload(flags);
         var dateStr = new Date().toISOString().slice(0, 10);
         var fileNameZip = 'chatapp-backup-' + dateStr + '.zip';
@@ -379,27 +379,27 @@
                         if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
                             await navigator.share({
                                 files: [shareFile],
-                                title: '传讯全量备份',
-                                text: 'ZIP 备份：' + new Date().toLocaleDateString()
+                                title: '傳訊全量備份',
+                                text: 'ZIP 備份：' + new Date().toLocaleDateString()
                             });
-                            if (typeof showNotification === 'function') showNotification('备份导出成功', 'success');
+                            if (typeof showNotification === 'function') showNotification('備份匯出成功', 'success');
                             return;
                         }
                     } catch (e) { /* fall through */ }
                 }
                 downloadBlob(zipBlob, fileNameZip);
                 if (typeof showNotification === 'function') {
-                    showNotification('已导出 ZIP：主 JSON 不含大图，导入更不易失败', 'success', 3500);
+                    showNotification('已匯出 ZIP：主 JSON 不含大圖，匯入更不易失敗', 'success', 3500);
                 }
                 return;
             } catch (zipErr) {
-                console.error('[backup] ZIP 导出失败，回退单文件 JSON', zipErr);
+                console.error('[backup] ZIP 匯出失敗，回退單檔案 JSON', zipErr);
                 if (typeof showNotification === 'function') {
-                    showNotification('ZIP 打包失败，已改为单文件 JSON（大备份可能较难解析）', 'warning', 4500);
+                    showNotification('ZIP 打包失敗，已改為單檔案 JSON（大備份可能較難解析）', 'warning', 4500);
                 }
             }
         } else if (typeof showNotification === 'function') {
-            showNotification('JSZip 未加载，将导出单文件 JSON', 'warning', 3000);
+            showNotification('JSZip 未載入，將匯出單檔案 JSON', 'warning', 3000);
         }
 
         var str = serializeBackupV4(payload);
@@ -409,14 +409,14 @@
             try {
                 var f = new File([blob], fileName, { type: 'application/json' });
                 if (navigator.canShare && navigator.canShare({ files: [f] })) {
-                    await navigator.share({ files: [f], title: '传讯全量备份', text: '备份日期：' + new Date().toLocaleDateString() });
-                    if (typeof showNotification === 'function') showNotification('备份导出成功', 'success');
+                    await navigator.share({ files: [f], title: '傳訊全量備份', text: '備份日期：' + new Date().toLocaleDateString() });
+                    if (typeof showNotification === 'function') showNotification('備份匯出成功', 'success');
                     return;
                 }
             } catch (e2) { /* fall through */ }
         }
         downloadBlob(blob, fileName);
-        if (typeof showNotification === 'function') showNotification('备份导出成功（JSON）', 'success');
+        if (typeof showNotification === 'function') showNotification('備份匯出成功（JSON）', 'success');
     }
 
     function getLfSource(data) {
@@ -473,8 +473,8 @@
     }
 
     /**
-     * 将备份写入存储（已解析的对象）
-     * @param {object} data 原始备份 JSON
+     * 將備份寫入儲存（已解析的物件）
+     * @param {object} data 原始備份 JSON
      * @param {{ selective?: boolean, selectedCategoryIds?: string[], categories?: array }} opt
      */
     async function applyBackupToStorage(data, opt) {
@@ -502,7 +502,7 @@
             try {
                 await localforage.setItem(targetKey, val);
             } catch (e) {
-                console.warn('[backup] 写入失败', targetKey, e);
+                console.warn('[backup] 寫入失敗', targetKey, e);
             }
         }
 
@@ -514,11 +514,11 @@
                 if (typeof lsv === 'string' && lsv.indexOf('data:image/') === 0 && lsv.length > 2000) continue;
                 localStorage.setItem(targetLsKey, lsv);
             } catch (e2) {
-                console.warn('[backup] localStorage 恢复失败', targetLsKey, e2);
+                console.warn('[backup] localStorage 恢復失敗', targetLsKey, e2);
             }
         }
 
-        // 修复 sessionList 中的会话 ID：键已被 remap，但值里的 id 字段还是旧 sessionId
+        // 修復 sessionList 中的會話 ID：鍵已被 remap，但值裡的 id 欄位還是舊 sessionId
         if (needRemap) {
             try {
                 var slKey = appPfx + 'sessionList';

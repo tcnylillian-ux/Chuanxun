@@ -1,9 +1,9 @@
 /*
- * 传讯 · 同步层（Firebase 版）
- * 原网站把所有数据存在 localforage（IndexedDB）和 localStorage。
- * 这里在原代码启动前把云端（你自己的 Firebase Firestore）的数据写回本地，
- * 启动后把每次本地改动上传。其他设备有更新时，回到页面会自动刷新。
- * 不修改原网站的任何代码。在网址后面加 #sync 可以打开同步设置。
+ * 傳訊 · 同步層（Firebase 版）
+ * 原網站把所有資料存在 localforage（IndexedDB）和 localStorage。
+ * 這裡在原始碼啟動前把雲端（你自己的 Firebase Firestore）的資料寫回本地，
+ * 啟動後把每次本地改動上傳。其他裝置有更新時，回到頁面會自動重新整理。
+ * 不修改原網站的任何程式碼。在網址後面加 #sync 可以開啟同步設定。
  */
 (function () {
   'use strict';
@@ -45,9 +45,9 @@
   /* ---------- UI: loading veil + status pill ---------- */
   var veil = document.createElement('div');
   veil.id = 'cx-veil';
-  veil.innerHTML = '<div class="cx-v-in"><div class="cx-v-t">传讯</div><div class="cx-v-s" id="cx-v-s">正在同步…</div></div>';
+  veil.innerHTML = '<div class="cx-v-in"><div class="cx-v-t">傳訊</div><div class="cx-v-s" id="cx-v-s">正在同步…</div></div>';
   var vs = document.createElement('style');
-  vs.textContent = '#cx-veil{position:fixed;inset:0;z-index:2147483600;background:#0b0b0c;color:#f2f2f2;display:flex;align-items:center;justify-content:center;font-family:"Noto Serif SC",serif}' +
+  vs.textContent = '#cx-veil{position:fixed;inset:0;z-index:2147483600;background:#0b0b0c;color:#f2f2f2;display:flex;align-items:center;justify-content:center;font-family:"Noto Serif TC", "Noto Serif SC",serif}' +
     '.cx-v-in{text-align:center}.cx-v-t{font-size:26px;letter-spacing:.5em;margin-left:.5em}.cx-v-s{margin-top:14px;font-size:12px;opacity:.6;letter-spacing:.1em;font-variant-numeric:tabular-nums}' +
     '#cx-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147483500;background:rgba(20,20,22,.9);color:#fff;font:12px/1 -apple-system,"PingFang SC",sans-serif;padding:9px 14px;border-radius:99px;border:none;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}' +
     '#cx-pill[hidden]{display:none}';
@@ -143,10 +143,10 @@
     } catch (e) {
       console.warn('[cx] upload', id, e);
       dirty[id] = dirty[id] || d;
-      if (e && e.code === 'resource-exhausted') showPill('Firebase 今日免费额度已用完，明天会继续同步', 6000);
-      else if (e && e.code === 'permission-denied') showPill('Firebase 拒绝写入，请检查规则（见使用说明）', 6000);
-      else if (e && e.code === 'invalid-argument') showPill('有内容过大未能同步', 4000);
-      else { showPill('同步失败，稍后重试', 3000); setTimeout(function () { upload(id); }, 8000); }
+      if (e && e.code === 'resource-exhausted') showPill('Firebase 今日免費額度已用完，明天會繼續同步', 6000);
+      else if (e && e.code === 'permission-denied') showPill('Firebase 拒絕寫入，請檢查規則（見使用說明）', 6000);
+      else if (e && e.code === 'invalid-argument') showPill('有內容過大未能同步', 4000);
+      else { showPill('同步失敗，稍後重試', 3000); setTimeout(function () { upload(id); }, 8000); }
     }
     running[id] = false;
     if (again[id]) { again[id] = false; upload(id); }
@@ -161,7 +161,7 @@
     }, 60000);
   }
   function pending() { for (var k in timers) if (dirty[k]) return true; for (var r in running) if (running[r]) return true; return false; }
-  function statusIdle() { if (!pending() && pill.textContent === '同步失败，稍后重试') pill.hidden = true; }
+  function statusIdle() { if (!pending() && pill.textContent === '同步失敗，稍後重試') pill.hidden = true; }
   async function flushAll(maxMs) {
     var ids = Object.keys(dirty); ids.forEach(function (id) { clearTimeout(timers[id]); upload(id); });
     var end = Date.now() + (maxMs || 3000);
@@ -238,12 +238,12 @@
   /* ---------- remote updates after start ---------- */
   var visibleSince = document.visibilityState === 'visible' ? Date.now() : 0;
   var needReload = false;
-  async function reloadNow() { showPill('正在载入其他设备的更新…'); await flushAll(3000); location.reload(); }
+  async function reloadNow() { showPill('正在載入其他裝置的更新…'); await flushAll(3000); location.reload(); }
   function onRemoteChanged(ids) {
     ids.forEach(function (id) { blockedUntilReload[id] = true; });
     needReload = true;
     if (document.visibilityState === 'visible' && Date.now() - visibleSince < 5000) { reloadNow(); return; }
-    if (document.visibilityState === 'visible') showPill('其他设备有新内容 · 点此刷新', 0, reloadNow);
+    if (document.visibilityState === 'visible') showPill('其他裝置有新內容 · 點此重新整理', 0, reloadNow);
   }
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') { visibleSince = 0; flushAll(2500); }
@@ -260,7 +260,7 @@
     Object.keys(META).forEach(function (id) { if (META[id].dirty) markDirty(META[id].st, META[id].k); });
   }
 
-  /* ---------- connection: Firebase config + sync key, shared as one 连接码 ---------- */
+  /* ---------- connection: Firebase config + sync key, shared as one 連線碼 ---------- */
   function b64e(str) { return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function b64d(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return decodeURIComponent(escape(atob(str))); }
   function makeLink(c, k) { return 'CX1.' + b64e(JSON.stringify({ c: c, k: k })); }
@@ -278,7 +278,7 @@
   function newKey() { var a = new Uint8Array(24); crypto.getRandomValues(a); var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789', s = ''; for (var i = 0; i < a.length; i++) s += abc[a[i] % abc.length]; return s + Date.now().toString(36); }
   var setupCss = document.createElement('style');
   setupCss.textContent = '.cx-set{width:min(440px,100%);max-height:100%;overflow:auto;text-align:left;padding:24px max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;box-sizing:border-box}' +
-    '.cx-set h1{font:600 22px/1.3 "Noto Serif SC",serif;letter-spacing:.3em;margin:0 0 6px}.cx-set .sub{font-size:13px;opacity:.6;margin:0 0 22px;line-height:1.6}' +
+    '.cx-set h1{font:600 22px/1.3 "Noto Serif TC", "Noto Serif SC",serif;letter-spacing:.3em;margin:0 0 6px}.cx-set .sub{font-size:13px;opacity:.6;margin:0 0 22px;line-height:1.6}' +
     '.cx-set h2{font-size:14px;margin:22px 0 8px;font-weight:600}.cx-set p{font-size:13px;line-height:1.7;opacity:.8;margin:0 0 10px}' +
     '.cx-set textarea{width:100%;box-sizing:border-box;min-height:96px;border-radius:12px;border:1px solid #333;background:#151517;color:#eee;padding:10px 12px;font:13px/1.5 ui-monospace,Menlo,monospace;resize:vertical}' +
     '.cx-set button{margin-top:10px;width:100%;padding:12px;border-radius:12px;border:1px solid #444;background:#1c1c1f;color:#f2f2f2;font-size:15px;cursor:pointer}' +
@@ -290,13 +290,13 @@
     return new Promise(function (resolve) {
       var box = document.createElement('div'); box.className = 'cx-set';
       veil.innerHTML = ''; veil.appendChild(box); veil.style.overflow = 'auto';
-      function done(l) { history.replaceState(null, '', location.pathname + location.search); veil.innerHTML = '<div class="cx-v-in"><div class="cx-v-t">传讯</div><div class="cx-v-s" id="cx-v-s">正在同步…</div></div>'; resolve(l); }
+      function done(l) { history.replaceState(null, '', location.pathname + location.search); veil.innerHTML = '<div class="cx-v-in"><div class="cx-v-t">傳訊</div><div class="cx-v-s" id="cx-v-s">正在同步…</div></div>'; resolve(l); }
       function home() {
-        box.innerHTML = '<h1>传讯 · 同步</h1><p class="sub">电脑和手机用同一个「连接码」，数据就会自动同步。</p>' +
-          (current ? '<h2>这台设备已连接</h2><p>把下面的连接码发给自己，在另一台设备上粘贴即可。</p><div class="code" id="cx-cur"></div><button id="cx-copy">复制连接码</button><button class="pri" id="cx-keep">继续使用</button><button id="cx-off">断开这台设备的同步</button><hr>' : '') +
-          '<h2>已经有连接码（第二台设备）</h2><textarea id="cx-in" placeholder="粘贴 CX1. 开头的连接码"></textarea><div class="err" id="cx-e1"></div><button class="pri" id="cx-join">连接</button>' +
-          '<hr><h2>第一次设置（第一台设备）</h2><p>粘贴 Firebase 网页应用的 firebaseConfig（整段复制过来即可，见使用说明）。</p><textarea id="cx-cfg" placeholder="const firebaseConfig = { apiKey: ..., projectId: ... }"></textarea><div class="err" id="cx-e2"></div><button id="cx-make">建立连接码</button>' +
-          '<hr><button id="cx-skip">先不同步，只用这台设备</button>';
+        box.innerHTML = '<h1>傳訊 · 同步</h1><p class="sub">電腦和手機用同一個「連線碼」，資料就會自動同步。</p>' +
+          (current ? '<h2>這臺裝置已連線</h2><p>把下面的連線碼發給自己，在另一臺裝置上貼上即可。</p><div class="code" id="cx-cur"></div><button id="cx-copy">複製連線碼</button><button class="pri" id="cx-keep">繼續使用</button><button id="cx-off">斷開這臺裝置的同步</button><hr>' : '') +
+          '<h2>已經有連線碼（第二臺裝置）</h2><textarea id="cx-in" placeholder="貼上 CX1. 開頭的連線碼"></textarea><div class="err" id="cx-e1"></div><button class="pri" id="cx-join">連線</button>' +
+          '<hr><h2>第一次設定（第一臺裝置）</h2><p>貼上 Firebase 網頁應用的 firebaseConfig（整段複製過來即可，見使用說明）。</p><textarea id="cx-cfg" placeholder="const firebaseConfig = { apiKey: ..., projectId: ... }"></textarea><div class="err" id="cx-e2"></div><button id="cx-make">建立連線碼</button>' +
+          '<hr><button id="cx-skip">先不同步，只用這臺裝置</button>';
         if (current) {
           box.querySelector('#cx-cur').textContent = current.raw;
           box.querySelector('#cx-copy').onclick = function () { copy(current.raw, this); };
@@ -305,16 +305,16 @@
         }
         box.querySelector('#cx-join').onclick = function () {
           var l = readLink(box.querySelector('#cx-in').value);
-          if (!l) { box.querySelector('#cx-e1').textContent = '连接码不正确，请完整复制（以 CX1. 开头）。'; return; }
+          if (!l) { box.querySelector('#cx-e1').textContent = '連線碼不正確，請完整複製（以 CX1. 開頭）。'; return; }
           switchTo(l);
         };
         box.querySelector('#cx-make').onclick = function () {
           var c = parseConfig(box.querySelector('#cx-cfg').value);
-          if (!c) { box.querySelector('#cx-e2').textContent = '没有读到 apiKey 和 projectId，请把 firebaseConfig 整段复制过来。'; return; }
+          if (!c) { box.querySelector('#cx-e2').textContent = '沒有讀到 apiKey 和 projectId，請把 firebaseConfig 整段複製過來。'; return; }
           var l = readLink(makeLink(c, newKey()));
-          box.innerHTML = '<h1>连接码已建立</h1><p class="sub">这台设备会把现有数据上传。请把连接码发给自己（例如用聊天软件），在手机上打开同一个网址，选「已经有连接码」粘贴。</p>' +
-            '<div class="code" id="cx-new"></div><button id="cx-copy2">复制连接码</button><button class="pri" id="cx-go">开始使用</button>' +
-            '<p style="margin-top:14px">连接码等于你的数据钥匙，不要公开分享。之后在网址后面加 <b>#sync</b> 可以再次查看。</p>';
+          box.innerHTML = '<h1>連線碼已建立</h1><p class="sub">這臺裝置會把現有資料上傳。請把連線碼發給自己（例如用聊天軟體），在手機上開啟同一個網址，選「已經有連線碼」貼上。</p>' +
+            '<div class="code" id="cx-new"></div><button id="cx-copy2">複製連線碼</button><button class="pri" id="cx-go">開始使用</button>' +
+            '<p style="margin-top:14px">連線碼等於你的資料鑰匙，不要公開分享。之後在網址後面加 <b>#sync</b> 可以再次檢視。</p>';
           box.querySelector('#cx-new').textContent = l.raw;
           box.querySelector('#cx-copy2').onclick = function () { copy(l.raw, this); };
           box.querySelector('#cx-go').onclick = function () { switchTo(l); };
@@ -329,9 +329,9 @@
         done(l);
       }
       function copy(t, btn) {
-        var ok = function () { btn.textContent = '已复制'; setTimeout(function () { btn.textContent = '复制连接码'; }, 1500); };
+        var ok = function () { btn.textContent = '已複製'; setTimeout(function () { btn.textContent = '複製連線碼'; }, 1500); };
         if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { sel(); }); else sel();
-        function sel() { var c = box.querySelector('.code'); var r = document.createRange(); r.selectNodeContents(c); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = '已选中，请手动复制'; }
+        function sel() { var c = box.querySelector('.code'); var r = document.createRange(); r.selectNodeContents(c); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = '已選中，請手動複製'; }
       }
       home();
     });
@@ -344,12 +344,12 @@
     if (location.hash === '#sync' || (!link && !lsg('__cx_local'))) { link = await setupScreen(link); }
     if (!link) { veil.remove(); loadScripts(); return; }
     var offline = navigator.onLine === false;
-    var giveUp = setTimeout(function () { if (!started) { showPill(offline ? '离线中，使用本机数据，连网后自动同步' : '暂时连不上同步，先用本机数据', 5000); loadScripts(); } }, offline ? 300 : 15000);
+    var giveUp = setTimeout(function () { if (!started) { showPill(offline ? '離線中，使用本機資料，連網後自動同步' : '暫時連不上同步，先用本機資料', 5000); loadScripts(); } }, offline ? 300 : 15000);
     window.addEventListener('online', function () { Object.keys(META).forEach(function (id) { if (META[id].dirty) markDirty(META[id].st, META[id].k); }); });
     try {
       var app = firebase.apps.length ? firebase.app() : firebase.initializeApp(link.c);
       db = app.firestore();
-    } catch (e) { console.warn('[cx] firebase', e); clearTimeout(giveUp); showPill('Firebase 设置有误，在网址后加 #sync 重新设置', 8000); loadScripts(); return; }
+    } catch (e) { console.warn('[cx] firebase', e); clearTimeout(giveUp); showPill('Firebase 設定有誤，在網址後加 #sync 重新設定', 8000); loadScripts(); return; }
     P = { kv: 'sync/' + link.k + '/kv', kp: 'sync/' + link.k + '/kp' };
     var first = true;
     db.collection(P.kv).onSnapshot(async function (snap) {
@@ -364,7 +364,7 @@
         }
         await uploadLocalOnly(remoteIds);
         clearTimeout(giveUp);
-        if (started) { needReload = needReload || todo.length > 0; if (todo.length) showPill('其他设备有新内容 · 点此刷新', 0, reloadNow); }
+        if (started) { needReload = needReload || todo.length > 0; if (todo.length) showPill('其他裝置有新內容 · 點此重新整理', 0, reloadNow); }
         else { loadScripts(); showPill('已同步', 1500); }
         return;
       }
@@ -377,7 +377,7 @@
       if (changed.length) onRemoteChanged(changed);
     }, function (e) {
       console.warn('[cx] listen', e); clearTimeout(giveUp);
-      showPill(e && e.code === 'permission-denied' ? 'Firebase 拒绝访问，请检查规则（见使用说明）' : '同步连接中断，刷新页面可重连', 0, function () { location.reload(); });
+      showPill(e && e.code === 'permission-denied' ? 'Firebase 拒絕訪問，請檢查規則（見使用說明）' : '同步連線中斷，重新整理頁面可重連', 0, function () { location.reload(); });
       loadScripts();
     });
   }

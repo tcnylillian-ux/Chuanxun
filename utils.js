@@ -72,7 +72,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                     const blob = new Blob([dataString], { type: 'application/json' });
                     const file = new File([blob], fileName, { type: 'application/json' });
                     if (navigator.canShare({ files: [file] })) {
-                        navigator.share({ files: [file], title: '传讯数据备份', text: '请选择"保存到文件"' })
+                        navigator.share({ files: [file], title: '傳訊資料備份', text: '請選擇"儲存到檔案"' })
                             .catch(() => downloadFileFallback(blob, fileName));
                         return;
                     }
@@ -97,7 +97,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 description: 'Storage for Chat App V3'
             });
         } else {
-            console.warn('[storage] localforage 未加载，IndexedDB 能力不可用，将退回 localStorage/内存兜底');
+            console.warn('[storage] localforage 未載入，IndexedDB 能力不可用，將退回 localStorage/記憶體兜底');
         }
 
         function showNotification(message, type = 'info', duration = 3000) {
@@ -135,14 +135,14 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
             if (!settings.soundEnabled) return;
             stopCurrentSound();
             try {
-                // =============== 两方音效配置 ===============
+                // =============== 兩方音效配置 ===============
                 const category = (() => {
-                    // 新类型（按两方区分）
+                    // 新型別（按兩方區分）
                     if (type === 'my_send') return 'my_send';
                     if (type === 'partner_message') return 'partner_message';
                     if (type === 'my_poke') return 'my_poke';
                     if (type === 'partner_poke') return 'partner_poke';
-                    // 兼容旧调用
+                    // 相容舊呼叫
                     if (type === 'send') return 'my_send';
                     if (type === 'message') return 'partner_message';
                     if (type === 'poke') return 'my_poke';
@@ -165,7 +165,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
 
                 const KAKAO_TALK_URL = 'https://image.uglycat.cc/jl5xf9.mp3';
 
-                // 预设音效（无音效 / kakaoTalk）需要优先级高于自定义 URL
+                // 預設音效（無音效 / kakaoTalk）需要優先順序高於自定義 URL
                 const presetId = (() => {
                     if (!category) return '';
                     if (category === 'my_send') return settings.mySendSoundPreset || 'tone_low';
@@ -177,10 +177,10 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
 
                 if (presetId === 'mute') return;
 
-                // kakaoTalk 作为"固定预设"，选择它就播放对应音频
+                // kakaoTalk 作為"固定預設"，選擇它就播放對應音訊
                 let resolvedCustomUrl = (presetId === 'kakaotalk') ? KAKAO_TALK_URL : resolvedCustomUrlBase;
 
-                // 自定义 URL：只要填了就直接播放（不区分内置/预设）
+                // 自定義 URL：只要填了就直接播放（不區分內建/預設）
                 if (resolvedCustomUrl) {
                     const audio = new Audio(resolvedCustomUrl);
                     audio.volume = Math.min(1, Math.max(0, settings.soundVolume || 0.15));
@@ -190,7 +190,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                     return;
                 }
 
-                // =============== 内置合成音效（两方 + 预设） ===============
+                // =============== 內建合成音效（兩方 + 預設） ===============
                 const CATEGORY_BASE = {
                     my_send: { osc1Type: 'triangle', osc2Type: 'sine', freq: 520, dur: 0.18, up: 1.06, down: 0.72 },
                     partner_message: { osc1Type: 'triangle', osc2Type: 'sine', freq: 460, dur: 0.2, up: 1.04, down: 0.74 },
@@ -199,7 +199,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 };
 
                 const PRESET_EFFECTS = {
-                    // 预设 effect：允许覆盖波形与倍率（不填则沿用基础音色）
+                    // 預設 effect：允許覆蓋波形與倍率（不填則沿用基礎音色）
                     tone_default: { osc1Type: 'triangle', osc2Type: 'sine', fMul: 0.92, durMul: 1.08, upMul: 1.0, downMul: 0.95 },
                     tone_soft: { osc1Type: 'sine', osc2Type: 'triangle', fMul: 0.88, durMul: 1.15, upMul: 0.98, downMul: 0.92 },
                     tone_low: { osc1Type: 'sawtooth', osc2Type: 'triangle', fMul: 0.78, durMul: 1.2, upMul: 0.96, downMul: 0.88 },
@@ -208,7 +208,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                     tone_haze: { osc1Type: 'sine', osc2Type: 'square', fMul: 0.8, durMul: 1.18, upMul: 0.97, downMul: 0.9 }
                 };
 
-                // presetId 已在上方计算
+                // presetId 已在上方計算
 
                 const cfg = (() => {
                     if (category && CATEGORY_BASE[category]) {
@@ -223,7 +223,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                         return { osc1Type, osc2Type, freq, dur, up, down };
                     }
 
-                    // 兼容其它旧声音类型（不走两方预设）
+                    // 相容其它舊聲音型別（不走兩方預設）
                     if (type === 'favorite') return { osc1Type: 'sine', osc2Type: 'sine', freq: 1200, dur: 0.18, up: 1.06, down: 0.70 };
                     if (type === 'anniversary') return { osc1Type: 'sawtooth', osc2Type: 'triangle', freq: 660, dur: 0.22, up: 1.10, down: 0.62 };
                     if (type === 'mood') return { osc1Type: 'sine', osc2Type: 'square', freq: 440, dur: 0.16, up: 1.12, down: 0.60 };
@@ -238,7 +238,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 const gainNode = audioContext.createGain();
                 const vol = Math.min(0.55, Math.max(0.01, settings.soundVolume || 0.1));
 
-                // 叠加一层泛音让音色更"厚"
+                // 疊加一層泛音讓音色更"厚"
                 const osc1 = audioContext.createOscillator();
                 const osc2 = audioContext.createOscillator();
 
@@ -249,7 +249,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 const now = audioContext.currentTime;
                 gainNode.gain.setValueAtTime(vol, now);
 
-                const jitter = (Math.random() - 0.5) * 0.02; // 轻微随机
+                const jitter = (Math.random() - 0.5) * 0.02; // 輕微隨機
                 const f1 = cfg.freq * (1 + jitter);
                 const f2 = f1 * 2;
 
@@ -259,7 +259,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 osc1.frequency.setValueAtTime(f1, now);
                 osc2.frequency.setValueAtTime(f2, now);
 
-                // 频率滑动 + 音量包络
+                // 頻率滑動 + 音量包絡
                 osc1.frequency.exponentialRampToValueAtTime(f1 * cfg.up, now + 0.04);
                 osc2.frequency.exponentialRampToValueAtTime(f2 * (cfg.up - 0.03), now + 0.04);
 
@@ -277,7 +277,7 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 audioContext.addEventListener('statechange', () => {
                     if (audioContext.state === 'closed') _currentAudioContext = null;
                 });
-            } catch (e) { console.warn("音频播放失败:", e); }
+            } catch (e) { console.warn("音訊播放失敗:", e); }
         };
 
         const throttledSaveData = () => {
@@ -286,10 +286,10 @@ function deduplicateContentArray(arr, baseSystemArray = []) {
                 try {
                     const maybePromise = saveData();
                     if (maybePromise && typeof maybePromise.catch === 'function') {
-                        maybePromise.catch(e => console.error('[throttledSaveData] 保存失败:', e));
+                        maybePromise.catch(e => console.error('[throttledSaveData] 儲存失敗:', e));
                     }
                 } catch (e) {
-                    console.error('[throttledSaveData] 保存失败:', e);
+                    console.error('[throttledSaveData] 儲存失敗:', e);
                 }
             }, 500);
         };
@@ -305,13 +305,13 @@ async function applyCustomFont(url) {
         const font = new FontFace(fontName, `url(${url})`);
         await font.load();
         document.fonts.add(font);
-        const fontStack = `"${fontName}", 'Noto Serif SC', serif`;
+        const fontStack = `"${fontName}", 'Noto Serif TC', 'Noto Serif SC', serif`;
         document.documentElement.style.setProperty('--font-family', fontStack);
         document.documentElement.style.setProperty('--message-font-family', fontStack);
         if (typeof settings !== 'undefined') settings.messageFontFamily = fontStack;
     } catch (e) {
-        console.error('字体加载失败:', e);
-        showNotification('字体加载失败，请检查链接是否有效', 'error');
+        console.error('字型載入失敗:', e);
+        showNotification('字型載入失敗，請檢查連結是否有效', 'error');
     }
 }
 
@@ -393,25 +393,25 @@ async function exportAllData() {
             const fileName = `chatapp-backup-${dateStr}.json`;
             const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
             downloadFileFallback(blob, fileName);
-            if (typeof showNotification === 'function') showNotification('已导出 JSON 备份', 'success');
+            if (typeof showNotification === 'function') showNotification('已匯出 JSON 備份', 'success');
         } else {
-            showNotification('备份模块或函数未加载，请刷新页面', 'error');
+            showNotification('備份模組或函式未載入，請重新整理頁面', 'error');
         }
     } catch (e) {
-        console.error('全量导出失败:', e);
-        showNotification('全量导出失败，请重试', 'error');
+        console.error('全量匯出失敗:', e);
+        showNotification('全量匯出失敗，請重試', 'error');
     }
 }
 
 async function importAllData(file) {
     if (!file) return;
     if (file.size > 220 * 1024 * 1024) {
-        showNotification('文件过大（>220MB），请确认是否为正确备份', 'error');
+        showNotification('檔案過大（>220MB），請確認是否為正確備份', 'error');
         return;
     }
     try {
         if (typeof ChatBackup === 'undefined' || !ChatBackup.loadBackupFromFile || !ChatBackup.applyBackupToStorage) {
-            showNotification('备份模块未加载，请刷新页面重试', 'error');
+            showNotification('備份模組未載入，請重新整理頁面重試', 'error');
             return;
         }
         const data = await ChatBackup.loadBackupFromFile(file);
@@ -427,48 +427,48 @@ async function importAllData(file) {
             if (typeof importChatHistory === 'function') importChatHistory(file);
             return;
         }
-        if (!confirm('导入全量备份将按你的选择覆盖对应数据。\n\n头像/背景等如勾选导入会写入备份中的内容。\n\n确定继续吗？')) return;
+        if (!confirm('匯入全量備份將按你的選擇覆蓋對應資料。\n\n頭像/背景等如勾選匯入會寫入備份中的內容。\n\n確定繼續嗎？')) return;
 
         const categories = [
             {
                 id: 'chat',
-                label: '聊天记录 / 会话 / 红包',
+                label: '聊天記錄 / 會話 / 紅包',
                 indexedDBNeedles: ['chatMessages', 'sessionList', 'chatSettings', 'showPartnerNameInChat', 'envelopeData', 'pending_envelope'],
                 localStorageNeedles: ['groupChatSettings']
             },
             {
                 id: 'replies',
-                label: '回复 / 拍一拍 / 氛围',
+                label: '回覆 / 拍一拍 / 氛圍',
                 indexedDBNeedles: ['customReplies', 'customPokes', 'customStatuses', 'customMottos', 'customIntros', 'customEmojis', 'customReplyGroups', 'customPokeGroups', 'customStatusGroups'],
                 localStorageNeedles: ['disabledReplyItems', 'pokeSym_my', 'pokeSym_partner', 'pokeSym_my_custom', 'pokeSym_partner_custom']
             },
             {
                 id: 'stickers',
-                label: '表情库（贴纸）',
+                label: '表情庫（貼紙）',
                 indexedDBNeedles: ['stickerLibrary', 'myStickerLibrary'],
                 localStorageNeedles: ['disabledStickerItems']
             },
             {
                 id: 'ann',
-                label: '纪念日',
+                label: '紀念日',
                 indexedDBNeedles: ['anniversaries'],
                 localStorageNeedles: []
             },
             {
                 id: 'mood',
-                label: '心晴手账',
+                label: '心晴手帳',
                 indexedDBNeedles: ['moodCalendar', 'customMoodOptions', 'moodTrash'],
                 localStorageNeedles: []
             },
             {
                 id: 'themes',
-                label: '主题 / 外观 / 图库',
+                label: '主題 / 外觀 / 相簿',
                 indexedDBNeedles: ['customThemes', 'themeSchemes', 'backgroundGallery', 'chatBackground', 'partnerAvatar', 'myAvatar', 'partnerPersonas'],
                 localStorageNeedles: []
             },
             {
                 id: 'dg',
-                label: '每日公告 / 运势 / 天气',
+                label: '每日公告 / 運勢 / 天氣',
                 indexedDBNeedles: [],
                 localStorageNeedles: ['dg_custom_data', 'dg_status_pool', 'weekly_fortune', 'daily_fortune'],
                 localStoragePrefixes: ['customWeather_']
@@ -488,7 +488,7 @@ async function importAllData(file) {
                     padding:16px 18px env(safe-area-inset-bottom,0);
                 ">
                     <div style="width:36px;height:4px;border-radius:2px;background:var(--border-color);margin:0 auto 14px;"></div>
-                    <div style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">全量恢复：选择要导入的部分</div>
+                    <div style="font-size:16px;font-weight:800;color:var(--text-primary);margin-bottom:10px;">全量恢復：選擇要匯入的部分</div>
                     <div style="display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow:auto;padding-right:6px;">
                         ${categories.map(c => {
                             return `
@@ -501,7 +501,7 @@ async function importAllData(file) {
                     </div>
                     <div style="display:flex;gap:10px;margin-top:14px;">
                         <button id="full-imp-cancel" class="modal-btn modal-btn-secondary" style="flex:1;padding:12px 0;">取消</button>
-                        <button id="full-imp-confirm" class="modal-btn modal-btn-primary" style="flex:1;padding:12px 0;">确认恢复</button>
+                        <button id="full-imp-confirm" class="modal-btn modal-btn-primary" style="flex:1;padding:12px 0;">確認恢復</button>
                     </div>
                 </div>
             `;
@@ -522,18 +522,18 @@ async function importAllData(file) {
         const selectedCats = await pickSelected();
         if (!selectedCats || selectedCats.length === 0) return;
 
-        showNotification('正在恢复数据…', 'info', 3000);
+        showNotification('正在恢復資料…', 'info', 3000);
         await ChatBackup.applyBackupToStorage(data, {
             selective: true,
             selectedCategoryIds: selectedCats,
             categories
         });
 
-        showNotification('恢复完成，即将刷新页面…', 'success', 2000);
+        showNotification('恢復完成，即將重新整理頁面…', 'success', 2000);
         setTimeout(() => location.reload(), 2200);
     } catch (err) {
-        console.error('全量导入失败:', err);
-        const msg = err && err.message ? err.message : '未知错误';
-        showNotification('导入失败：' + msg, 'error', 5000);
+        console.error('全量匯入失敗:', err);
+        const msg = err && err.message ? err.message : '未知錯誤';
+        showNotification('匯入失敗：' + msg, 'error', 5000);
     }
 }

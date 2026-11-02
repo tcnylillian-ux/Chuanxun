@@ -16,7 +16,7 @@ function setupEventListeners() {
         initComboMenu(); 
         
     } catch (e) {
-        console.error("事件绑定过程中发生错误:", e);
+        console.error("事件繫結過程中發生錯誤:", e);
     }
 }
 
@@ -39,7 +39,7 @@ function initChatActionListeners() {
 
                         const confirmBtn = document.getElementById('confirm-batch-favorite');
                         if (confirmBtn) {
-                            confirmBtn.textContent = `确认收藏 (${selectedMessages.length})`;
+                            confirmBtn.textContent = `確認收藏 (${selectedMessages.length})`;
                         }
                         return;
                     }
@@ -75,7 +75,7 @@ function initChatActionListeners() {
                 if (!message) return;
 
 if (target.classList.contains('delete-btn')) {
-    if (confirm('确定要删除这条消息吗？')) {
+    if (confirm('確定要刪除這條訊息嗎？')) {
         const index = messages.findIndex(m => m.id === messageId);
         if (index > -1) {
             const savedScrollTop = DOMElements.chatContainer.scrollTop;
@@ -85,7 +85,7 @@ if (target.classList.contains('delete-btn')) {
             requestAnimationFrame(() => {
                 DOMElements.chatContainer.scrollTop = savedScrollTop;
             });
-            showNotification('消息已删除', 'success');
+            showNotification('訊息已刪除', 'success');
         }
     }
     return;
@@ -120,7 +120,7 @@ if (target.classList.contains('delete-btn')) {
                     const index = parseInt(item.dataset.index);
                     const msg = batchMessages[index];
                     if (!msg || msg.image) return;
-                    const newText = prompt('编辑内容：', msg.text);
+                    const newText = prompt('編輯內容：', msg.text);
                     if (newText !== null) {
                         batchMessages[index].text = newText.trim();
                         updateBatchPreview();
@@ -189,7 +189,7 @@ if (target.classList.contains('delete-btn')) {
                             if (typeof renderReplyLibrary === 'function') renderReplyLibrary();
                         }
                     } catch (e) {
-                        console.warn('拍一拍保存到库失败:', e);
+                        console.warn('拍一拍儲存到庫失敗:', e);
                     }
                 }
                 hideModal(DOMElements.pokeModal.modal);
@@ -208,7 +208,7 @@ if (target.classList.contains('delete-btn')) {
 
             DOMElements.sendCoinResult.addEventListener('click', () => {
                 if (lastCoinResult) {
-                    sendMessage(`🎲 抛硬币结果：${lastCoinResult}`, 'normal');
+                    sendMessage(`🎲 拋硬幣結果：${lastCoinResult}`, 'normal');
                     DOMElements.coinTossOverlay.classList.remove('visible', 'finished');
                     lastCoinResult = null;
                 }
@@ -233,7 +233,7 @@ if (target.classList.contains('delete-btn')) {
             const openNameModal = (isPartner) => {
                 const modal = DOMElements.editModal;
                 showModal(modal.modal, modal.input);
-                modal.title.textContent = `修改${isPartner ? (settings.partnerName || '对方'): '我'}的昵称`;
+                modal.title.textContent = `修改${isPartner ? (settings.partnerName || '對方'): '我'}的暱稱`;
                 modal.input.value = isPartner ? settings.partnerName: settings.myName;
                 modal.save.disabled = !modal.input.value.trim();
                 modal.save.onclick = () => {
@@ -242,7 +242,7 @@ if (target.classList.contains('delete-btn')) {
                         isPartner ? settings.partnerName = newName: settings.myName = newName;
                         throttledSaveData();
                         updateUI();
-                        showNotification('昵称已更新', 'success');
+                        showNotification('暱稱已更新', 'success');
                     }
                     hideModal(modal.modal);
                 };
@@ -252,21 +252,21 @@ if (target.classList.contains('delete-btn')) {
                 const modal = DOMElements.avatarModal;
 
                 modal.modal.querySelector('.modal-content').innerHTML = `
-            <div class="modal-title"><i class="fas fa-portrait"></i><span>上传${isPartner ? '对方': '我'}的头像</span></div>
+            <div class="modal-title"><i class="fas fa-portrait"></i><span>上傳${isPartner ? '對方': '我'}的頭像</span></div>
             <div style="margin-bottom: 16px;">
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button class="modal-btn modal-btn-secondary" id="upload-file-btn" style="flex: 1;">选择文件</button>
-            <button class="modal-btn modal-btn-secondary" id="paste-url-btn" style="flex: 1;">粘贴URL</button>
+            <button class="modal-btn modal-btn-secondary" id="upload-file-btn" style="flex: 1;">選擇檔案</button>
+            <button class="modal-btn modal-btn-secondary" id="paste-url-btn" style="flex: 1;">貼上URL</button>
             </div>
             <input type="file" class="modal-input" id="avatar-file-input" accept="image/*" style="display: none;">
-            <input type="text" class="modal-input" id="avatar-url-input" placeholder="输入图片URL地址" style="display: none;">
+            <input type="text" class="modal-input" id="avatar-url-input" placeholder="輸入圖片URL地址" style="display: none;">
             <div id="avatar-preview" style="text-align: center; margin-top: 10px; display: none;">
             <img id="preview-image" style="max-width: 100px; max-height: 100px; border-radius: 50%; border: 2px solid var(--border-color);">
             </div>
             </div>
             <div class="modal-buttons">
             <button class="modal-btn modal-btn-secondary" id="cancel-avatar">取消</button>
-            <button class="modal-btn modal-btn-primary" id="save-avatar" disabled>保存</button>
+            <button class="modal-btn modal-btn-primary" id="save-avatar" disabled>儲存</button>
             </div>
             `;
 
@@ -305,11 +305,11 @@ fileInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
         if (file.size > MAX_AVATAR_SIZE) {
-            showNotification('头像图片不能超过2MB', 'error');
+            showNotification('頭像圖片不能超過2MB', 'error');
             return;
         }
 
-        showNotification('正在裁剪处理...', 'info', 1000);
+        showNotification('正在裁剪處理...', 'info', 1000);
         
         cropImageToSquare(file, 300).then(base64Data => {
             currentAvatarData = base64Data;
@@ -318,7 +318,7 @@ fileInput.addEventListener('change', function(e) {
             saveBtn.disabled = false;
         }).catch(err => {
             console.error(err);
-            showNotification('图片处理失败', 'error');
+            showNotification('圖片處理失敗', 'error');
         });
     }
 });
@@ -342,7 +342,7 @@ fileInput.addEventListener('change', function(e) {
                                     previewImg.src = url;
                                 };
                                 img.onerror = function() {
-                                    showNotification('图片URL无效或无法访问', 'error');
+                                    showNotification('圖片URL無效或無法訪問', 'error');
                                     saveBtn.disabled = true;
                                 };
                                 img.src = url;
@@ -361,7 +361,7 @@ fileInput.addEventListener('change', function(e) {
                         if (currentAvatarData) {
                             updateAvatar(isPartner ? DOMElements.partner.avatar: DOMElements.me.avatar, currentAvatarData);
                             throttledSaveData();
-                            showNotification('头像已更新', 'success');
+                            showNotification('頭像已更新', 'success');
                             hideModal(modal.modal);
                         }
                     });
@@ -385,9 +385,9 @@ fileInput.addEventListener('change', function(e) {
                 const saveStatus = () => {
                     const newStatus = input.value.trim();
                     if (newStatus) {
-                        settings.myStatus = newStatus; showNotification('状态已更新', 'success');
+                        settings.myStatus = newStatus; showNotification('狀態已更新', 'success');
                     } else {
-                        settings.myStatus = "在线";
+                        settings.myStatus = "線上";
                     }
                     statusTextElement.textContent = settings.myStatus;
                     statusContainer.innerHTML = '';
@@ -402,7 +402,7 @@ fileInput.addEventListener('change', function(e) {
             });
 
             DOMElements.themeToggle.addEventListener('click', () => {
-                settings.isDarkMode = !settings.isDarkMode; throttledSaveData(); updateUI(); showNotification(`已切换到${settings.isDarkMode ? '夜': '昼'}模式`,
+                settings.isDarkMode = !settings.isDarkMode; throttledSaveData(); updateUI(); showNotification(`已切換到${settings.isDarkMode ? '夜': '晝'}模式`,
                     'success');
             });
             DOMElements.settingsModal.settingsBtn.addEventListener('click', () => {
@@ -421,7 +421,7 @@ window.setReadReceiptStyle = function(style) {
     if (iconBtn) { iconBtn.className = style === 'icon' ? 'modal-btn modal-btn-primary' : 'modal-btn modal-btn-secondary'; iconBtn.style.cssText = 'padding:5px 12px;font-size:12px;'; }
     if (textBtn) { textBtn.className = style === 'text' ? 'modal-btn modal-btn-primary' : 'modal-btn modal-btn-secondary'; textBtn.style.cssText = 'padding:5px 12px;font-size:12px;'; }
     renderMessages();
-    showNotification('已读回执样式已更新', 'success');
+    showNotification('已讀回執樣式已更新', 'success');
 };
 
 const _chatSettingsEl = document.getElementById('chat-settings');
@@ -429,12 +429,12 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
     hideModal(DOMElements.settingsModal.modal);
     
     const toggleSyncMap = {
-        '#reply-toggle': { prop: 'replyEnabled', name: '引用回复' },
+        '#reply-toggle': { prop: 'replyEnabled', name: '引用回覆' },
         '#sound-toggle': { prop: 'soundEnabled', name: '音效' },
-        '#read-receipts-toggle': { prop: 'readReceiptsEnabled', name: '已读回执' },
-        '#typing-indicator-toggle': { prop: 'typingIndicatorEnabled', name: '正在输入' },
-        '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已读不回' },
-        '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情消息' }
+        '#read-receipts-toggle': { prop: 'readReceiptsEnabled', name: '已讀回執' },
+        '#typing-indicator-toggle': { prop: 'typingIndicatorEnabled', name: '正在輸入' },
+        '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已讀不回' },
+        '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情訊息' }
     };
     for (const [selector, { prop }] of Object.entries(toggleSyncMap)) {
         const el = document.querySelector(selector);
@@ -454,12 +454,12 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
         const el = document.getElementById(id);
         if (el) el.value = val || '';
     };
-    // 音频自定义值显示：base64 数据只显示友好文字
+    // 音訊自定義值顯示：base64 資料只顯示友好文字
     const setSoundUrlInput = (id, val) => {
         const el = document.getElementById(id);
         if (!el) return;
         if (val && val.startsWith('data:audio')) {
-            el.value = '[本地文件（已上传）]';
+            el.value = '[本地檔案（已上傳）]';
         } else {
             el.value = val || '';
         }
@@ -532,7 +532,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                         if (medEl) medEl.textContent = fmt(mediaSize);
                     } catch(e) {
                         const totalEl = document.getElementById('dm-storage-total');
-                        if (totalEl) totalEl.textContent = '无法读取';
+                        if (totalEl) totalEl.textContent = '無法讀取';
                     }
                 })();
             });
@@ -541,7 +541,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
             if (exportChatBtnDm) {
                 exportChatBtnDm.addEventListener('click', () => {
                     if (typeof exportChatHistory === 'function') exportChatHistory();
-                    else showNotification('功能暂不可用', 'error');
+                    else showNotification('功能暫不可用', 'error');
                 });
             }
             if (importChatBtnDm) {
@@ -560,7 +560,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                         settings.colorTheme = btn.dataset.theme;
                         throttledSaveData();
                         updateUI();
-                        showNotification(`主题颜色已切换`, 'success');
+                        showNotification(`主題顏色已切換`, 'success');
                     });
             });
 
@@ -571,7 +571,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                         settings.bubbleStyle = item.dataset.bubbleStyle;
                         throttledSaveData();
                         updateUI();
-                        showNotification(`气泡样式已切换为${getBubbleStyleName(settings.bubbleStyle)}`, 'success');
+                        showNotification(`氣泡樣式已切換為${getBubbleStyleName(settings.bubbleStyle)}`, 'success');
                     });
             });
 
@@ -585,11 +585,11 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     const url = fontUrlInput.value.trim();
                     settings.customFontUrl = url;
                     
-                    showNotification('正在尝试加载字体...', 'info', 1000);
+                    showNotification('正在嘗試載入字型...', 'info', 1000);
                     applyCustomFont(url).then(() => {
                         throttledSaveData();
-                        if(url) showNotification('字体已应用', 'success');
-                        else showNotification('已恢复默认字体', 'success');
+                        if(url) showNotification('字型已應用', 'success');
+                        else showNotification('已恢復預設字型', 'success');
                     });
                 });
             }
@@ -620,7 +620,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     
                     renderMessages(true);
                     
-                    showNotification('已应用跟随系统字体', 'success');
+                    showNotification('已應用跟隨系統字型', 'success');
                 });
             }
             
@@ -652,7 +652,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     settings.customBubbleCss = css;
                     applyCustomBubbleCss(css);
                     throttledSaveData();
-                    showNotification('自定义样式已应用', 'success');
+                    showNotification('自定義樣式已應用', 'success');
                 });
             }
 
@@ -663,7 +663,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     applyCustomBubbleCss("");
                     if (document.getElementById('css-live-preview-style')) document.getElementById('css-live-preview-style').textContent = '';
                     throttledSaveData();
-                    showNotification('自定义样式已清除', 'success');
+                    showNotification('自定義樣式已清除', 'success');
                 });
             }
 
@@ -681,7 +681,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                         applyGlobalThemeCss(globalCssTextarea.value);
                         if (globalCssStatus) {
                             globalCssStatus.style.display = 'block';
-                            globalCssStatus.textContent = '● 实时应用中';
+                            globalCssStatus.textContent = '● 實時應用中';
                             globalCssStatus.style.color = 'var(--accent-color)';
                         }
                     }
@@ -694,10 +694,10 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     settings.customGlobalCss = css;
                     applyGlobalThemeCss(css);
                     throttledSaveData();
-                    showNotification('全局主题 CSS 已应用', 'success');
+                    showNotification('全域性主題 CSS 已應用', 'success');
                     if (globalCssStatus) {
                         globalCssStatus.style.display = 'block';
-                        globalCssStatus.textContent = '✓ 已应用到全局';
+                        globalCssStatus.textContent = '✓ 已應用到全域性';
                         globalCssStatus.style.color = '#51cf66';
                         setTimeout(() => { if (globalCssStatus) globalCssStatus.style.display = 'none'; }, 2000);
                     }
@@ -710,7 +710,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     settings.customGlobalCss = '';
                     applyGlobalThemeCss('');
                     throttledSaveData();
-                    showNotification('全局主题 CSS 已清除', 'success');
+                    showNotification('全域性主題 CSS 已清除', 'success');
                     if (globalCssStatus) globalCssStatus.style.display = 'none';
                 });
             }
@@ -786,7 +786,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 const statusText = document.getElementById('avatar-toggle-status-2');
                 if (pill) pill.style.background = enabled ? 'var(--accent-color)' : 'var(--border-color)';
                 if (knob) knob.style.right = enabled ? '3px' : '23px';
-                if (statusText) statusText.textContent = enabled ? '已开启 — 消息旁显示头像' : '已关闭';
+                if (statusText) statusText.textContent = enabled ? '已開啟 — 訊息旁顯示頭像' : '已關閉';
 
                 if (avatarSizeControl) avatarSizeControl.style.display = enabled ? 'flex' : 'none';
                 if (avatarPositionControl) avatarPositionControl.style.display = enabled ? 'block' : 'none';
@@ -840,7 +840,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 const alwaysOn = !!settings.alwaysShowAvatar;
                 if (alwaysPill) alwaysPill.style.background = alwaysOn ? 'var(--accent-color)' : 'var(--border-color)';
                 if (alwaysKnob) alwaysKnob.style.right = alwaysOn ? '3px' : '23px';
-                if (alwaysStatus) alwaysStatus.textContent = alwaysOn ? '已开启 — 每条消息都显示头像' : '已关闭 — 仅首条消息显示';
+                if (alwaysStatus) alwaysStatus.textContent = alwaysOn ? '已開啟 — 每條訊息都顯示頭像' : '已關閉 — 僅首條訊息顯示';
                 document.body.classList.toggle('always-show-avatar', alwaysOn);
 
                 const namePill = document.getElementById('partner-name-chat-pill');
@@ -849,7 +849,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 const nameOn = !!settings.showPartnerNameInChat;
                 if (namePill) namePill.style.background = nameOn ? 'var(--accent-color)' : 'var(--border-color)';
                 if (nameKnob) nameKnob.style.right = nameOn ? '3px' : '23px';
-                if (nameStatus) nameStatus.textContent = nameOn ? '已开启 — 消息旁显示对方名字' : '已关闭';
+                if (nameStatus) nameStatus.textContent = nameOn ? '已開啟 — 訊息旁顯示對方名字' : '已關閉';
                 showPartnerNameInChat = nameOn;
                 document.body.classList.toggle('show-partner-name', nameOn);
 
@@ -1021,10 +1021,10 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
             function updateDelayUI() {
                 minDelaySlider.value = settings.replyDelayMin;
                 const minSec = settings.replyDelayMin / 1000;
-                minDelayValue.textContent = minSec >= 60 ? `${(minSec/60).toFixed(1)}分钟` : `${minSec.toFixed(0)}s`;
+                minDelayValue.textContent = minSec >= 60 ? `${(minSec/60).toFixed(1)}分鐘` : `${minSec.toFixed(0)}s`;
                 maxDelaySlider.value = settings.replyDelayMax;
                 const maxSec = settings.replyDelayMax / 1000;
-                maxDelayValue.textContent = maxSec >= 60 ? `${(maxSec/60).toFixed(1)}分钟` : `${maxSec.toFixed(0)}s`;
+                maxDelayValue.textContent = maxSec >= 60 ? `${(maxSec/60).toFixed(1)}分鐘` : `${maxSec.toFixed(0)}s`;
                 maxDelaySlider.min = settings.replyDelayMin; 
             }
             updateDelayUI();
@@ -1049,18 +1049,18 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
 
             const settingToggles = {
                 '#reply-toggle': {
-                    prop: 'replyEnabled', name: '引用回复'
+                    prop: 'replyEnabled', name: '引用回覆'
                 },
                 '#sound-toggle': {
                     prop: 'soundEnabled', name: '音效'
                 },
                 '#read-receipts-toggle': {
-                    prop: 'readReceiptsEnabled', name: '已读回执'
+                    prop: 'readReceiptsEnabled', name: '已讀回執'
                 },
                 '#typing-indicator-toggle': {
-                    prop: 'typingIndicatorEnabled', name: '正在输入'},
-                    '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已读不回' },
-                    '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入消息' }
+                    prop: 'typingIndicatorEnabled', name: '正在輸入'},
+                    '#read-no-reply-toggle': { prop: 'allowReadNoReply', name: '已讀不回' },
+                    '#emoji-mix-toggle': { prop: 'emojiMixEnabled', name: '表情混入訊息' }
 };
 
             for (const [selector, {
@@ -1079,7 +1079,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     updateUI();
                     element.classList.toggle('active', !!settings[prop]);
                     if (prop !== 'soundEnabled') renderMessages(true);
-                    showNotification(`${name}已${settings[prop] ? '开启': '关闭'}`, 'success');
+                    showNotification(`${name}已${settings[prop] ? '開啟': '關閉'}`, 'success');
                 });
             }
 
@@ -1115,9 +1115,9 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 if (!el) return;
                 el.addEventListener('change', () => {
                     const val = el.value.trim();
-                    // 如果是本地文件占位文字，不覆盖 settings（保留 base64）
-                    if (val === '[本地文件（已上传）]') return;
-                    // 如果清空了，同时清除可能存在的 base64
+                    // 如果是本地檔案佔位文字，不覆蓋 settings（保留 base64）
+                    if (val === '[本地檔案（已上傳）]') return;
+                    // 如果清空了，同時清除可能存在的 base64
                     settings[settingsKey] = val;
                     throttledSaveData();
                 });
@@ -1128,7 +1128,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
             bindCustomUrlInput('sound-my-poke-custom-url', 'myPokeCustomSoundUrl');
             bindCustomUrlInput('sound-partner-poke-custom-url', 'partnerPokeCustomSoundUrl');
 
-            // 本地音频文件上传
+            // 本地音訊檔案上傳
             const bindAudioUpload = (btnId, fileInputId, urlInputId, settingsKey, presetSelectId) => {
                 const btn = document.getElementById(btnId);
                 const fileInput = document.getElementById(fileInputId);
@@ -1142,16 +1142,16 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     reader.onload = (e) => {
                         const base64 = e.target.result;
                         settings[settingsKey] = base64;
-                        if (urlInput) urlInput.value = '[本地文件: ' + file.name + ']';
-                        // 将 preset 切换到 custom（如果当前是 mute 则保持，否则不强制切换）
+                        if (urlInput) urlInput.value = '[本地檔案: ' + file.name + ']';
+                        // 將 preset 切換到 custom（如果當前是 mute 則保持，否則不強制切換）
                         const sel = document.getElementById(presetSelectId);
                         if (sel && sel.value === 'mute') {
-                            // 保持 mute，用户可手动切换
+                            // 保持 mute，使用者可手動切換
                         }
                         throttledSaveData();
                     };
                     reader.readAsDataURL(file);
-                    fileInput.value = ''; // 允许重复选同一文件
+                    fileInput.value = ''; // 允許重複選同一檔案
                 });
             };
 
@@ -1180,7 +1180,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     settings.timeFormat = opt.dataset.fmt;
                     throttledSaveData();
                     renderMessages(true);
-                    showNotification('时间格式已更新', 'success');
+                    showNotification('時間格式已更新', 'success');
                 });
             });
 
@@ -1229,11 +1229,11 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                     const file = e.target.files[0];
                     if (!file) return;
                     if (file.size > 10 * 1024 * 1024) {
-                        showNotification('背景图片不能超过10MB', 'error');
+                        showNotification('背景圖片不能超過10MB', 'error');
                         return;
                     }
                     if (file.size > 5 * 1024 * 1024) {
-                        showNotification('文件较大，正在处理中...', 'info', 2000);
+                        showNotification('檔案較大，正在處理中...', 'info', 2000);
                     }
                     const reader = new FileReader();
                     reader.onload = (event) => {
@@ -1247,7 +1247,7 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                         renderBackgroundGallery();
                         applyBackground(base64);
                         localforage.setItem(getStorageKey('chatBackground'), base64);
-                        showNotification('新背景已添加并应用', 'success');
+                        showNotification('新背景已新增並應用', 'success');
                     };
                     reader.readAsDataURL(file);
                     e.target.value = '';
@@ -1264,7 +1264,7 @@ const updateAutoSendUI = () => {
     autoSendControl.style.display = settings.autoSendEnabled ? "flex" : "none";
     const currentVal = settings.autoSendInterval || 5;
     autoSendSlider.value = currentVal;
-    autoSendValue.textContent = `${currentVal}分钟`;
+    autoSendValue.textContent = `${currentVal}分鐘`;
 };
 
 updateAutoSendUI();
@@ -1274,16 +1274,16 @@ autoSendToggle.addEventListener('click', () => {
     updateAutoSendUI();
     manageAutoSendTimer(); 
     throttledSaveData();
-    showNotification(`主动发送已${settings.autoSendEnabled ? '开启' : '关闭'}`, 'success');
+    showNotification(`主動傳送已${settings.autoSendEnabled ? '開啟' : '關閉'}`, 'success');
 });
 
 autoSendSlider.value = settings.autoSendInterval || 5;
-autoSendValue.textContent = `${settings.autoSendInterval || 5}分钟`;
+autoSendValue.textContent = `${settings.autoSendInterval || 5}分鐘`;
 
 autoSendSlider.addEventListener('input', (e) => {
     const val = parseInt(e.target.value);
     settings.autoSendInterval = val;
-    autoSendValue.textContent = `${val}分钟`;
+    autoSendValue.textContent = `${val}分鐘`;
 });
 
 autoSendSlider.addEventListener('change', () => {
@@ -1296,7 +1296,7 @@ autoSendSlider.addEventListener('change', () => {
                 resetBgBtn.addEventListener('click', () => {
                     removeBackground();
                     renderBackgroundGallery();
-                    showNotification('已移除背景图', 'success');
+                    showNotification('已移除背景圖', 'success');
                 });
             }
         }
@@ -1396,13 +1396,13 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
                 const player = document.getElementById('player');
                 if (settings.musicPlayerEnabled) {
                     player.classList.add('visible');
-                    showNotification('音乐播放器已开启', 'success');
+                    showNotification('音樂播放器已開啟', 'success');
                 } else {
                     player.classList.remove('visible');
                     document.getElementById('playlist').classList.remove('active');
                     const audio = document.getElementById('audio');
                     if (audio) audio.pause();
-                    showNotification('音乐播放器已关闭', 'info');
+                    showNotification('音樂播放器已關閉', 'info');
                 }
                 hideModal(DOMElements.advancedModal.modal);
             });
@@ -1430,12 +1430,12 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
 
         function getBubbleStyleName(style) {
             const names = {
-                'standard': '标准',
-                'rounded': '圆角',
-                'rounded-large': '大圆角',
+                'standard': '標準',
+                'rounded': '圓角',
+                'rounded-large': '大圓角',
                 'square': '方形'
             };
-            return names[style] || '标准';
+            return names[style] || '標準';
         }
 
 
@@ -1469,7 +1469,7 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
         DOMElements.sessionModal.createBtn.addEventListener('click', async () => {
             await createNewSession(false);
             renderSessionList();
-            showNotification('新会话已创建', 'success');
+            showNotification('新會話已建立', 'success');
         });
 
         DOMElements.sessionModal.list.addEventListener('click', (e) => {
@@ -1479,26 +1479,26 @@ if (_cancelEnvEl) _cancelEnvEl.addEventListener('click', () => {
 
             if (e.target.closest('.rename')) {
                 const session = sessionList.find(s => s.id === sessionId);
-                const newName = prompt('输入新的会话名称:', session.name);
+                const newName = prompt('輸入新的會話名稱:', session.name);
                 if (newName && newName.trim()) {
                     session.name = newName.trim();
                     localforage.setItem(`${APP_PREFIX}sessionList`, sessionList); 
                     renderSessionList();
-                    showNotification('会话已重命名', 'success');
+                    showNotification('會話已重新命名', 'success');
                 }
             } else if (e.target.closest('.delete')) {
                 if (sessionList.length <= 1) {
-                    showNotification('无法删除最后一个会话', 'warning');
+                    showNotification('無法刪除最後一個會話', 'warning');
                     return;
                 }
-                if (confirm('确定要删除此会话及其所有聊天记录吗？此操作不可恢复')) {
+                if (confirm('確定要刪除此會話及其所有聊天記錄嗎？此操作不可恢復')) {
 
                     const currentSessionId = SESSION_ID;
 
                     sessionList = sessionList.filter(s => s.id !== sessionId);
 localforage.setItem(`${APP_PREFIX}sessionList`, sessionList);
 
-// 同时清除 localStorage 和 localforage 中该会话的所有键
+// 同時清除 localStorage 和 localforage 中該會話的所有鍵
 Object.keys(localStorage).forEach(key => {
     if (key.startsWith(`${APP_PREFIX}${sessionId}_`)) safeRemoveItem(key);
 });
@@ -1517,13 +1517,13 @@ if (sessionId === currentSessionId) {
     window.location.reload();
 } else {
     renderSessionList();
-    showNotification('会话已删除', 'success');
+    showNotification('會話已刪除', 'success');
 }
                 }
             } else {
 
                 if (sessionId !== SESSION_ID) {
-                    if (confirm('切换会话将刷新页面，确定要继续吗？')) {
+                    if (confirm('切換會話將重新整理頁面，確定要繼續嗎？')) {
                         window.location.hash = sessionId;
                         window.location.reload();
                     }
@@ -1544,34 +1544,34 @@ if (sessionId === currentSessionId) {
     "url": "http://music.163.com/song/media/outer/url?id=1940368.mp3"
   },
   {
-    "title": "第三个吻痕",
-    "sub": "非要做 贪心的坏人",
-    "url": "https://img.heliar.top/file/1773902740144_下载您的文件_—_Convertio_1425997963.mp3"
+    "title": "第三個吻痕",
+    "sub": "非要做 貪心的壞人",
+    "url": "https://img.heliar.top/file/1773902740144_下載您的檔案_—_Convertio_1425997963.mp3"
   },
   {
     "title": "小半",
     "sub": "我的心借了你的光是明是暗",
-    "url": "https://img.heliar.top/file/1772964128402_陈粒_-_小半.mp3"
+    "url": "https://img.heliar.top/file/1772964128402_陳粒_-_小半.mp3"
   },
   {
-    "title": "当你",
-    "sub": "好喜欢你 知不知道",
-    "url": "https://img.heliar.top/file/1772964503074_林俊杰_-_当你.mp3"
+    "title": "當你",
+    "sub": "好喜歡你 知不知道",
+    "url": "https://img.heliar.top/file/1772964503074_林俊杰_-_當你.mp3"
   },
   {
-    "title": "恶作剧",
-    "sub": "我想我会开始想念你",
-    "url": "https://img.heliar.top/file/1772965264360_林依晨_-_恶作剧.mp3"
+    "title": "惡作劇",
+    "sub": "我想我會開始想念你",
+    "url": "https://img.heliar.top/file/1772965264360_林依晨_-_惡作劇.mp3"
   },
   {
-    "title": "孤单北半球",
-    "sub": "想念不会偷懒 我的梦通通给你保管",
-    "url": "https://img.heliar.top/file/1772963472128_林依晨_-_孤单北半球.mp3"
+    "title": "孤單北半球",
+    "sub": "想念不會偷懶 我的夢通通給你保管",
+    "url": "https://img.heliar.top/file/1772963472128_林依晨_-_孤單北半球.mp3"
   },
   {
     "title": "_Dear_D__",
     "sub": "好想好想在一起",
-    "url": "https://img.heliar.top/file/1772970137585_项睿娴_-_Dear_D__亲爱的告诉你_.mp3"
+    "url": "https://img.heliar.top/file/1772970137585_項睿嫻_-_Dear_D__親愛的告訴你_.mp3"
   },
   {
     "title": "初雪",
@@ -1589,8 +1589,8 @@ if (sessionId === currentSessionId) {
     "url": "https://img.heliar.top/file/1773547910130_solitude.m4a"
   },
   {
-    "title": "恋人",
-    "sub": "回忆里充满着罗曼蒂克的幻想",
+    "title": "戀人",
+    "sub": "回憶裡充滿著羅曼蒂克的幻想",
     "url": "https://img.heliar.top/file/1773544800453_%E6%81%8B%E4%BA%BA.m4a"
   },
   {
@@ -1599,18 +1599,18 @@ if (sessionId === currentSessionId) {
     "url": "https://img.heliar.top/file/1773543103115_first_snow.mp3.m4a"
   },
   {
-    "title": "我走以后",
+    "title": "我走以後",
     "sub": "----",
     "url": "http://music.163.com/song/media/outer/url?id=3347121761.mp3"
   },
   {
-    "title": "偏爱",
-    "sub": "等你的依赖 对你的偏爱",
+    "title": "偏愛",
+    "sub": "等你的依賴 對你的偏愛",
     "url": "https://music.163.com/song/media/outer/url?id=5238992.mp3"
   },
   {
     "title": "A Faint Glow Of Life",
-    "sub": "你让我振作起来使我的世界熠熠生辉",
+    "sub": "你讓我振作起來使我的世界熠熠生輝",
     "url": "https://music.163.com/song/media/outer/url?id=2065544118.mp3"
   },
   {
@@ -1620,92 +1620,92 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "Half Blood Angel",
-    "sub": "我存在的意义难道是 在这糟糕的世界腐烂",
+    "sub": "我存在的意義難道是 在這糟糕的世界腐爛",
     "url": "https://music.163.com/song/media/outer/url?id=2635248857.mp3"
   },
   {
-    "title": "红颜",
-    "sub": "这一世英名我不要 只求换来红颜一笑",
-    "url": "https://img.heliar.top/file/1772752066038_红颜.mp3"
+    "title": "紅顏",
+    "sub": "這一世英名我不要 只求換來紅顏一笑",
+    "url": "https://img.heliar.top/file/1772752066038_紅顏.mp3"
   },
   {
-    "title": "永远永远",
-    "sub": "你爱过我就已足够 就算到了最后爱已搁浅",
+    "title": "永遠永遠",
+    "sub": "你愛過我就已足夠 就算到了最後愛已擱淺",
     "url": "https://files.catbox.moe/2lcm70.mp3"
   },
   {
-    "title": "虚拟",
-    "sub": "你是我朝夕相伴触手可及的虚拟",
+    "title": "虛擬",
+    "sub": "你是我朝夕相伴觸手可及的虛擬",
     "url": "https://files.catbox.moe/6s65mp.mp3"
   },
   {
-    "title": "多远都要在一起",
-    "sub": "爱能克服远距离",
+    "title": "多遠都要在一起",
+    "sub": "愛能克服遠距離",
     "url": "https://files.catbox.moe/06k9ra.mp3"
   },
   {
-    "title": "永不失联的爱",
-    "sub": "这一辈子都不想失联的爱",
+    "title": "永不失聯的愛",
+    "sub": "這一輩子都不想失聯的愛",
     "url": "https://files.catbox.moe/uvucav.mp3"
   },
   {
-    "title": "稳稳的幸福",
-    "sub": "这是我想要的幸福",
+    "title": "穩穩的幸福",
+    "sub": "這是我想要的幸福",
     "url": "https://files.catbox.moe/inb22a.mp3"
   },
   {
     "title": "有我呢",
-    "sub": "我会让你习惯 多一个人陪伴",
+    "sub": "我會讓你習慣 多一個人陪伴",
     "url": "https://files.catbox.moe/hrazjt"
   },
   {
     "title": "一千零一夜",
-    "sub": "梦里能到达的地方啊 有一天脚步也能到达",
+    "sub": "夢裡能到達的地方啊 有一天腳步也能到達",
     "url": "https://files.catbox.moe/syfuon.mp3"
   },
   {
-    "title": "月亮与六便士",
+    "title": "月亮與六便士",
     "sub": "我的世界由你建立 因你崩塌",
     "url": "https://files.catbox.moe/98quqc.mp3"
   },
   {
-    "title": "次元恋人",
-    "sub": "约好了隔着次元也吻住泪眼",
+    "title": "次元戀人",
+    "sub": "約好了隔著次元也吻住淚眼",
     "url": "https://files.catbox.moe/5u5dy0.mp3"
   },
   {
-    "title": "阳光下的星星",
-    "sub": "如果爱上你只是一个梦境",
+    "title": "陽光下的星星",
+    "sub": "如果愛上你只是一個夢境",
     "url": "https://files.catbox.moe/dxgqsk.mp3"
   },
   {
-    "title": "周边",
-    "sub": "灵魂里空缺的那段",
+    "title": "周邊",
+    "sub": "靈魂裡空缺的那段",
     "url": "https://files.catbox.moe/a7k5wd.mp3"
   },
   {
-    "title": "恋爱ing",
-    "sub": "让我重新认识L O V E",
+    "title": "戀愛ing",
+    "sub": "讓我重新認識L O V E",
     "url": "https://files.catbox.moe/94slcd.mp3"
   },
   {
-    "title": "一点一滴",
-    "sub": "你让爱一点一滴汇成河",
+    "title": "一點一滴",
+    "sub": "你讓愛一點一滴匯成河",
     "url": "https://files.catbox.moe/958qzg.mp3"
   },
   {
-    "title": "关键词",
-    "sub": "让我见识爱情可以慷慨又自私",
+    "title": "關鍵詞",
+    "sub": "讓我見識愛情可以慷慨又自私",
     "url": "https://files.catbox.moe/9yl5ic.mp3"
   },
   {
-    "title": "想见你想见你想见你",
-    "sub": "穿越了千个万个时间线里人海里相依",
+    "title": "想見你想見你想見你",
+    "sub": "穿越了千個萬個時間線里人海里相依",
     "url": "https://files.catbox.moe/co58d7.mp3"
   },
   {
     "title": "star crossing night",
-    "sub": "这里没有你",
+    "sub": "這裡沒有你",
     "url": "https://files.catbox.moe/i3f86b.mp3"
   },
   {
@@ -1714,48 +1714,48 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/c57gxs.mp3"
   },
   {
-    "title": "我想要占据你",
-    "sub": "占据你的⼀切且无可厚非",
+    "title": "我想要佔據你",
+    "sub": "佔據你的⼀切且無可厚非",
     "url": "https://files.catbox.moe/1fp6eg.mp3"
   },
   {
-    "title": "特别的人",
-    "sub": "我们是对方特别的人",
+    "title": "特別的人",
+    "sub": "我們是對方特別的人",
     "url": "https://files.catbox.moe/a0n0l7.mp3"
   },
   {
-    "title": "麦恩莉",
-    "sub": "在广阔寂寞漩涡解脱",
+    "title": "麥恩莉",
+    "sub": "在廣闊寂寞漩渦解脫",
     "url": "https://files.catbox.moe/2inae2.mp3"
   },
   {
-    "title": "会呼吸的痛",
-    "sub": "想念是会呼吸的痛",
+    "title": "會呼吸的痛",
+    "sub": "想念是會呼吸的痛",
     "url": "https://files.catbox.moe/0uhmxr.mp3"
   },
   {
-    "title": "一生的爱",
-    "sub": "我只想要给你我一生的爱",
+    "title": "一生的愛",
+    "sub": "我只想要給你我一生的愛",
     "url": "https://files.catbox.moe/f0e93c.mp3"
   },
   {
-    "title": "身骑白马",
-    "sub": "追赶要我爱的不保留",
+    "title": "身騎白馬",
+    "sub": "追趕要我愛的不保留",
     "url": "https://files.catbox.moe/iywfe2.mp3"
   },
   {
-    "title": "爱情讯息",
-    "sub": "想念变成空气在叹息",
+    "title": "愛情訊息",
+    "sub": "想念變成空氣在嘆息",
     "url": "https://files.catbox.moe/4dl0t2.mp3"
   },
   {
     "title": "你在 不在",
-    "sub": "你在我心里面 陪我失眠",
+    "sub": "你在我心裡面 陪我失眠",
     "url": "https://files.catbox.moe/povyqa.mp3"
   },
   {
-    "title": "你是我的风景",
-    "sub": "爱让悬崖变平地",
+    "title": "你是我的風景",
+    "sub": "愛讓懸崖變平地",
     "url": "https://files.catbox.moe/fnwtf8.mp3"
   },
   {
@@ -1765,12 +1765,12 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "勾指起誓",
-    "sub": "你是理所当然的奇迹",
+    "sub": "你是理所當然的奇蹟",
     "url": "https://files.catbox.moe/4spgo5.mp3"
   },
   {
-    "title": "牵一半",
-    "sub": "你的存在是我唯一依赖",
+    "title": "牽一半",
+    "sub": "你的存在是我唯一依賴",
     "url": "https://files.catbox.moe/bk21gu.mp3"
   },
   {
@@ -1780,87 +1780,87 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "唯一",
-    "sub": "我真的爱你 句句不轻易",
+    "sub": "我真的愛你 句句不輕易",
     "url": "https://files.catbox.moe/69g4fe.mp3"
   },
   {
-    "title": "致爱 Your Song",
-    "sub": "我只想每个落日 身边都有你",
+    "title": "致愛 Your Song",
+    "sub": "我只想每個落日 身邊都有你",
     "url": "https://files.catbox.moe/01bmnf.mp3"
   },
   {
-    "title": "一首想不通的古风",
-    "sub": "画地为牢 画命为符 铸成下一世坚守",
+    "title": "一首想不通的古風",
+    "sub": "畫地為牢 畫命為符 鑄成下一世堅守",
     "url": "https://files.catbox.moe/9b4lh7.mp3"
   },
   {
     "title": "茉莉雨",
-    "sub": "琴声里愁几许关于你",
+    "sub": "琴聲裡愁幾許關於你",
     "url": "https://files.catbox.moe/7ml83u.mp3"
   },
   {
-    "title": "怎么唱情歌",
-    "sub": "海 变的苦涩 灼伤一片温柔",
+    "title": "怎麼唱情歌",
+    "sub": "海 變的苦澀 灼傷一片溫柔",
     "url": "https://files.catbox.moe/isqax9.mp3"
   },
   {
-    "title": "岸边客",
-    "sub": "你回来我心未改 你不在我还等待",
+    "title": "岸邊客",
+    "sub": "你回來我心未改 你不在我還等待",
     "url": "https://files.catbox.moe/9oud6s.mp3"
   },
   {
     "title": "江南雪",
-    "sub": "相思再无药解 从此万般风月都是我心结",
+    "sub": "相思再無藥解 從此萬般風月都是我心結",
     "url": "https://files.catbox.moe/hhjwek.mp3"
   },
   {
     "title": "不死之身",
-    "sub": "我仍爱你爱得不知天高地厚",
+    "sub": "我仍愛你愛得不知天高地厚",
     "url": "https://files.catbox.moe/g960ev.mp3"
   },
   {
-    "title": "我们的明天",
-    "sub": "爱从不曾保留 才勇敢了我",
+    "title": "我們的明天",
+    "sub": "愛從不曾保留 才勇敢了我",
     "url": "https://files.catbox.moe/a3yjvv.mp3"
   },
   {
-    "title": "难解",
-    "sub": "点炷高香敬予神明 被人嘲笑矢志不渝",
+    "title": "難解",
+    "sub": "點炷高香敬予神明 被人嘲笑矢志不渝",
     "url": "https://files.catbox.moe/1u8m3r.mp3"
   },
   {
     "title": "最好的我 & 50 Feet",
-    "sub": "试着伸手 却连你的影子我都无法靠近",
+    "sub": "試著伸手 卻連你的影子我都無法靠近",
     "url": "https://files.catbox.moe/clsiyi.mp3"
   },
   {
-    "title": "同手同脚",
-    "sub": "也是存在在这个世界 唯一的唯一",
+    "title": "同手同腳",
+    "sub": "也是存在在這個世界 唯一的唯一",
     "url": "https://files.catbox.moe/b8hss3.mp3"
   },
   {
-    "title": "同花顺",
-    "sub": "只要肯爱得深 是不是就有这可能",
+    "title": "同花順",
+    "sub": "只要肯愛得深 是不是就有這可能",
     "url": "https://files.catbox.moe/28mw5d.mp3"
   },
   {
-    "title": "轻舞",
-    "sub": "轻舞吧 过往如裙纱",
+    "title": "輕舞",
+    "sub": "輕舞吧 過往如裙紗",
     "url": "https://files.catbox.moe/8n9lhi.mp3"
   },
   {
-    "title": "绝对占有 相对自由",
-    "sub": "赞美你包容你都是我的使命",
+    "title": "絕對佔有 相對自由",
+    "sub": "讚美你包容你都是我的使命",
     "url": "https://files.catbox.moe/zi4gxo.mp3"
   },
   {
-    "title": "千万次想象",
-    "sub": "我千万次想象 千万次模仿 思念的形状",
+    "title": "千萬次想象",
+    "sub": "我千萬次想象 千萬次模仿 思念的形狀",
     "url": "https://files.catbox.moe/4jtex8.mp3"
   },
   {
-    "title": "辞家千里",
-    "sub": "穿过无人问津去见山海万顷",
+    "title": "辭家千里",
+    "sub": "穿過無人問津去見山海萬頃",
     "url": "https://files.catbox.moe/2quy44.mp3"
   },
   {
@@ -1869,13 +1869,13 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/utmbqp.mp3"
   },
   {
-    "title": "沦陷",
-    "sub": "圈它在黑暗中逃不出的梦魇",
+    "title": "淪陷",
+    "sub": "圈它在黑暗中逃不出的夢魘",
     "url": "https://files.catbox.moe/0bhl3i.mp3"
   },
   {
-    "title": "晚枫歌",
-    "sub": "你又怎知我从未放手",
+    "title": "晚楓歌",
+    "sub": "你又怎知我從未放手",
     "url": "https://files.catbox.moe/xhwrwy.mp3"
   },
   {
@@ -1884,23 +1884,23 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/v1k4h8.mp3"
   },
   {
-    "title": "若梦",
-    "sub": "日升月落 此生依旧难舍",
+    "title": "若夢",
+    "sub": "日升月落 此生依舊難捨",
     "url": "https://files.catbox.moe/6uysqy.mp3"
   },
   {
-    "title": "爱人",
-    "sub": "可是恨的人没死成 爱的人没可能",
+    "title": "愛人",
+    "sub": "可是恨的人沒死成 愛的人沒可能",
     "url": "https://files.catbox.moe/wtbdxe.mp3"
   },
   {
-    "title": "星河叹",
-    "sub": "我盼孤身纵马 笛声漫天 四海任我游",
+    "title": "星河嘆",
+    "sub": "我盼孤身縱馬 笛聲漫天 四海任我遊",
     "url": "https://files.catbox.moe/de7g2m.mp3"
   },
   {
-    "title": "爱殇",
-    "sub": "假欢畅 又何妨 无人共享",
+    "title": "愛殤",
+    "sub": "假歡暢 又何妨 無人共享",
     "url": "https://files.catbox.moe/or2hm7.mp3"
   },
   {
@@ -1909,118 +1909,118 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/nf8o90.mp3"
   },
   {
-    "title": "顺其自然",
+    "title": "順其自然",
     "sub": "You light up my heart",
     "url": "https://files.catbox.moe/na01cn.mp3"
   },
   {
-    "title": "初见",
-    "sub": "若如初见 为谁而归",
+    "title": "初見",
+    "sub": "若如初見 為誰而歸",
     "url": "https://files.catbox.moe/bumolx.mp3"
   },
   {
-    "title": "我好像在哪见过你",
-    "sub": "人们把难言的爱都埋入土壤里",
+    "title": "我好像在哪見過你",
+    "sub": "人們把難言的愛都埋入土壤裡",
     "url": "https://files.catbox.moe/vcidpc.mp3"
   },
   {
-    "title": "别回头",
-    "sub": "爱是年少时不堪其重 渗透灵魂的一阵剧痛",
+    "title": "別回頭",
+    "sub": "愛是年少時不堪其重 滲透靈魂的一陣劇痛",
     "url": "https://files.catbox.moe/h1hwo5.mp3"
   },
   {
-    "title": "大鱼",
-    "sub": "怕你飞远去 怕你离我而去",
+    "title": "大魚",
+    "sub": "怕你飛遠去 怕你離我而去",
     "url": "https://files.catbox.moe/jlcvkg.mp3"
   },
   {
-    "title": "人鱼的眼泪",
+    "title": "人魚的眼淚",
     "sub": "Baby Don't cry",
     "url": "https://files.catbox.moe/40fm4j.mp3"
   },
   {
-    "title": "九张机",
-    "sub": "我愿化作望断天涯那一方青石",
+    "title": "九張機",
+    "sub": "我願化作望斷天涯那一方青石",
     "url": "https://files.catbox.moe/hql6w5.mp3"
   },
   {
-    "title": "梦幻诛仙",
-    "sub": "来世若再会还与你双双对对",
+    "title": "夢幻誅仙",
+    "sub": "來世若再會還與你雙雙對對",
     "url": "https://files.catbox.moe/r6btwp.mp3"
   },
   {
-    "title": "寻常歌",
-    "sub": "所幸不过是 寻常人间事",
+    "title": "尋常歌",
+    "sub": "所幸不過是 尋常人間事",
     "url": "https://files.catbox.moe/ntcqvr.mp3"
   },
   {
-    "title": "公示情书",
-    "sub": "有种微妙确定的幸福 叫对方正在输入",
+    "title": "公示情書",
+    "sub": "有種微妙確定的幸福 叫對方正在輸入",
     "url": "https://files.catbox.moe/rptwer.mp3"
   },
   {
-    "title": "现在那边是几点",
-    "sub": "请问你现在那边是几点 会不会还放有我的照片",
+    "title": "現在那邊是幾點",
+    "sub": "請問你現在那邊是幾點 會不會還放有我的照片",
     "url": "https://files.catbox.moe/icv2aa.mp3"
   },
   {
     "title": "情人",
-    "sub": "气氛开始升温 危险又迷人",
+    "sub": "氣氛開始升溫 危險又迷人",
     "url": "https://files.catbox.moe/iqairg.mp3"
   },
   {
-    "title": "怜悯",
-    "sub": "我要带着爱意着恨你",
+    "title": "憐憫",
+    "sub": "我要帶著愛意著恨你",
     "url": "https://files.catbox.moe/242a1h.mp3"
   },
   {
     "title": "疑心病",
-    "sub": "你终于说出口你对我感情也很重",
+    "sub": "你終於說出口你對我感情也很重",
     "url": "https://files.catbox.moe/jc1umm.mp3"
   },
   {
-    "title": "诀爱",
-    "sub": "若灵魂相结在天地之间",
+    "title": "訣愛",
+    "sub": "若靈魂相結在天地之間",
     "url": "https://files.catbox.moe/quqaws.mp3"
   },
   {
     "title": "彼岸",
-    "sub": "她捧起镜花水月 一刹那湮灭",
+    "sub": "她捧起鏡花水月 一剎那湮滅",
     "url": "https://files.catbox.moe/zxepep.mp3"
   },
   {
-    "title": "问情",
-    "sub": "当爱恨如潮生多残忍",
+    "title": "問情",
+    "sub": "當愛恨如潮生多殘忍",
     "url": "https://files.catbox.moe/erds0n.mp3"
   },
   {
-    "title": "同进退",
-    "sub": "我会牵着你手同进退 佛前立誓不后悔",
+    "title": "同進退",
+    "sub": "我會牽著你手同進退 佛前立誓不後悔",
     "url": "https://files.catbox.moe/vb6chf.mp3"
   },
   {
-    "title": "招摇",
-    "sub": "一句此生不换",
+    "title": "招搖",
+    "sub": "一句此生不換",
     "url": "https://files.catbox.moe/oc86ih.mp3"
   },
   {
     "title": "你要的全拿走",
-    "sub": "好聚好散听着也楚楚可怜",
+    "sub": "好聚好散聽著也楚楚可憐",
     "url": "https://files.catbox.moe/pegwqb.mp3"
   },
   {
-    "title": "云裳羽衣曲",
-    "sub": "故事鲜艳而缘分却太浅",
+    "title": "雲裳羽衣曲",
+    "sub": "故事鮮豔而緣分卻太淺",
     "url": "https://files.catbox.moe/memi6v.aac"
   },
   {
-    "title": "大梦归离",
-    "sub": "终于听风儿说 知道你在哪里",
+    "title": "大夢歸離",
+    "sub": "終於聽風兒說 知道你在哪裡",
     "url": "https://files.catbox.moe/5z67vs.mp3"
   },
   {
     "title": "偏向",
-    "sub": "为何会两败俱伤",
+    "sub": "為何會兩敗俱傷",
     "url": "https://files.catbox.moe/i37f39.mp3"
   },
   {
@@ -2035,7 +2035,7 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "The Evergreen",
-    "sub": "我恍然明了我所需的一切已尽数摆在眼前",
+    "sub": "我恍然明瞭我所需的一切已盡數擺在眼前",
     "url": "https://files.catbox.moe/ca3rim.mp3"
   },
   {
@@ -2044,23 +2044,23 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/xtj8db.mp3"
   },
   {
-    "title": "熄灭",
-    "sub": "你总问我在一起会不会感到厌倦",
+    "title": "熄滅",
+    "sub": "你總問我在一起會不會感到厭倦",
     "url": "https://files.catbox.moe/wnzxou.mp3"
   },
   {
-    "title": "爱人错过",
-    "sub": "我肯定在几百年前就说过爱你",
+    "title": "愛人錯過",
+    "sub": "我肯定在幾百年前就說過愛你",
     "url": "https://files.catbox.moe/q2nx16.mp3"
   },
   {
     "title": "我想念",
-    "sub": "我想念你说过的那种永远",
+    "sub": "我想念你說過的那種永遠",
     "url": "https://files.catbox.moe/3qxads.mp3"
   },
   {
-    "title": "此生不换",
-    "sub": "再有一万年深情也不变",
+    "title": "此生不換",
+    "sub": "再有一萬年深情也不變",
     "url": "https://files.catbox.moe/72ik88.mp3"
   },
   {
@@ -2075,7 +2075,7 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "2017,你",
-    "sub": "谁也不知道那满载的心 正一步一步跟随你的指引",
+    "sub": "誰也不知道那滿載的心 正一步一步跟隨你的指引",
     "url": "https://files.catbox.moe/yzo0f8.mp3"
   },
   {
@@ -2099,133 +2099,133 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/8t4oca.mp3"
   },
   {
-    "title": "爱人错过",
-    "sub": "我肯定在几百年前就说过爱你",
+    "title": "愛人錯過",
+    "sub": "我肯定在幾百年前就說過愛你",
     "url": "https://files.catbox.moe/quoufu.mp3"
   },
   {
     "title": "超感",
-    "sub": "就让我成为你的枪 只为你一个人上膛",
+    "sub": "就讓我成為你的槍 只為你一個人上膛",
     "url": "https://files.catbox.moe/1es15e.mp3"
   },
   {
-    "title": "春日小径花园",
+    "title": "春日小徑花園",
     "sub": "----",
     "url": "https://files.catbox.moe/bujm9x.mp3"
   },
   {
-    "title": "当遇见你",
-    "sub": "这一秒 像蜜一般的味道 是你给我的讯号",
+    "title": "當遇見你",
+    "sub": "這一秒 像蜜一般的味道 是你給我的訊號",
     "url": "https://files.catbox.moe/ultuhw.mp3"
   },
   {
-    "title": "读心术",
-    "sub": "束一个马尾 束起所有伤悲",
+    "title": "讀心術",
+    "sub": "束一個馬尾 束起所有傷悲",
     "url": "https://files.catbox.moe/mees4p.mp3"
   },
   {
     "title": "朵朵",
-    "sub": "墙角开了一朵小花 没人管他自己长大",
+    "sub": "牆角開了一朵小花 沒人管他自己長大",
     "url": "https://files.catbox.moe/uk1rzh.mp3"
   },
   {
-    "title": "给你一瓶魔法药水",
-    "sub": "我们一起去太空旅行",
+    "title": "給你一瓶魔法藥水",
+    "sub": "我們一起去太空旅行",
     "url": "https://files.catbox.moe/j5grzr.aac"
   },
   {
-    "title": "好事要发生",
-    "sub": "阳光撞怀中 有好事要发生 我如一道绚烂的红",
+    "title": "好事要發生",
+    "sub": "陽光撞懷中 有好事要發生 我如一道絢爛的紅",
     "url": "https://files.catbox.moe/63p0x7.mp3"
   },
   {
-    "title": "驾鹤西去",
-    "sub": "浮生苦闷有太多 我总爱做极乐的美梦",
+    "title": "駕鶴西去",
+    "sub": "浮生苦悶有太多 我總愛做極樂的美夢",
     "url": "https://files.catbox.moe/9l0uva.mp3"
   },
   {
-    "title": "浆果",
+    "title": "漿果",
     "sub": "A piece of heart he flies out when she's gone",
     "url": "https://files.catbox.moe/l0gpmk.mp3"
   },
   {
-    "title": "君莫离",
-    "sub": "愿君莫离 朝暮两相依",
+    "title": "君莫離",
+    "sub": "願君莫離 朝暮兩相依",
     "url": "https://files.catbox.moe/gy3bi9.mp3"
   },
   {
-    "title": "路过人间",
-    "sub": "相遇离别 贪嗔爱痴怨",
+    "title": "路過人間",
+    "sub": "相遇離別 貪嗔愛痴怨",
     "url": "https://files.catbox.moe/9o5udi.mp3"
   },
   {
-    "title": "没关系",
-    "sub": "空气像青苹果公车开满花朵",
+    "title": "沒關係",
+    "sub": "空氣像青蘋果公車開滿花朵",
     "url": "https://files.catbox.moe/iv8i2j.mp3"
   },
   {
-    "title": "你说爱情啊",
-    "sub": "满载故事盛开的花 我翻越山海送给你啊",
+    "title": "你說愛情啊",
+    "sub": "滿載故事盛開的花 我翻越山海送給你啊",
     "url": "https://files.catbox.moe/b398la.aac"
   },
   {
     "title": "失眠",
-    "sub": "尝试过爱恋 尝试过缠绵",
+    "sub": "嘗試過愛戀 嘗試過纏綿",
     "url": "https://files.catbox.moe/m6j0s1.mp3"
   },
   {
-    "title": "十二月的奇迹",
+    "title": "十二月的奇蹟",
     "sub": "我望眼欲穿看我看不到的你",
     "url": "https://files.catbox.moe/fkjyuk.aac"
   },
   {
-    "title": "叹云兮",
-    "sub": "别怨我不在身边 记住 我会在你的心里面",
+    "title": "嘆雲兮",
+    "sub": "別怨我不在身邊 記住 我會在你的心裡面",
     "url": "https://files.catbox.moe/24q2xu.aac"
   },
   {
-    "title": "天外来物",
-    "sub": "你在世俗里的名字不重要了",
+    "title": "天外來物",
+    "sub": "你在世俗裡的名字不重要了",
     "url": "https://files.catbox.moe/brd7c5.mp3"
   },
   {
-    "title": "我用什么把你留住",
-    "sub": "恍然抬头 梦却醒了",
+    "title": "我用什麼把你留住",
+    "sub": "恍然抬頭 夢卻醒了",
     "url": "https://files.catbox.moe/f86tc1.mp3"
   },
   {
-    "title": "喜欢你",
-    "sub": "车窗上的雾气 仿佛是你的爱在呼吸",
+    "title": "喜歡你",
+    "sub": "車窗上的霧氣 彷彿是你的愛在呼吸",
     "url": "https://files.catbox.moe/11vacs.mp3"
   },
   {
-    "title": "锈",
-    "sub": "给你的情诗生了锈 我也变成新和旧",
+    "title": "鏽",
+    "sub": "給你的情詩生了鏽 我也變成新和舊",
     "url": "https://files.catbox.moe/qpxik8.mp3"
   },
   {
-    "title": "用尽我的一切奔向你",
-    "sub": "如果这世界复杂 虚假 喧哗",
+    "title": "用盡我的一切奔向你",
+    "sub": "如果這世界複雜 虛假 喧譁",
     "url": "https://files.catbox.moe/1tlog4.mp3"
   },
   {
-    "title": "种果无果",
-    "sub": "你是我亲手种下的 栽满了爱意的",
+    "title": "種果無果",
+    "sub": "你是我親手種下的 栽滿了愛意的",
     "url": "https://files.catbox.moe/2k1nmo.mp3"
   },
   {
     "title": "珠玉",
-    "sub": "每想到一些 天地都容纳不下的说法",
+    "sub": "每想到一些 天地都容納不下的說法",
     "url": "https://files.catbox.moe/kyajap.mp3"
   },
   {
-    "title": "迷人的危险",
-    "sub": "为什么爱会让人变残缺",
+    "title": "迷人的危險",
+    "sub": "為什麼愛會讓人變殘缺",
     "url": "https://files.catbox.moe/a3iann.aac"
   },
   {
-    "title": "母神傩",
-    "sub": "翻滚出七情六欲 和喜怒哀乐",
+    "title": "母神儺",
+    "sub": "翻滾出七情六慾 和喜怒哀樂",
     "url": "https://files.catbox.moe/6n36qs.mp3"
   },
   {
@@ -2240,7 +2240,7 @@ if (sessionId === currentSessionId) {
   },
   {
     "title": "剩下的盛夏",
-    "sub": "我们说过要永远在对方身边",
+    "sub": "我們說過要永遠在對方身邊",
     "url": "https://files.catbox.moe/x6afqu.mp3"
   },
   {
@@ -2254,33 +2254,33 @@ if (sessionId === currentSessionId) {
     "url": "https://files.catbox.moe/puq3bz.aac"
   },
   {
-    "title": "生物钟",
+    "title": "生物鐘",
     "sub": "----",
     "url": "https://files.catbox.moe/37g4kw.mp3"
   },
   {
     "title": "味道",
-    "sub": "你是我眼里最美的花朵",
+    "sub": "你是我眼裡最美的花朵",
     "url": "https://files.catbox.moe/964spg.mp3"
   },
   {
-    "title": "记忆中的你",
+    "title": "記憶中的你",
     "sub": "----",
     "url": "https://files.catbox.moe/rfoi2l.mp3"
   },
   {
-    "title": "我们俩",
-    "sub": "你在左边，我紧靠右",
+    "title": "我們倆",
+    "sub": "你在左邊，我緊靠右",
     "url": "https://files.catbox.moe/u8521d.aac"
   },
   {
-    "title": "蓝色雨",
-    "sub": "我爱你真的爱你",
+    "title": "藍色雨",
+    "sub": "我愛你真的愛你",
     "url": "https://files.catbox.moe/4d4hx2.mp3"
   },
   {
-    "title": "一笑倾城",
-    "sub": "想和你铺纸笔写余生的篇章",
+    "title": "一笑傾城",
+    "sub": "想和你鋪紙筆寫餘生的篇章",
     "url": "https://files.catbox.moe/o3jk7p.aac"
   },
   {
@@ -2318,10 +2318,10 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
     uploadCoverBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (vinylRecord.classList.contains('has-cover')) {
-            if (confirm('想要重置回默认的【主题色黑胶】样式吗？\n\n• 点击【确定】恢复默认\n• 点击【取消】选择新图片')) {
+            if (confirm('想要重置回預設的【主題色黑膠】樣式嗎？\n\n• 點選【確定】恢復預設\n• 點選【取消】選擇新圖片')) {
                 localforage.removeItem(APP_PREFIX + 'playerCover');
                 applyPlayerCover(null);
-                showNotification('已恢复默认黑胶样式', 'success');
+                showNotification('已恢復預設黑膠樣式', 'success');
                 return;
             }
         }
@@ -2332,20 +2332,20 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         const file = e.target.files[0];
         if (!file) return;
         if (file.size > 2 * 1024 * 1024) {
-            showNotification('图片太大了，请上传 2MB 以内的图片', 'error');
+            showNotification('圖片太大了，請上傳 2MB 以內的圖片', 'error');
             return;
         }
         cropImageToSquare(file, 200).then(base64Data => {
             try {
                 localforage.setItem(APP_PREFIX + 'playerCover', base64Data);
                 applyPlayerCover(base64Data);
-                showNotification('专辑封面设置成功！', 'success');
+                showNotification('專輯封面設定成功！', 'success');
             } catch (err) {
                 console.error(err);
-                showNotification('图片存储失败（可能超出了浏览器限制）', 'error');
+                showNotification('圖片儲存失敗（可能超出了瀏覽器限制）', 'error');
             }
         }).catch(() => {
-            showNotification('图片处理失败，请重试', 'error');
+            showNotification('圖片處理失敗，請重試', 'error');
         });
         e.target.value = '';
     });
@@ -2373,7 +2373,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             }
         }
     } catch(e) {
-        console.error('加载歌单失败，使用默认歌单', e);
+        console.error('載入歌單失敗，使用預設歌單', e);
         songs = [...latestSystemSongs];
     }
 
@@ -2414,7 +2414,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
 
     function togglePlay() {
         if (songs.length === 0) {
-            showNotification('播放列表为空', 'warning');
+            showNotification('播放列表為空', 'warning');
             return;
         }
         if (isPlaying) {
@@ -2433,7 +2433,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                     player.classList.add('playing');
                 }).catch(error => {
                     console.error(error);
-                    showNotification('播放失败，请检查网络或链接是否有效', 'error');
+                    showNotification('播放失敗，請檢查網路或連結是否有效', 'error');
                 });
             }
         }
@@ -2457,8 +2457,8 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
 
     function savePlaylist() {
         localforage.setItem(APP_PREFIX + 'customSongs', songs).catch(e => {
-            console.error('歌单保存失败', e);
-            showNotification('歌单保存失败，存储空间可能已满', 'error');
+            console.error('歌單儲存失敗', e);
+            showNotification('歌單儲存失敗，儲存空間可能已滿', 'error');
         });
         renderPlaylist();
     }
@@ -2470,8 +2470,8 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         newSongTitle.value = song.title;
         newSongSub.value = song.sub;
         newSongUrl.value = song.url;
-        modalTitleElem.innerText = "编辑歌曲信息";
-        confirmAddSongBtn.innerText = "保存修改";
+        modalTitleElem.innerText = "編輯歌曲資訊";
+        confirmAddSongBtn.innerText = "儲存修改";
         showModal(addSongModal);
     }
 
@@ -2480,8 +2480,8 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         newSongTitle.value = '';
         newSongSub.value = '';
         newSongUrl.value = '';
-        modalTitleElem.innerText = "添加自定义歌曲";
-        confirmAddSongBtn.innerText = "添加播放";
+        modalTitleElem.innerText = "新增自定義歌曲";
+        confirmAddSongBtn.innerText = "新增播放";
         showModal(addSongModal);
     }
 
@@ -2493,9 +2493,9 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         header.innerHTML = `
     <div class="pl-header-title">˙°ʚᕱ⑅ᕱɞ°˙</div>
     <div class="pl-header-actions">
-        <button class="pl-icon-btn" id="pl-manage-btn" title="歌单管理"><i class="fas fa-folder-open"></i></button>
-        <button class="pl-icon-btn ${isSearchVisible ? 'active' : ''}" id="pl-search-toggle" title="搜索"><i class="fas fa-search"></i></button>
-        <button class="pl-icon-btn" id="pl-add-btn" title="添加歌曲"><i class="fas fa-plus"></i></button>
+        <button class="pl-icon-btn" id="pl-manage-btn" title="歌單管理"><i class="fas fa-folder-open"></i></button>
+        <button class="pl-icon-btn ${isSearchVisible ? 'active' : ''}" id="pl-search-toggle" title="搜尋"><i class="fas fa-search"></i></button>
+        <button class="pl-icon-btn" id="pl-add-btn" title="新增歌曲"><i class="fas fa-plus"></i></button>
     </div>
     <input type="file" id="pl-import-input" accept=".json" style="display:none">
 `;
@@ -2535,16 +2535,16 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
             overlay.innerHTML = `
                 <div style="background:var(--secondary-bg);border-radius:16px;padding:20px;width:280px;box-shadow:0 10px 40px rgba(0,0,0,0.3);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:12px;">
-                    <div style="text-align:center;font-weight:600;margin-bottom:5px;">歌单管理</div>
+                    <div style="text-align:center;font-weight:600;margin-bottom:5px;">歌單管理</div>
                     
                     <button id="_pl_opt_import" style="padding:12px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;transition:0.2s;">
                         <div style="width:32px;height:32px;background:rgba(var(--accent-color-rgb),0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-color);"><i class="fas fa-file-import"></i></div>
-                        导入歌单文件
+                        匯入歌單檔案
                     </button>
                     
                     <button id="_pl_opt_export" style="padding:12px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;transition:0.2s;">
                         <div style="width:32px;height:32px;background:rgba(var(--accent-color-rgb),0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-color);"><i class="fas fa-file-export"></i></div>
-                        导出当前歌单
+                        匯出當前歌單
                     </button>
                     
                     <button id="_pl_opt_cancel" style="padding:10px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px;margin-top:5px;">取消</button>
@@ -2562,7 +2562,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             if (plOptExportBtn) plOptExportBtn.onclick = () => {
                 closeOpt();
                 if (songs.length === 0) {
-                    showNotification('歌单为空，无法导出', 'warning');
+                    showNotification('歌單為空，無法匯出', 'warning');
                     return;
                 }
                 const dataStr = JSON.stringify(songs, null, 2);
@@ -2574,7 +2574,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                showNotification('歌单导出成功', 'success');
+                showNotification('歌單匯出成功', 'success');
             };
 
             if (plOptImportBtn) plOptImportBtn.onclick = () => {
@@ -2591,11 +2591,11 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
             reader.onload = (ev) => {
                 try {
                     const importedSongs = JSON.parse(ev.target.result);
-                    if (!Array.isArray(importedSongs)) throw new Error('格式错误');
+                    if (!Array.isArray(importedSongs)) throw new Error('格式錯誤');
                     
-                    if (confirm(`检测到 ${importedSongs.length} 首歌曲。\n点击【确定】覆盖当前歌单\n点击【取消】追加到当前歌单末尾`)) {
+                    if (confirm(`檢測到 ${importedSongs.length} 首歌曲。\n點選【確定】覆蓋當前歌單\n點選【取消】追加到當前歌單末尾`)) {
                         songs = importedSongs;
-                        showNotification('歌单已覆盖', 'success');
+                        showNotification('歌單已覆蓋', 'success');
                     } else {
                         songs = [...songs, ...importedSongs];
                         showNotification(`已追加 ${importedSongs.length} 首歌曲`, 'success');
@@ -2608,7 +2608,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                     }
                 } catch (err) {
                     console.error(err);
-                    showNotification('导入失败：文件格式不正确', 'error');
+                    showNotification('匯入失敗：檔案格式不正確', 'error');
                 }
             };
             reader.readAsText(file);
@@ -2633,7 +2633,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                                                 s.sub.toLowerCase().includes(searchTerm));
 
         if (filteredSongs.length === 0) {
-            container.innerHTML = `<div class="empty-search-result">未找到 "${searchTerm}" 相关歌曲</div>`;
+            container.innerHTML = `<div class="empty-search-result">未找到 "${searchTerm}" 相關歌曲</div>`;
             return;
         }
 
@@ -2659,7 +2659,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
                     <div class="song-sub-row">${displaySub}</div>
                 </div>
                 <div class="item-actions">
-                    ${song.isCustom ? '<span class="custom-tag" title="自定义歌曲"></span>' : ''}
+                    ${song.isCustom ? '<span class="custom-tag" title="自定義歌曲"></span>' : ''}
                     <span class="action-icon-btn delete" title="移除">&times;</span>
                 </div>
             `;
@@ -2673,7 +2673,7 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
 
             div.querySelector('.delete').addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (confirm(`确定移除《${song.title}》吗？`)) {
+                if (confirm(`確定移除《${song.title}》嗎？`)) {
                     songs.splice(realIndex, 1);
                     savePlaylist();
                     
@@ -2716,23 +2716,23 @@ const savedCover = safeGetItem(APP_PREFIX + 'playerCover');
         const url = newSongUrl.value.trim();
 
         if (!title || !url) {
-            showNotification('歌名和链接不能为空', 'error');
+            showNotification('歌名和連結不能為空', 'error');
             return;
         }
 
         const songData = {
             title,
-            sub: sub || '未知艺术家',
+            sub: sub || '未知藝術家',
             url,
             isCustom: true
         };
 
         if (editModeIndex >= 0) {
             songs[editModeIndex] = songData;
-            showNotification('歌曲信息已修改', 'success');
+            showNotification('歌曲資訊已修改', 'success');
         } else {
             songs.unshift(songData);
-            showNotification('歌曲已添加', 'success');
+            showNotification('歌曲已新增', 'success');
             if (songs.length === 1) loadSong(0);
         }
 
@@ -2835,7 +2835,7 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
         document.getElementById('icon-loop').style.display   = playMode === 'sequence' ? 'block' : 'none';
         document.getElementById('icon-single').style.display = playMode === 'single'   ? 'block' : 'none';
         document.getElementById('icon-shuffle').style.display= playMode === 'shuffle'  ? 'block' : 'none';
-        const labels = { sequence: '顺序播放', single: '单曲循环', shuffle: '随机播放' };
+        const labels = { sequence: '順序播放', single: '單曲迴圈', shuffle: '隨機播放' };
         showNotification(labels[playMode], 'info', 1000);
     });
 
@@ -2918,21 +2918,21 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
             opacity: 0;
             transition: all 0.3s ease;
             ">
-            <div class="modal-title"><i class="fas fa-image"></i><span>发送图片</span></div>
+            <div class="modal-title"><i class="fas fa-image"></i><span>傳送圖片</span></div>
             <div style="margin-bottom: 16px;">
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button class="modal-btn modal-btn-secondary upload-mode-btn active" id="upload-image-file-btn" style="flex: 1;">选择文件</button>
-            <button class="modal-btn modal-btn-secondary upload-mode-btn" id="paste-image-url-btn" style="flex: 1;">粘贴URL</button>
+            <button class="modal-btn modal-btn-secondary upload-mode-btn active" id="upload-image-file-btn" style="flex: 1;">選擇檔案</button>
+            <button class="modal-btn modal-btn-secondary upload-mode-btn" id="paste-image-url-btn" style="flex: 1;">貼上URL</button>
             </div>
             <input type="file" class="modal-input" id="image-file-input" accept="image/*">
-            <input type="text" class="modal-input" id="image-url-input" placeholder="输入图片URL地址" style="display: none;">
+            <input type="text" class="modal-input" id="image-url-input" placeholder="輸入圖片URL地址" style="display: none;">
             <div id="image-preview" style="text-align: center; margin-top: 10px; display: none;">
             <img id="preview-chat-image" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color);">
             </div>
             </div>
             <div class="modal-buttons">
             <button class="modal-btn modal-btn-secondary" id="cancel-image">取消</button>
-            <button class="modal-btn modal-btn-primary" id="send-image" disabled>发送</button>
+            <button class="modal-btn modal-btn-primary" id="send-image" disabled>傳送</button>
             </div>
             </div>
             `;
@@ -2989,17 +2989,17 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
                     const file = e.target.files[0];
                     if (file) {
                         if (file.size > MAX_IMAGE_SIZE) {
-                            showNotification('图片大小不能超过5MB', 'error');
+                            showNotification('圖片大小不能超過5MB', 'error');
                             return;
                         }
-                        showNotification('正在优化图片...', 'info', 1500);
+                        showNotification('正在最佳化圖片...', 'info', 1500);
                         optimizeImage(file).then(optimizedData => {
                             currentImageData = optimizedData;
                             previewImg.src = currentImageData;
                             previewDiv.style.display = 'block';
                             sendBtn.disabled = false;
                         }).catch(() => {
-                            showNotification('图片处理失败', 'error');
+                            showNotification('圖片處理失敗', 'error');
                         });
                     }
                 });
@@ -3021,10 +3021,10 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
                                 img.onload = function() {
 
                                     previewImg.src = url;
-                                    showNotification('图片URL有效', 'success', 1000);
+                                    showNotification('圖片URL有效', 'success', 1000);
                                 };
                                 img.onerror = function() {
-                                    showNotification('图片URL无效或无法访问', 'error');
+                                    showNotification('圖片URL無效或無法訪問', 'error');
                                     sendBtn.disabled = true;
                                     previewDiv.style.display = 'none';
                                 };
@@ -3119,7 +3119,7 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
             DOMElements.imageInput.addEventListener('change', () => {
                 if (DOMElements.imageInput.files[0]) {
                     if (isBatchMode) {
-                        showNotification('批量模式不支持图片', 'warning');
+                        showNotification('批次模式不支援圖片', 'warning');
                         DOMElements.imageInput.value = '';
                     } else {
                         sendMessage();
@@ -3151,7 +3151,7 @@ window._toggleBottomCollapse = function() {
     _applyCollapseState(isOn);
     if (typeof throttledSaveData === 'function') throttledSaveData();
     if (typeof showNotification === 'function')
-        showNotification(isOn ? '底部栏已收纳 — 点击 ⌃ 展开更多' : '已退出收纳模式', 'success', 2000);
+        showNotification(isOn ? '底部欄已收納 — 點選 ⌃ 展開更多' : '已退出收納模式', 'success', 2000);
 };
 
 window.toggleCollapsedExtras = function() {
@@ -3178,7 +3178,7 @@ window.exitCollapseMode = function() {
     if (typeof settings !== 'undefined') settings.bottomCollapseMode = false;
     _applyCollapseState(false);
     if (typeof throttledSaveData === 'function') throttledSaveData();
-    if (typeof showNotification === 'function') showNotification('已退出收纳模式', 'success', 2000);
+    if (typeof showNotification === 'function') showNotification('已退出收納模式', 'success', 2000);
 };
 
 (function initCollapseMode() {

@@ -5,15 +5,15 @@
     var PTR_CUST_KEY = 'pokeSym_partner_custom';
 
     var PRESETS = [
-        { value: 'none',    label: '无装饰',   sym: '' },
+        { value: 'none',    label: '無裝飾',   sym: '' },
         { value: 'star4',   label: '✦ 四角星', sym: '✦' },
-        { value: 'star5',   label: '✧ 镂空星', sym: '✧' },
-        { value: 'dot',     label: '· 圆点',   sym: '·' },
+        { value: 'star5',   label: '✧ 鏤空星', sym: '✧' },
+        { value: 'dot',     label: '· 圓點',   sym: '·' },
         { value: 'wave',    label: '～ 波浪',  sym: '～' },
-        { value: 'heart',   label: '♡ 爱心',   sym: '♡' },
+        { value: 'heart',   label: '♡ 愛心',   sym: '♡' },
         { value: 'flower',  label: '✿ 花朵',   sym: '✿' },
-        { value: 'sparkle', label: '✨ 闪光',  sym: '✨' },
-        { value: 'custom',  label: '自定义…',  sym: null }
+        { value: 'sparkle', label: '✨ 閃光',  sym: '✨' },
+        { value: 'custom',  label: '自定義…',  sym: null }
     ];
 
     function _getSym(key, customKey) {
@@ -23,11 +23,11 @@
         return p ? p.sym : '✦';
     }
 
-    // 用于“戳一戳”文本的清理：移除大部分表情类字符，避免用户文本里夹带 emoji
-    // 装饰符号仍由 _formatPokeText() 根据用户配置自动包裹输出
+    // 用於“戳一戳”文字的清理：移除大部分表情類字元，避免使用者文字里夾帶 emoji
+    // 裝飾符號仍由 _formatPokeText() 根據使用者配置自動包裹輸出
     function _stripEmojiForPoke(text) {
         return String(text || '')
-            // 常见 Emoji / 符号区段（尽量保守）
+            // 常見 Emoji / 符號區段（儘量保守）
             .replace(/[\u2600-\u27BF\u{1F300}-\u{1FAFF}]/gu, '')
             .replace(/\s+/g, ' ')
             .trim();
@@ -68,23 +68,23 @@
         wrap.innerHTML = [
             '<div style="background:var(--primary-bg);border-radius:20px;padding:22px 20px;width:min(340px,92vw);box-shadow:0 20px 60px rgba(0,0,0,0.28);border:1px solid var(--border-color);">',
               '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">',
-                '<span style="font-size:15px;font-weight:700;color:var(--text-primary);font-family:var(--font-family);">戳一戳装饰符号</span>',
+                '<span style="font-size:15px;font-weight:700;color:var(--text-primary);font-family:var(--font-family);">戳一戳裝飾符號</span>',
                 '<button id="psm-close" style="background:none;border:none;font-size:18px;color:var(--text-secondary);cursor:pointer;padding:2px 6px;border-radius:6px;">✕</button>',
               '</div>',
-              '<div style="font-size:11px;color:var(--text-secondary);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;">我发出的</div>',
+              '<div style="font-size:11px;color:var(--text-secondary);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;">我發出的</div>',
               '<select id="psm-my" style="width:100%;padding:9px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;font-family:var(--font-family);margin-bottom:8px;">'+opts(mySel)+'</select>',
               '<div id="psm-my-cw" style="margin-bottom:12px;display:'+(mySel==='custom'?'block':'none')+';">',
-                '<input id="psm-my-ci" type="text" maxlength="4" placeholder="输入 1-2 个字符" value="'+_esc(myCustom)+'" style="width:100%;padding:8px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;font-family:var(--font-family);">',
+                '<input id="psm-my-ci" type="text" maxlength="4" placeholder="輸入 1-2 個字元" value="'+_esc(myCustom)+'" style="width:100%;padding:8px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;font-family:var(--font-family);">',
               '</div>',
-              '<div style="font-size:11px;color:var(--text-secondary);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;">对方发出的</div>',
+              '<div style="font-size:11px;color:var(--text-secondary);font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;">對方發出的</div>',
               '<select id="psm-ptr" style="width:100%;padding:9px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;font-family:var(--font-family);margin-bottom:8px;">'+opts(ptrSel)+'</select>',
               '<div id="psm-ptr-cw" style="margin-bottom:14px;display:'+(ptrSel==='custom'?'block':'none')+';">',
-                '<input id="psm-ptr-ci" type="text" maxlength="4" placeholder="输入 1-2 个字符" value="'+_esc(ptrCustom)+'" style="width:100%;padding:8px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;font-family:var(--font-family);">',
+                '<input id="psm-ptr-ci" type="text" maxlength="4" placeholder="輸入 1-2 個字元" value="'+_esc(ptrCustom)+'" style="width:100%;padding:8px 10px;border:1.5px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;font-family:var(--font-family);">',
               '</div>',
               '<div id="psm-preview" style="background:var(--secondary-bg);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--text-secondary);margin-bottom:16px;border:1px dashed var(--border-color);line-height:1.7;"></div>',
               '<div style="display:flex;gap:8px;">',
                 '<button id="psm-cancel" style="flex:1;padding:9px;border:1px solid var(--border-color);border-radius:10px;background:var(--secondary-bg);color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-family);">取消</button>',
-                '<button id="psm-save" style="flex:2;padding:9px;border:none;border-radius:10px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">保存</button>',
+                '<button id="psm-save" style="flex:2;padding:9px;border:none;border-radius:10px;background:var(--accent-color);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-family);">儲存</button>',
               '</div>',
             '</div>'
         ].join('');
@@ -96,12 +96,12 @@
             var ms = mv==='custom'?(document.getElementById('psm-my-ci').value||'✦'):((PRESETS.find(function(x){return x.value===mv;})||{}).sym||'');
             var ps = pv==='custom'?(document.getElementById('psm-ptr-ci').value||'✦'):((PRESETS.find(function(x){return x.value===pv;})||{}).sym||'');
             var myN  = (typeof settings!=='undefined'&&settings.myName)||'我';
-            var pN   = (typeof settings!=='undefined'&&settings.partnerName)||'对方';
+            var pN   = (typeof settings!=='undefined'&&settings.partnerName)||'對方';
             var mt   = ms?(ms+' '+myN+' 拍了拍你 '+ms):(myN+' 拍了拍你');
             var pt   = ps?(ps+' '+pN+' 拍了拍你 '+ps):(pN+' 拍了拍你');
             document.getElementById('psm-preview').innerHTML =
                 '<div style="color:var(--text-primary);">我：'+_esc(mt)+'</div>'+
-                '<div style="color:var(--text-primary);margin-top:3px;">对方：'+_esc(pt)+'</div>';
+                '<div style="color:var(--text-primary);margin-top:3px;">對方：'+_esc(pt)+'</div>';
         }
 
         document.getElementById('psm-my').addEventListener('change', function(){
@@ -127,7 +127,7 @@
             if(pv==='custom') localStorage.setItem(PTR_CUST_KEY, document.getElementById('psm-ptr-ci').value.trim());
             close();
             if(window._syncPokeDesc) window._syncPokeDesc();
-            if(typeof showNotification==='function') showNotification('戳一戳符号已保存 ✓','success',1800);
+            if(typeof showNotification==='function') showNotification('戳一戳符號已儲存 ✓','success',1800);
         });
     };
 
@@ -137,7 +137,7 @@
         var ml = (PRESETS.find(function(p){return p.value===ms;})||{}).label||ms;
         var pl = (PRESETS.find(function(p){return p.value===ps;})||{}).label||ps;
         var d = document.getElementById('poke-symbol-desc');
-        if(d) d.textContent = '我: '+ml+'  /  对方: '+pl;
+        if(d) d.textContent = '我: '+ml+'  /  對方: '+pl;
     }
     window._syncPokeDesc = _syncPokeDesc;
     document.addEventListener('DOMContentLoaded', _syncPokeDesc);
@@ -168,14 +168,14 @@
         var row = document.getElementById('header-opacity-toggle');
         if (row) row.classList.toggle('active', en);
         var spans = document.querySelectorAll('#header-opacity-toggle .setting-pill-label span');
-        if (spans.length) spans[0].textContent = en ? '已开启，始终清晰' : '关闭后悬停才清晰';
+        if (spans.length) spans[0].textContent = en ? '已開啟，始終清晰' : '關閉後懸停才清晰';
     }
 
     window._toggleHeaderOpacity = function() {
         localStorage.setItem(KEY, String(!_get()));
         _applyHeader(); _syncUI();
         if (typeof showNotification === 'function')
-            showNotification(_get() ? '顶部栏已常驻清晰 ✓' : '顶部栏已恢复悬停清晰', 'success', 1800);
+            showNotification(_get() ? '頂部欄已常駐清晰 ✓' : '頂部欄已恢復懸停清晰', 'success', 1800);
     };
 
     _applyHeader();
@@ -214,9 +214,9 @@
             dot.className = 'keepalive-dot' + (playing ? ' alive' : '');
         }
         if (desc) {
-            if (!_get())      desc.textContent = '静音循环音频，防止页面被系统挂起';
-            else if (playing) desc.textContent = '运行中 · 页面已保活';
-            else              desc.textContent = '等待交互后启动…';
+            if (!_get())      desc.textContent = '靜音迴圈音訊，防止頁面被系統掛起';
+            else if (playing) desc.textContent = '執行中 · 頁面已保活';
+            else              desc.textContent = '等待互動後啟動…';
         }
         if (row)  row.style.display = _get() ? 'flex' : 'none';
         var bars = document.querySelectorAll('.keepalive-wave-bar');
@@ -249,10 +249,10 @@
         localStorage.setItem(KEY, String(next));
         if (next) {
             _start();
-            if (typeof showNotification === 'function') showNotification('保活音频已开启 🎵', 'success', 2000);
+            if (typeof showNotification === 'function') showNotification('保活音訊已開啟 🎵', 'success', 2000);
         } else {
             _stop();
-            if (typeof showNotification === 'function') showNotification('保活音频已关闭', 'info', 1500);
+            if (typeof showNotification === 'function') showNotification('保活音訊已關閉', 'info', 1500);
         }
         _setUI(next && _audio && !_audio.paused);
     };
@@ -286,11 +286,11 @@
         var td = to   && to.value   ? new Date(to.value  +'T23:59:59') : null;
 
         if (!q && !fd && !td) {
-            out.innerHTML = '<div class="sri-empty"><i class="fas fa-search"></i><span>输入关键词或选择日期范围</span></div>';
+            out.innerHTML = '<div class="sri-empty"><i class="fas fa-search"></i><span>輸入關鍵詞或選擇日期範圍</span></div>';
             return;
         }
         if (typeof messages === 'undefined' || !messages || !messages.length) {
-            out.innerHTML = '<div class="sri-empty"><i class="fas fa-inbox"></i><span>暂无聊天记录</span></div>';
+            out.innerHTML = '<div class="sri-empty"><i class="fas fa-inbox"></i><span>暫無聊天記錄</span></div>';
             return;
         }
 
@@ -304,7 +304,7 @@
         });
 
         if (!res.length) {
-            out.innerHTML = '<div class="sri-empty"><i class="fas fa-inbox"></i><span>未找到匹配消息</span></div>';
+            out.innerHTML = '<div class="sri-empty"><i class="fas fa-inbox"></i><span>未找到匹配訊息</span></div>';
             return;
         }
 
@@ -318,7 +318,7 @@
             var d=new Date(ts);
             return d.getFullYear()+'/'+(d.getMonth()+1+'').padStart(2,'0')+'/'+(d.getDate()+'').padStart(2,'0')+' '+(d.getHours()+'').padStart(2,'0')+':'+(d.getMinutes()+'').padStart(2,'0');
         }
-        function nm(m){ return m.sender==='user'?((typeof settings!=='undefined'&&settings.myName)||'我'):((typeof settings!=='undefined'&&settings.partnerName)||'对方'); }
+        function nm(m){ return m.sender==='user'?((typeof settings!=='undefined'&&settings.myName)||'我'):((typeof settings!=='undefined'&&settings.partnerName)||'對方'); }
 
         var _myAvSrc = (function(){
             var el = document.querySelector('#my-avatar img,[id*="my-avatar"] img');
@@ -333,10 +333,10 @@
             if (src) return '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
             return '<i class="fas fa-'+(isMe?'user':'user-circle')+'" style="font-size:16px;color:rgba(255,255,255,.8);"></i>';
         }
-        var html = '<div style="font-size:12px;color:var(--text-secondary);padding:0 2px 8px;">共 <b style="color:var(--accent-color)">'+res.length+'</b> 条</div>';
+        var html = '<div style="font-size:12px;color:var(--text-secondary);padding:0 2px 8px;">共 <b style="color:var(--accent-color)">'+res.length+'</b> 條</div>';
         html += res.slice(0,200).map(function(m){
             var isMe = m.sender==='user';
-            var preview = m.text?(m.text.length>100?m.text.slice(0,100)+'…':m.text):(m.image?'[图片]':'');
+            var preview = m.text?(m.text.length>100?m.text.slice(0,100)+'…':m.text):(m.image?'[圖片]':'');
             return '<div class="search-result-item" onclick="window._scrollToMsg&&window._scrollToMsg('+m.id+')">'+
                 '<div class="sri-avatar '+(isMe?'sri-me':'sri-partner')+'">'+_avHtml(isMe)+'</div>'+
                 '<div class="sri-body">'+
@@ -345,7 +345,7 @@
                 '</div>'+
             '</div>';
         }).join('');
-        if (res.length>200) html+='<div style="text-align:center;font-size:12px;color:var(--text-secondary);padding:6px 0">仅显示前 200 条</div>';
+        if (res.length>200) html+='<div style="text-align:center;font-size:12px;color:var(--text-secondary);padding:6px 0">僅顯示前 200 條</div>';
         out.innerHTML = html;
     };
 
@@ -359,7 +359,7 @@
             var m = document.getElementById('stats-modal');
             if (m && typeof hideModal==='function') setTimeout(function(){ hideModal(m); }, 350);
         } else {
-            if (typeof showNotification==='function') showNotification('消息不在当前视图中','info',2000);
+            if (typeof showNotification==='function') showNotification('訊息不在當前檢視中','info',2000);
         }
     };
 })();
@@ -448,7 +448,7 @@ function showEmojiTab() {
             if (isBatchMode) {
                 batchMessages.push({ id: Date.now() + batchMessages.length, text: '', image: src });
                 updateBatchPreview();
-                showNotification('已添加到批量发送', 'success', 1200);
+                showNotification('已新增到批次傳送', 'success', 1200);
             } else {
                 addMessage({
                     id: Date.now(),
@@ -526,7 +526,7 @@ function showPokeTab() {
     });
     
     const customBtn = document.createElement('button');
-    customBtn.innerHTML = '<i class="fas fa-edit"></i> 自定义拍一拍';
+    customBtn.innerHTML = '<i class="fas fa-edit"></i> 自定義拍一拍';
     customBtn.style.cssText = `
         padding: 11px 14px;
         background: linear-gradient(135deg, var(--accent-color), rgba(var(--accent-color-rgb),0.8));
@@ -595,21 +595,21 @@ function showPokeTab() {
             opacity: 0;
             transition: all 0.3s ease;
             ">
-            <div class="modal-title"><i class="fas fa-image"></i><span>发送图片</span></div>
+            <div class="modal-title"><i class="fas fa-image"></i><span>傳送圖片</span></div>
             <div style="margin-bottom: 16px;">
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button class="modal-btn modal-btn-secondary upload-mode-btn active" id="upload-image-file-btn" style="flex: 1;">选择文件</button>
-            <button class="modal-btn modal-btn-secondary upload-mode-btn" id="paste-image-url-btn" style="flex: 1;">粘贴URL</button>
+            <button class="modal-btn modal-btn-secondary upload-mode-btn active" id="upload-image-file-btn" style="flex: 1;">選擇檔案</button>
+            <button class="modal-btn modal-btn-secondary upload-mode-btn" id="paste-image-url-btn" style="flex: 1;">貼上URL</button>
             </div>
             <input type="file" class="modal-input" id="image-file-input" accept="image/*">
-            <input type="text" class="modal-input" id="image-url-input" placeholder="输入图片URL地址" style="display: none;">
+            <input type="text" class="modal-input" id="image-url-input" placeholder="輸入圖片URL地址" style="display: none;">
             <div id="image-preview" style="text-align: center; margin-top: 10px; display: none;">
             <img id="preview-chat-image" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color);">
             </div>
             </div>
             <div class="modal-buttons">
             <button class="modal-btn modal-btn-secondary" id="cancel-image">取消</button>
-            <button class="modal-btn modal-btn-primary" id="send-image" disabled>发送</button>
+            <button class="modal-btn modal-btn-primary" id="send-image" disabled>傳送</button>
             </div>
             </div>
             `;
@@ -666,17 +666,17 @@ function showPokeTab() {
                     const file = e.target.files[0];
                     if (file) {
                         if (file.size > MAX_IMAGE_SIZE) {
-                            showNotification('图片大小不能超过5MB', 'error');
+                            showNotification('圖片大小不能超過5MB', 'error');
                             return;
                         }
-                        showNotification('正在优化图片...', 'info', 1500);
+                        showNotification('正在最佳化圖片...', 'info', 1500);
                         optimizeImage(file).then(optimizedData => {
                             currentImageData = optimizedData;
                             previewImg.src = currentImageData;
                             previewDiv.style.display = 'block';
                             sendBtn.disabled = false;
                         }).catch(() => {
-                            showNotification('图片处理失败', 'error');
+                            showNotification('圖片處理失敗', 'error');
                         });
                     }
                 });
@@ -698,10 +698,10 @@ function showPokeTab() {
                                 img.onload = function() {
 
                                     previewImg.src = url;
-                                    showNotification('图片URL有效', 'success', 1000);
+                                    showNotification('圖片URL有效', 'success', 1000);
                                 };
                                 img.onerror = function() {
-                                    showNotification('图片URL无效或无法访问', 'error');
+                                    showNotification('圖片URL無效或無法訪問', 'error');
                                     sendBtn.disabled = true;
                                     previewDiv.style.display = 'none';
                                 };
@@ -796,7 +796,7 @@ function showPokeTab() {
             DOMElements.imageInput.addEventListener('change', () => {
                 if (DOMElements.imageInput.files[0]) {
                     if (isBatchMode) {
-                        showNotification('批量模式不支持图片', 'warning');
+                        showNotification('批次模式不支援圖片', 'warning');
                         DOMElements.imageInput.value = '';
                     } else {
                         sendMessage();
@@ -822,64 +822,64 @@ function _getDailyGreetingData() {
     else if (hour >= 22 || hour < 6) { timeLabel = '晚上好'; timeEmoji = '🌙'; }
 
 var festivals = [
-    { m:1, d:1, name:'元旦', emoji:'🎆', label:'NEW YEAR', note:'新年快乐！愿新的一年里，你们的爱情越来越甜蜜，每一天都充满幸福与惊喜～' },
-    { m:1, d:5, name:'小寒', emoji:'❄️', label:'MINOR COLD', note:'小寒至，春不远。有你在身边，心里总是暖暖的。' },
-    { m:1, d:20, name:'大寒', emoji:'🧊', label:'MAJOR COLD', note:'大寒快乐，记得添衣保暖。你的拥抱就是最暖的炉火。' },
+    { m:1, d:1, name:'元旦', emoji:'🎆', label:'NEW YEAR', note:'新年快樂！願新的一年裡，你們的愛情越來越甜蜜，每一天都充滿幸福與驚喜～' },
+    { m:1, d:5, name:'小寒', emoji:'❄️', label:'MINOR COLD', note:'小寒至，春不遠。有你在身邊，心裡總是暖暖的。' },
+    { m:1, d:20, name:'大寒', emoji:'🧊', label:'MAJOR COLD', note:'大寒快樂，記得添衣保暖。你的擁抱就是最暖的爐火。' },
 
-    { m:2, d:4, name:'立春', emoji:'🌱', label:'START OF SPRING', note:'立春快乐！春天来了，我们的爱也像新芽一样蓬勃生长。' },
-    { m:2, d:14, name:'情人节', emoji:'💝', label:'VALENTINES DAY', note:'情人节快乐，亲爱的！你是我最美好的礼物，爱你哦～' },
-    { m:2, d:16, name:'除夕', emoji:'🧧', label:'CHINESE NEW YEAR EVE', note:'除夕快乐！辞旧迎新，愿你们携手跨入幸福的新一年，万事如意！' },
-    { m:2, d:17, name:'春节', emoji:'🎊', label:'SPRING FESTIVAL', note:'新年快乐！新的一年，愿你们相爱如初，甜蜜长久。' },
-    { m:2, d:18, name:'雨水', emoji:'☔', label:'RAIN WATER', note:'雨水节气，愿幸福像春雨一样滋润你的每一天。' },
+    { m:2, d:4, name:'立春', emoji:'🌱', label:'START OF SPRING', note:'立春快樂！春天來了，我們的愛也像新芽一樣蓬勃生長。' },
+    { m:2, d:14, name:'情人節', emoji:'💝', label:'VALENTINES DAY', note:'情人節快樂，親愛的！你是我最美好的禮物，愛你哦～' },
+    { m:2, d:16, name:'除夕', emoji:'🧧', label:'CHINESE NEW YEAR EVE', note:'除夕快樂！辭舊迎新，願你們攜手跨入幸福的新一年，萬事如意！' },
+    { m:2, d:17, name:'春節', emoji:'🎊', label:'SPRING FESTIVAL', note:'新年快樂！新的一年，願你們相愛如初，甜蜜長久。' },
+    { m:2, d:18, name:'雨水', emoji:'☔', label:'RAIN WATER', note:'雨水節氣，願幸福像春雨一樣滋潤你的每一天。' },
 
-    { m:3, d:3, name:'元宵节', emoji:'🏮', label:'LANTERN FESTIVAL', note:'元宵节快乐！花灯映月，你是我心里最亮的那盏灯。' },
-    { m:3, d:5, name:'惊蛰', emoji:'⚡', label:'AWAKENING OF INSECTS', note:'惊蛰春雷响，万物复苏，你是我最美的春天。' },
-    { m:3, d:8, name:'妇女节', emoji:'🌹', label:'WOMENS DAY', note:'今天是属于你的节日，愿你永远被温柔相待，被爱守护。' },
-    { m:3, d:12, name:'植树节', emoji:'🌳', label:'TREE PLANTING DAY', note:'今天种下一棵树，也在心里种下对你不变的爱。' },
-    { m:3, d:20, name:'春分', emoji:'🌸', label:'SPRING EQUINOX', note:'春分昼夜平分，我的爱对你从不偏心——永远满分。' },
+    { m:3, d:3, name:'元宵節', emoji:'🏮', label:'LANTERN FESTIVAL', note:'元宵節快樂！花燈映月，你是我心裡最亮的那盞燈。' },
+    { m:3, d:5, name:'驚蟄', emoji:'⚡', label:'AWAKENING OF INSECTS', note:'驚蟄春雷響，萬物復甦，你是我最美的春天。' },
+    { m:3, d:8, name:'婦女節', emoji:'🌹', label:'WOMENS DAY', note:'今天是屬於你的節日，願你永遠被溫柔相待，被愛守護。' },
+    { m:3, d:12, name:'植樹節', emoji:'🌳', label:'TREE PLANTING DAY', note:'今天種下一棵樹，也在心裡種下對你不變的愛。' },
+    { m:3, d:20, name:'春分', emoji:'🌸', label:'SPRING EQUINOX', note:'春分晝夜平分，我的愛對你從不偏心——永遠滿分。' },
 
-    { m:4, d:1, name:'愚人节', emoji:'🤡', label:'APRIL FOOLS', note:'今天可以骗你说“我不爱你了”，但我的心骗不了自己～' },
-    { m:4, d:5, name:'清明节', emoji:'🌧', label:'QINGMING FESTIVAL', note:'慎终追远，珍惜眼前。有你在，每一天都格外温暖。' },
-    { m:4, d:20, name:'谷雨', emoji:'🌾', label:'GRAIN RAIN', note:'谷雨生百谷，你是我生命里最饱满的那颗。' },
+    { m:4, d:1, name:'愚人節', emoji:'🤡', label:'APRIL FOOLS', note:'今天可以騙你說“我不愛你了”，但我的心騙不了自己～' },
+    { m:4, d:5, name:'清明節', emoji:'🌧', label:'QINGMING FESTIVAL', note:'慎終追遠，珍惜眼前。有你在，每一天都格外溫暖。' },
+    { m:4, d:20, name:'穀雨', emoji:'🌾', label:'GRAIN RAIN', note:'穀雨生百穀，你是我生命裡最飽滿的那顆。' },
 
-    { m:5, d:1, name:'劳动节', emoji:'🛠️', label:'LABOR DAY', note:'劳动最光荣，但我更光荣的是能拥有你。' },
-    { m:5, d:4, name:'青年节', emoji:'✨', label:'YOUTH DAY', note:'青春正好，与你共度。愿我们永远年轻，永远热泪盈眶。' },
-    { m:5, d:5, name:'立夏', emoji:'☀️', label:'START OF SUMMER', note:'立夏快乐！愿我们的爱像夏天一样热情。' },
-    { m:5, d:20, name:'520', emoji:'💕', label:'I LOVE YOU', note:'520，我爱你！感谢你出现在我的生命里，你是我最好的选择。' },
-    { m:5, d:21, name:'小满', emoji:'🌾', label:'GRAIN BUDS', note:'小满未满，万物可期。我对你的爱永远在增长的季节。' },
+    { m:5, d:1, name:'勞動節', emoji:'🛠️', label:'LABOR DAY', note:'勞動最光榮，但我更光榮的是能擁有你。' },
+    { m:5, d:4, name:'青年節', emoji:'✨', label:'YOUTH DAY', note:'青春正好，與你共度。願我們永遠年輕，永遠熱淚盈眶。' },
+    { m:5, d:5, name:'立夏', emoji:'☀️', label:'START OF SUMMER', note:'立夏快樂！願我們的愛像夏天一樣熱情。' },
+    { m:5, d:20, name:'520', emoji:'💕', label:'I LOVE YOU', note:'520，我愛你！感謝你出現在我的生命裡，你是我最好的選擇。' },
+    { m:5, d:21, name:'小滿', emoji:'🌾', label:'GRAIN BUDS', note:'小滿未滿，萬物可期。我對你的愛永遠在增長的季節。' },
 
-    { m:6, d:1, name:'儿童节', emoji:'🎈', label:'CHILDRENS DAY', note:'愿你永远保持那颗童心，和我一起做个快乐的大小孩。' },
-    { m:6, d:5, name:'芒种', emoji:'🌽', label:'GRAIN IN EAR', note:'芒种忙种，有你在的日子，每天都是收获。' },
-    { m:6, d:19, name:'端午节', emoji:'🛶', label:'DRAGON BOAT FESTIVAL', note:'粽子软糯，你更甜～端午安康！' },
-    { m:6, d:21, name:'夏至', emoji:'🍉', label:'SUMMER SOLSTICE', note:'夏至最长的一天，我的思念比它还长。' },
+    { m:6, d:1, name:'兒童節', emoji:'🎈', label:'CHILDRENS DAY', note:'願你永遠保持那顆童心，和我一起做個快樂的大小孩。' },
+    { m:6, d:5, name:'芒種', emoji:'🌽', label:'GRAIN IN EAR', note:'芒種忙種，有你在的日子，每天都是收穫。' },
+    { m:6, d:19, name:'端午節', emoji:'🛶', label:'DRAGON BOAT FESTIVAL', note:'粽子軟糯，你更甜～端午安康！' },
+    { m:6, d:21, name:'夏至', emoji:'🍉', label:'SUMMER SOLSTICE', note:'夏至最長的一天，我的思念比它還長。' },
 
-    { m:7, d:6, name:'小暑', emoji:'🌡️', label:'MINOR HEAT', note:'小暑入伏天，你的怀抱是最清凉的风。' },
-    { m:7, d:23, name:'大暑', emoji:'🔥', label:'MAJOR HEAT', note:'大暑炎炎，你是我心里的冰镇西瓜。' },
+    { m:7, d:6, name:'小暑', emoji:'🌡️', label:'MINOR HEAT', note:'小暑入伏天，你的懷抱是最清涼的風。' },
+    { m:7, d:23, name:'大暑', emoji:'🔥', label:'MAJOR HEAT', note:'大暑炎炎，你是我心裡的冰鎮西瓜。' },
 
-    { m:8, d:7, name:'立秋', emoji:'🍁', label:'START OF AUTUMN', note:'立秋快乐，愿与你共赏每一片秋叶。' },
-    { m:8, d:19, name:'七夕节', emoji:'🌌', label:'QIXI FESTIVAL', note:'七夕快乐！牛郎织女一年只见一次，而我们每天都在一起，真幸运。' },
-    { m:8, d:23, name:'处暑', emoji:'🌬️', label:'END OF HEAT', note:'处暑出暑，炎热渐消，爱意不减。' },
+    { m:8, d:7, name:'立秋', emoji:'🍁', label:'START OF AUTUMN', note:'立秋快樂，願與你共賞每一片秋葉。' },
+    { m:8, d:19, name:'七夕節', emoji:'🌌', label:'QIXI FESTIVAL', note:'七夕快樂！牛郎織女一年只見一次，而我們每天都在一起，真幸運。' },
+    { m:8, d:23, name:'處暑', emoji:'🌬️', label:'END OF HEAT', note:'處暑出暑，炎熱漸消，愛意不減。' },
 
-    { m:9, d:7, name:'白露', emoji:'💧', label:'WHITE DEW', note:'白露为霜，所谓伊人，在我身旁。' },
-    { m:9, d:10, name:'教师节', emoji:'📚', label:'TEACHERS DAY', note:'你是我人生中最特别的老师，教会了我什么是爱。' },
-    { m:9, d:23, name:'秋分', emoji:'🍂', label:'AUTUMN EQUINOX', note:'秋分昼夜均，你是我心里的天平。' },
-    { m:9, d:25, name:'中秋节', emoji:'🌕', label:'MID AUTUMN FESTIVAL', note:'月圆人团圆，有你才叫团圆。中秋快乐！' },
+    { m:9, d:7, name:'白露', emoji:'💧', label:'WHITE DEW', note:'白露為霜，所謂伊人，在我身旁。' },
+    { m:9, d:10, name:'教師節', emoji:'📚', label:'TEACHERS DAY', note:'你是我人生中最特別的老師，教會了我什麼是愛。' },
+    { m:9, d:23, name:'秋分', emoji:'🍂', label:'AUTUMN EQUINOX', note:'秋分晝夜均，你是我心裡的天平。' },
+    { m:9, d:25, name:'中秋節', emoji:'🌕', label:'MID AUTUMN FESTIVAL', note:'月圓人團圓，有你才叫團圓。中秋快樂！' },
 
-    { m:10, d:1, name:'国庆节', emoji:'🎑', label:'NATIONAL DAY', note:'国庆快乐！和你在一起的每一天都像节日，爱你。' },
-    { m:10, d:8, name:'寒露', emoji:'🍃', label:'COLD DEW', note:'寒露凝霜，有你在心里总是暖的。' },
-    { m:10, d:23, name:'霜降', emoji:'❄️', label:'FROST DESCENT', note:'霜降叶落，我的爱却常青。' },
-    { m:10, d:31, name:'万圣夜', emoji:'🎃', label:'HALLOWEEN', note:'不给糖就捣蛋，但你给了我全世界最甜的糖——你的爱。' },
+    { m:10, d:1, name:'國慶節', emoji:'🎑', label:'NATIONAL DAY', note:'國慶快樂！和你在一起的每一天都像節日，愛你。' },
+    { m:10, d:8, name:'寒露', emoji:'🍃', label:'COLD DEW', note:'寒露凝霜，有你在心裡總是暖的。' },
+    { m:10, d:23, name:'霜降', emoji:'❄️', label:'FROST DESCENT', note:'霜降葉落，我的愛卻常青。' },
+    { m:10, d:31, name:'萬聖夜', emoji:'🎃', label:'HALLOWEEN', note:'不給糖就搗蛋，但你給了我全世界最甜的糖——你的愛。' },
 
-    { m:11, d:7, name:'立冬', emoji:'🧣', label:'START OF WINTER', note:'立冬快乐，你的拥抱是冬天里最暖的阳光。' },
-    { m:11, d:11, name:'光棍节', emoji:'👫', label:'SINGLES DAY', note:'幸好我们不用过这个节，因为我有你。' },
-    { m:11, d:22, name:'小雪', emoji:'⛄', label:'MINOR SNOW', note:'小雪飘飘，你是我心里最暖的那团火。' },
-    { m:11, d:26, name:'感恩节', emoji:'🙏', label:'THANKSGIVING', note:'感谢生命中有你，每一天都是恩赐。' },
+    { m:11, d:7, name:'立冬', emoji:'🧣', label:'START OF WINTER', note:'立冬快樂，你的擁抱是冬天裡最暖的陽光。' },
+    { m:11, d:11, name:'光棍節', emoji:'👫', label:'SINGLES DAY', note:'幸好我們不用過這個節，因為我有你。' },
+    { m:11, d:22, name:'小雪', emoji:'⛄', label:'MINOR SNOW', note:'小雪飄飄，你是我心裡最暖的那團火。' },
+    { m:11, d:26, name:'感恩節', emoji:'🙏', label:'THANKSGIVING', note:'感謝生命中有你，每一天都是恩賜。' },
 
-    { m:12, d:7, name:'大雪', emoji:'☃️', label:'MAJOR SNOW', note:'大雪封门，封不住我对你的想念。' },
-    { m:12, d:22, name:'冬至', emoji:'🥟', label:'WINTER SOLSTICE', note:'冬至快乐，记得吃饺子，但记得想我。' },
-    { m:12, d:24, name:'平安夜', emoji:'🎄', label:'CHRISTMAS EVE', note:'平安夜快乐！愿你平平安安，我们的爱情也岁岁常安。' },
-    { m:12, d:25, name:'圣诞节', emoji:'🎅', label:'MERRY CHRISTMAS', note:'圣诞快乐！你就是我收到的最好的礼物，永远爱你。' },
-    { m:12, d:31, name:'跨年夜', emoji:'🎆', label:'NEW YEAR EVE', note:'再见这一年，你是我最好的收获。新的一年，继续爱你。' }
+    { m:12, d:7, name:'大雪', emoji:'☃️', label:'MAJOR SNOW', note:'大雪封門，封不住我對你的想念。' },
+    { m:12, d:22, name:'冬至', emoji:'🥟', label:'WINTER SOLSTICE', note:'冬至快樂，記得吃餃子，但記得想我。' },
+    { m:12, d:24, name:'平安夜', emoji:'🎄', label:'CHRISTMAS EVE', note:'平安夜快樂！願你平平安安，我們的愛情也歲歲常安。' },
+    { m:12, d:25, name:'聖誕節', emoji:'🎅', label:'MERRY CHRISTMAS', note:'聖誕快樂！你就是我收到的最好的禮物，永遠愛你。' },
+    { m:12, d:31, name:'跨年夜', emoji:'🎆', label:'NEW YEAR EVE', note:'再見這一年，你是我最好的收穫。新的一年，繼續愛你。' }
 ];
 var festival = null;
     for (var fi = 0; fi < festivals.length; fi++) {
@@ -887,70 +887,70 @@ var festival = null;
     }
 
   var weathers = [
-    '晴空万里',
-    '多云转晴',
-    '阴天有云',
-    '细雨蒙蒙',
-    '春风和煦',
+    '晴空萬里',
+    '多雲轉晴',
+    '陰天有云',
+    '細雨濛濛',
+    '春風和煦',
     '微微寒冷',
-    '清风徐徐',
-    '雨后初晴',
-    '夜色宁静',
-    '月光皎洁',
-    '晴间多云',
+    '清風徐徐',
+    '雨後初晴',
+    '夜色寧靜',
+    '月光皎潔',
+    '晴間多雲',
     '大雨滂沱',
     '雷雨交加',
-    '小雪纷飞',
-    '微风拂面',
-    '多云天气',
-    '雾气朦胧',
+    '小雪紛飛',
+    '微風拂面',
+    '多雲天氣',
+    '霧氣朦朧',
     '星光璀璨',
-    '朝霞满天',
-    '夕阳西下',
-    '海风轻拂',
-    '山间清爽',
-    '秋叶飘落',
+    '朝霞滿天',
+    '夕陽西下',
+    '海風輕拂',
+    '山間清爽',
+    '秋葉飄落',
     '花香四溢',
-    '绿意盎然',
-    '雨后清新',
-    '雪花飞舞',
-    '阳光明媚'
+    '綠意盎然',
+    '雨後清新',
+    '雪花飛舞',
+    '陽光明媚'
 ];
 
 var statusPool = [
     '正在想你 💭',
-    '忙碌中，但心里有你',
-    '好好的，别担心 ✨',
-    '期待见到你',
-    '有点想你了',
-    '在努力变更好',
-    '今天挺安静的',
-    '心情不错哦 🌱',
+    '忙碌中，但心裡有你',
+    '好好的，別擔心 ✨',
+    '期待見到你',
+    '有點想你了',
+    '在努力變更好',
+    '今天挺安靜的',
+    '心情不錯哦 🌱',
     '一切都好，你呢？',
     '看月亮，想到你 🌙',
-    '今天有点想你',
-    '刚刚看到一朵云像你 ☁️',
-    '工作再忙也会想你的',
-    '今天你开心吗？',
-    '梦里见 💤',
-    '好好吃饭了吗？',
-    '记得多喝水哦 💧',
-    '今天有没有照顾好自己',
-    '想你，但不说 🤫',
-    '全世界你最可爱',
-    '今天天气不错，适合想你',
-    '吃饱喝足，开始想你',
-    '今天也想牵你的手',
-    '你有没有想我',
+    '今天有點想你',
+    '剛剛看到一朵雲像你 ☁️',
+    '工作再忙也會想你的',
+    '今天你開心嗎？',
+    '夢裡見 💤',
+    '好好吃飯了嗎？',
+    '記得多喝水哦 💧',
+    '今天有沒有照顧好自己',
+    '想你，但不說 🤫',
+    '全世界你最可愛',
+    '今天天氣不錯，適合想你',
+    '吃飽喝足，開始想你',
+    '今天也想牽你的手',
+    '你有沒有想我',
     '今天比昨天更想你',
-    '看到好吃的想分享给你 🍜',
-    '听到一首歌想到你 🎵',
-    '今天也要加油鸭',
+    '看到好吃的想分享給你 🍜',
+    '聽到一首歌想到你 🎵',
+    '今天也要加油鴨',
     '晚安，我的全世界 🌙',
     '早安，又是想你的一天'
 ];
     var todayKey = String(now.getFullYear()) + String(month) + String(day);
-    // 为每个安装生成唯一 salt，确保每位用户每天的天气/状态各不相同
+    // 為每個安裝生成唯一 salt，確保每位使用者每天的天氣/狀態各不相同
     var userSalt = localStorage.getItem('_dgUserSalt');
     if (!userSalt) {
         userSalt = String(Math.floor(Math.random() * 999983) + 1);
@@ -967,7 +967,7 @@ var statusPool = [
     var customWeatherKey = 'customWeather_' + now.getFullYear() + '_' + month + '_' + day;
     var weather = localStorage.getItem(customWeatherKey) || defaultWeather;
 
-    // 混合系统预设 + 用户自定义状态池
+    // 混合系統預設 + 使用者自定義狀態池
     var userStatusPool = [];
     try { userStatusPool = JSON.parse(localStorage.getItem('dg_status_pool') || '[]'); } catch(e) {}
     var userStatusTexts = userStatusPool.map(function(item) { return item.status || item; }).filter(Boolean);
@@ -993,10 +993,10 @@ function _buildDailyGreeting() {
         var todayMood = moodDataRaw[todayStr];
         var allMoods = (typeof getAllMoodOptions === 'function') ? getAllMoodOptions() : [];
 
-        var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '梦角';
+        var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '夢角';
         var mName = (typeof settings !== 'undefined' && settings.myName) ? settings.myName : '我';
 
-        var partnerMoodText = pName + ' 今天还没有记录';
+        var partnerMoodText = pName + ' 今天還沒有記錄';
         var partnerMoodIcon = null; 
         var partnerMoodNote = '';
 
@@ -1012,9 +1012,9 @@ function _buildDailyGreeting() {
         }
 
         var h = now.getHours();
-        var mainTitle = festival ? (festival.name + '快乐') : timeLabel;
+        var mainTitle = festival ? (festival.name + '快樂') : timeLabel;
         var festLabel = festival ? festival.label : ('GOOD ' + (h < 12 ? 'MORNING' : h < 18 ? 'AFTERNOON' : 'EVENING'));
-        var noteText = festival ? festival.note : '今天也要元气满满，我在这里陪着你 ✦';
+        var noteText = festival ? festival.note : '今天也要元氣滿滿，我在這裡陪著你 ✦';
 
         var customData = {};
         try { customData = JSON.parse(localStorage.getItem('dg_custom_data') || '{}'); } catch(e2) {}
@@ -1024,8 +1024,8 @@ function _buildDailyGreeting() {
         function seededRandom(seed) { return (Math.abs(Math.sin(seed * 9301 + 49297) * 233280) % 233280) / 233280; }
         var todaySeedForText = dailySeed;
 
-        var defaultTitles = festival ? [(festival.name + '快乐')] : [timeLabel, '今天也要开心哦', '你在我心里呀', '想你'];
-        var defaultNotes = festival ? [festival.note] : ['今天也要元气满满，我在这里陪着你 ✦', '每一天都因为有你而特别 ✦', '想到你就觉得很安心 ✦', '你是我最喜欢的人 ✦'];
+        var defaultTitles = festival ? [(festival.name + '快樂')] : [timeLabel, '今天也要開心哦', '你在我心裡呀', '想你'];
+        var defaultNotes = festival ? [festival.note] : ['今天也要元氣滿滿，我在這裡陪著你 ✦', '每一天都因為有你而特別 ✦', '想到你就覺得很安心 ✦', '你是我最喜歡的人 ✦'];
 
         var mixedTitles = (customData.titles && customData.titles.length > 0) ? [...customData.titles, ...defaultTitles] : 
                           (customData.title ? [customData.title, ...defaultTitles] : defaultTitles);
@@ -1056,14 +1056,14 @@ function _buildDailyGreeting() {
         setEl('dg-festival', festLabel);
         setEl('dg-title', mainTitle);
         setEl('dg-partner-mood', partnerMoodText);
-        setEl('dg-partner-mood-note', partnerMoodNote || (todayMood && todayMood.partner ? pName + ' 记录了今天的心情 ☆' : ''));
+        setEl('dg-partner-mood-note', partnerMoodNote || (todayMood && todayMood.partner ? pName + ' 記錄了今天的心情 ☆' : ''));
 
         var statusPoolData = [];
         try { statusPoolData = JSON.parse(localStorage.getItem('dg_status_pool') || '[]'); } catch(e2) {}
-        // 将系统预设 + 用户自定义混合后，按今日种子选取
+        // 將系統預設 + 使用者自定義混合後，按今日種子選取
         var systemStatusItems = (function() {
             var sysPool = [];
-            // 将系统状态文本包装成与 statusPoolData 兼容的格式
+            // 將系統狀態文字包裝成與 statusPoolData 相容的格式
             var baseStatus = (typeof status !== 'undefined') ? status : '';
             if (baseStatus) sysPool.push({ status: baseStatus, icon: null, iconImg: null });
             return sysPool;
@@ -1097,9 +1097,9 @@ function _buildDailyGreeting() {
         var wBadge = document.getElementById('dg-note-weather-badge');
         if (wBadge) wBadge.style.display = 'none';
 
-        setEl('dg-section-label-partner', pName + ' 今日状态');
-        setEl('dg-weather-label', pName + ' 的天气');
-        setEl('dg-status-label', pName + ' 的状态');
+        setEl('dg-section-label-partner', pName + ' 今日狀態');
+        setEl('dg-weather-label', pName + ' 的天氣');
+        setEl('dg-status-label', pName + ' 的狀態');
 
         var months = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
         setEl('dg-date-stamp', now.getFullYear() + ' · ' + months[now.getMonth()] + '月' + now.getDate() + '日');
@@ -1238,7 +1238,7 @@ window.saveDailyGreetingCustom = function() {
     localStorage.setItem('dg_custom_data', JSON.stringify(customData));
     closeDailyGreetingEditor();
     if (typeof _buildDailyGreeting === 'function') _buildDailyGreeting();
-    if (typeof showNotification === 'function') showNotification('公告已保存 ✦', 'success');
+    if (typeof showNotification === 'function') showNotification('公告已儲存 ✦', 'success');
 };
 window.clearDgDecoImg = function() {
     var customData = {};
@@ -1352,11 +1352,11 @@ window.switchToAnnouncementPanel = function() {
     var subTabs = document.getElementById('cr-sub-tabs');
     var addBtn = document.getElementById('add-custom-reply');
     var titleEl = document.getElementById('cr-modal-title');
-    // 隐藏并清空列表区域，彻底清除 emoji/sticker/字卡等残留内容
+    // 隱藏並清空列表區域，徹底清除 emoji/sticker/字卡等殘留內容
     if (listArea) { listArea.style.display = 'none'; listArea.innerHTML = ''; listArea.className = 'content-list-area'; }
-    // 隐藏并清空批量操作工具栏，防止工具栏内容残留
+    // 隱藏並清空批次操作工具欄，防止工具欄內容殘留
     if (batchToolbar) { batchToolbar.style.display = 'none'; batchToolbar.innerHTML = ''; }
-    // 隐藏并清空 sub tabs，防止 tab 按钮残留
+    // 隱藏並清空 sub tabs，防止 tab 按鈕殘留
     if (subTabs) { subTabs.style.display = 'none'; subTabs.innerHTML = ''; }
     if (annPanel) { annPanel.style.display = 'block'; annPanel.scrollTop = 0; }
     if (toolbar) toolbar.style.display = 'none';
@@ -1389,7 +1389,7 @@ window.renderAnnStatusPool = function() {
     try { pool = JSON.parse(localStorage.getItem('dg_status_pool') || '[]'); } catch(e2) {}
     listEl.innerHTML = '';
     if (pool.length === 0) {
-        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);text-align:center;padding:10px 0;opacity:0.6;">暂无条目，添加后将随机抽取</div>';
+        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-secondary);text-align:center;padding:10px 0;opacity:0.6;">暫無條目，新增後將隨機抽取</div>';
         return;
     }
     pool.forEach(function(item, idx) {
@@ -1416,7 +1416,7 @@ window.addAnnStatusPoolItem = function() {
     var label = labelInput ? labelInput.value.trim() : '';
     var icon = iconInput ? iconInput.value.trim() : '';
     var iconImg = iconInput ? (iconInput.dataset.imgSrc || '') : '';
-    if (!status && !label) { if (typeof showNotification === 'function') showNotification('请至少填写状态或标签', 'warning'); return; }
+    if (!status && !label) { if (typeof showNotification === 'function') showNotification('請至少填寫狀態或標籤', 'warning'); return; }
     var pool = [];
     try { pool = JSON.parse(localStorage.getItem('dg_status_pool') || '[]'); } catch(e2) {}
     var entry = { status: status, label: label, icon: icon || '✦' };
@@ -1427,7 +1427,7 @@ window.addAnnStatusPoolItem = function() {
     if (labelInput) labelInput.value = '';
     if (iconInput) { iconInput.value = ''; delete iconInput.dataset.imgSrc; }
     renderAnnStatusPool();
-    if (typeof showNotification === 'function') showNotification('已添加到随机库', 'success');
+    if (typeof showNotification === 'function') showNotification('已新增到隨機庫', 'success');
 };
 
 window.handleAnnStatusIconUpload = function(input) {
@@ -1438,7 +1438,7 @@ window.handleAnnStatusIconUpload = function(input) {
         var iconInput = document.getElementById('ann-status-icon-input');
         if (iconInput) {
             iconInput.dataset.imgSrc = ev.target.result;
-            iconInput.value = '[图片]';
+            iconInput.value = '[圖片]';
             iconInput.style.fontSize = '10px';
         }
     };
@@ -1492,13 +1492,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.updateDynamicNames = function() {
     try {
-        var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '梦角';
+        var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '夢角';
         var mName = (typeof settings !== 'undefined' && settings.myName) ? settings.myName : '我';
 
         var tabPartner = document.getElementById('mood-tab-partner');
-        if (tabPartner) tabPartner.textContent = pName + '的记录';
+        if (tabPartner) tabPartner.textContent = pName + '的記錄';
         var tabMe = document.getElementById('mood-tab-me');
-        if (tabMe) tabMe.textContent = mName + '的记录';
+        if (tabMe) tabMe.textContent = mName + '的記錄';
 
         var detailPartnerTitle = document.getElementById('detail-partner-title');
         if (detailPartnerTitle) detailPartnerTitle.textContent = pName + '的';
@@ -1506,45 +1506,45 @@ window.updateDynamicNames = function() {
         var partnerNoRec = document.getElementById('detail-partner-no-record');
         if (partnerNoRec) {
             var msgEl = partnerNoRec;
-            if (!msgEl.querySelector('span')) msgEl.textContent = pName + ' 这天还没有留下记录';
+            if (!msgEl.querySelector('span')) msgEl.textContent = pName + ' 這天還沒有留下記錄';
         }
 
         var editPartnerBtn = document.getElementById('edit-partner-mood');
         if (editPartnerBtn) editPartnerBtn.textContent = '修改' + pName;
         var deletePartnerBtn = document.getElementById('delete-partner-mood');
-        if (deletePartnerBtn) deletePartnerBtn.textContent = '删除' + pName;
+        if (deletePartnerBtn) deletePartnerBtn.textContent = '刪除' + pName;
 
         var continueBtn = document.getElementById('continue-btn');
-        if (continueBtn) continueBtn.title = '让' + pName + '继续说';
+        if (continueBtn) continueBtn.title = '讓' + pName + '繼續說';
 
         var envInfo = document.querySelector('.env-send-info');
         if (envInfo) {
             var textNodes = Array.from(envInfo.childNodes).filter(n => n.nodeType === 3);
             textNodes.forEach(function(n) {
-                if (n.textContent.includes('对方将在') || n.textContent.includes('小时内回信')) {
-                    n.textContent = pName + ' 将在 10-24 小时内回信（8-12 句话）';
+                if (n.textContent.includes('對方將在') || n.textContent.includes('小時內回信')) {
+                    n.textContent = pName + ' 將在 10-24 小時內回信（8-12 句話）';
                 }
             });
         }
 
-        setDgLabel('dg-section-label-partner', pName + ' 今日状态');
-        setDgLabel('dg-weather-label', pName + ' 的天气');
-        setDgLabel('dg-status-label', pName + ' 的状态');
+        setDgLabel('dg-section-label-partner', pName + ' 今日狀態');
+        setDgLabel('dg-weather-label', pName + ' 的天氣');
+        setDgLabel('dg-status-label', pName + ' 的狀態');
 
         var envInfoSpan = document.getElementById('env-reply-time-info');
-        if (envInfoSpan) envInfoSpan.textContent = pName + ' 将在 10-24 小时内回信（8-12 句话）';
+        if (envInfoSpan) envInfoSpan.textContent = pName + ' 將在 10-24 小時內回信（8-12 句話）';
 
         var pokeInput = document.getElementById('poke-input');
         if (pokeInput) pokeInput.placeholder = '例如：拍了拍"' + pName + '"的肩膀';
 
         document.querySelectorAll('[data-name-partner]').forEach(function(el) {
-            el.textContent = pName + '的记录';
+            el.textContent = pName + '的記錄';
         });
         document.querySelectorAll('[data-name-me]').forEach(function(el) {
-            el.textContent = mName + '的记录';
+            el.textContent = mName + '的記錄';
         });
         document.querySelectorAll('[data-delete-partner]').forEach(function(el) {
-            el.textContent = '删除' + pName;
+            el.textContent = '刪除' + pName;
         });
         document.querySelectorAll('[data-edit-partner]').forEach(function(el) {
             el.textContent = '修改' + pName;
