@@ -368,10 +368,10 @@
         else { loadScripts(); showPill('已同步', 1500); }
         return;
       }
-      if (!started) return;
+      if (!started || (snap.metadata && snap.metadata.hasPendingWrites)) return;
       for (var c of snap.docChanges()) {
         if (c.type === 'removed') continue;
-        var x = c.doc.data(); if (x.dev === DEV && META[c.doc.id] && META[c.doc.id].h === x.h) continue;
+        var x = c.doc.data(); if (x.dev === DEV) continue; // this device's own write coming back
         try { if (await applyRemote(c.doc.id, x)) changed.push(c.doc.id); } catch (e) { console.warn('[cx] apply', c.doc.id, e); }
       }
       if (changed.length) onRemoteChanged(changed);
