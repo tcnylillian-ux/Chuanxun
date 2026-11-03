@@ -196,12 +196,12 @@
     if (b) { if (n) b.textContent = n > 99 ? '99+' : n; else b.remove(); }
   }
   function badge() {
-    var q = unansweredIn(), l = unreadLetters, total = q + l;
+    var q = unansweredIn(), x = window.__cxExtraBadge || 0, l = unreadLetters, total = q + l + x;
     setBadge(document.getElementById('qa-function'), q, 'qa-badge');
     setBadge(document.getElementById('envelope-function'), l, 'qa-badge');
     setBadge(document.getElementById('advanced-settings'), total, 'qa-badge-corner');
     setBadge(document.getElementById('qa-top-btn'), q, 'qa-badge-corner');
-    setBadge(document.getElementById('settings-btn'), l, 'qa-badge-corner');
+    setBadge(document.getElementById('settings-btn'), l + x, 'qa-badge-corner');
     var tab = document.querySelector('#qa-tabs [data-v="his"] .qa-dot'); if (tab) tab.hidden = !q;
   }
   async function countLetters() {
@@ -542,6 +542,8 @@
     } catch (e) {}
   }
   window._sendPartnerNotification = function (title, body) { sysNotify(title, body, 'partner-msg'); };
+  window.__cxNotify = sysNotify;
+  window.__cxBadge = function () { badge(); };
   function notifStatus(t) { var el = document.getElementById('notif-status-text'); if (el) el.textContent = t; }
   window.handleNotifToggle = function (cb) {
     var ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
