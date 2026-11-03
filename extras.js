@@ -76,6 +76,7 @@
   var css = document.createElement('style');
   css.textContent =
     '.cx-modal .modal-content{max-height:88vh;display:flex;flex-direction:column}' +
+    '.cx-modal .modal-buttons,#qa-modal .modal-buttons{margin-top:6px;margin-bottom:12px;padding-bottom:env(safe-area-inset-bottom,0px)}' +
     '.cx-body{overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:2px 2px 8px}' +
     '.cx-sec{display:flex;flex-direction:column;gap:8px}.cx-sec h4{margin:4px 0 0;font-size:12px;font-weight:600;color:var(--text-secondary);letter-spacing:.05em}' +
     '.cx-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-primary)}.cx-row>span:first-child{flex:1;min-width:0}' +
@@ -495,7 +496,7 @@
         return '<div class="k"><span>' + esc(r.n) + '</span><b>' + esc(r.v) + '</b></div>';
       }).join('') + '</div><div class="cx-muted" style="margin-top:10px">' + fmtTime(last.at) + ' 檢測 · 僅供娛樂</div></div>';
     } else h += '<div class="cx-muted" style="text-align:center;padding:20px 0">看看 ' + esc(pname()) + ' 現在怎麼樣</div>';
-    h += '<button class="cx-btn pri" data-s="scan">📡 開始檢測</button><div class="cx-btns">' + (last ? '<button class="cx-btn" data-s="share">傳到聊天</button>' : '') + '<button class="cx-btn" data-s="hist">記錄</button><button class="cx-btn" data-s="edit">編輯項目</button></div>';
+    h += '<button class="cx-btn pri" data-s="scan">開始檢測</button><div class="cx-btns">' + (last ? '<button class="cx-btn" data-s="share">傳到聊天</button>' : '') + '<button class="cx-btn" data-s="hist">記錄</button><button class="cx-btn" data-s="edit">編輯項目</button></div>';
     b.innerHTML = h;
   }
 
