@@ -1011,6 +1011,11 @@
     ticking = false;
   }
 
+  /* 修正：電腦用滑鼠點通話視窗右上角按鈕沒反應（拖動功能把滑鼠抓走了） */
+  document.addEventListener('pointerdown', function (e) {
+    if (e.target && e.target.closest && e.target.closest('#call-window-header button')) e.stopPropagation();
+  }, true);
+
   (function credit() {
     var h = Array.prototype.find.call(document.querySelectorAll('h3,h4'), function (x) { return /特別鳴謝/.test(x.textContent); });
     if (h && !document.getElementById('cx-credit')) { var c = document.createElement('p'); c.id = 'cx-credit'; c.style.cssText = 'font-size:12px;opacity:.75;margin-top:8px'; c.textContent = '潮汐、番茄鐘、陪伴中心、紅包、狀態檢測、拼字卡、主動來信的功能靈感來自「渡念」（小紅書 @我要學英語），程式為重新撰寫。'; h.parentNode.appendChild(c); }
