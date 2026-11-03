@@ -27,6 +27,7 @@
       { n: '精神', t: 'pct' }, { n: '想對你說', t: 'card' }
     ] },
     period: { list: [], days: {}, cycle: 28, len: 5, care: true, cared: {} },
+    link: { on: true, i: 0, next: 0 },
     comp: { books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
@@ -136,7 +137,11 @@
     '.cx-reader{font-size:var(--cx-fs,17px);line-height:1.9;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;font-family:var(--font-family,serif);padding:4px 2px}' +
     '.cx-reader h3{font-size:1.1em;margin:0 0 12px;text-align:center}' +
     '.cx-float{position:sticky;bottom:0;margin-top:8px}' +
-    '@media (prefers-reduced-motion:reduce){.cx-dm,.cx-scan,.cx-open .coin.spin{animation:none}}';
+    '#cx-link{order:4;display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:2px;cursor:pointer;line-height:1}' +
+    '#cx-link .hs{display:flex;gap:2px}#cx-link .hs i{width:7px;height:7px;background:var(--text-secondary);opacity:.25;clip-path:path("M3.5 6.6 0.6 3.7A1.7 1.7 0 0 1 3.5 1.3 1.7 1.7 0 0 1 6.4 3.7Z")}' +
+    '#cx-link .hs i.on{background:#e86a7a;opacity:1}#cx-link .tx{font-size:9px;color:var(--text-secondary);white-space:nowrap}' +
+    '@keyframes cxbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}#cx-link.lv5 .hs i.on{animation:cxbeat 1.6s ease-in-out infinite}#cx-link.lv5 .hs i.on:nth-child(2){animation-delay:.1s}#cx-link.lv5 .hs i.on:nth-child(3){animation-delay:.2s}#cx-link.lv5 .hs i.on:nth-child(4){animation-delay:.3s}#cx-link.lv5 .hs i.on:nth-child(5){animation-delay:.4s}' +
+    '@media (prefers-reduced-motion:reduce){#cx-link .hs i{animation:none!important}.cx-dm,.cx-scan,.cx-open .coin.spin{animation:none}}';
   document.head.appendChild(css);
 
   /* ---------- modal factory ---------- */
@@ -795,6 +800,29 @@
   function bookSave() { clearTimeout(bookSaveT); bookSaveT = setTimeout(function () { if (cState.book) { var body = cM.body; cState.book.scroll = body.scrollHeight > body.clientHeight ? body.scrollTop / (body.scrollHeight - body.clientHeight) : 0; cState.book.at = Date.now(); save(); } }, 1500); }
   document.addEventListener('scroll', function (e) { if (cM && e.target === cM.body && cM.view === 'reader') bookSave(); }, true);
 
+  /* ================= 連結狀態 ================= */
+  var LINKS = [['共鳴中', 5], ['連結穩定', 4], ['心意相通', 5], ['夢境相連', 5], ['心跳同頻', 4], ['能量交匯', 4], ['正在連接…', 3], ['努力靠近中', 3], ['訊號微弱', 1], ['頻率校準中', 3], ['斷斷續續', 2], ['正在搜尋…', 2], ['若有若無', 1], ['努力中…', 2]];
+  function linkTick() {
+    if (Date.now() < (X.link.next || 0)) return false;
+    var i; do { i = Math.floor(Math.random() * LINKS.length); } while (i === X.link.i && LINKS.length > 1);
+    X.link.i = i; X.link.next = Date.now() + rnd(2, 3) * 3600e3; return true;
+  }
+  function linkRender() {
+    var host = document.querySelector('#partner-status'); if (!host) return;
+    var el = document.getElementById('cx-link');
+    if (!X.link.on) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('div'); el.id = 'cx-link'; el.setAttribute('role', 'button'); el.tabIndex = 0;
+      el.addEventListener('click', function (e) { e.stopPropagation(); var L = LINKS[X.link.i] || LINKS[0]; toast('與 ' + pname() + ' 的連結：' + L[0] + '（' + L[1] + ' / 5）· ' + fmtLeft(X.link.next - Date.now()) + '更新', 'info'); });
+      host.parentNode.insertBefore(el, host.nextSibling);
+    }
+    var L = LINKS[X.link.i] || LINKS[0], hearts = '';
+    for (var k = 1; k <= 5; k++) hearts += '<i class="' + (k <= L[1] ? 'on' : '') + '"></i>';
+    el.className = 'lv' + L[1]; el.title = '連結狀態：' + L[0];
+    el.innerHTML = '<span class="hs">' + hearts + '</span><span class="tx">' + esc(L[0]) + '</span>';
+  }
+  function fmtLeft(ms) { var m = Math.max(1, Math.round(ms / 60e3)); return m < 60 ? '約 ' + m + ' 分鐘後' : '約 ' + Math.round(m / 6) / 10 + ' 小時後'; }
+
   /* ================= 回覆與來信設定 ================= */
   var sM = null;
   var JOINS = ['，', '…', '、', '～', '。', '！', '/', '　'];
@@ -813,6 +841,7 @@
         else if (t.id === 'cx-cb-max') X.combine.max = Math.max(1, Math.min(6, parseInt(t.value, 10) || 3));
         else if (t.id === 'cx-lt') { X.letters.freq = t.value; scheduleLetter(); }
         else if (t.id === 'cx-rpc') X.rp.chance = parseFloat(t.value) || 0;
+        else if (t.id === 'cx-link-on') { X.link.on = t.checked; linkRender(); }
         else return;
         if (X.combine.max < X.combine.min) X.combine.max = X.combine.min;
         await save(); setRender();
@@ -829,6 +858,7 @@
       '<button class="cx-btn" data-a="preview">預覽看看</button><div id="cx-prev" class="cx-list"></div></div>' +
       '<div class="cx-sec"><h4>主動來信</h4><select class="cx-sel" id="cx-lt">' + Object.keys(LETTER_FREQ).map(function (k) { return '<option value="' + k + '"' + (X.letters.freq === k ? ' selected' : '') + '>' + LETTER_FREQ[k].label + '</option>'; }).join('') + '</select>' +
       (X.letters.freq !== 'off' && nxt ? '<div class="cx-muted">下一封大約在 ' + fmtTime(nxt) + ' 寄到信封投遞</div>' : '<div class="cx-muted">' + esc(pname()) + ' 會用你的字卡寫信，自己寄到「信封投遞」</div>') + '</div>' +
+      '<div class="cx-sec"><h4>連結狀態</h4><label class="qa-chk"><input type="checkbox" id="cx-link-on"' + (X.link.on ? ' checked' : '') + '>在 ' + esc(pname()) + ' 的頭像下面顯示連結狀態（每 2～3 小時變化）</label></div>' +
       '<div class="cx-sec"><h4>' + esc(pname()) + ' 發紅包給你</h4><select class="cx-sel" id="cx-rpc">' + [[0, '不要發'], [0.03, '偶爾'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.rp.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
   }
 
@@ -848,8 +878,9 @@
       if (await letterTick()) ch = true;
       if (await rpTick()) ch = true;
       if (periodCare()) ch = true;
+      if (linkTick()) ch = true;
       if (ch) await save();
-      refreshBadge();
+      refreshBadge(); linkRender();
     } catch (e) { console.warn('[cx extras]', e); }
     ticking = false;
   }
