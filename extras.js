@@ -27,7 +27,8 @@
       { n: '精神', t: 'pct' }, { n: '想對你說', t: 'card' }
     ] },
     period: { list: [], days: {}, cycle: 28, len: 5, care: true, cared: {} },
-    link: { on: true, i: 0, next: 0 },
+    link: { on: true, i: 0, next: 0, every: 'h1', list: null },
+    diary: { on: true, time: '22:00', entries: [] },
     comp: { books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
@@ -818,10 +819,15 @@
 
   /* ================= 連結狀態 ================= */
   var LINKS = [['共鳴中', 5], ['連結穩定', 4], ['心意相通', 5], ['夢境相連', 5], ['心跳同頻', 4], ['能量交匯', 4], ['正在連接…', 3], ['努力靠近中', 3], ['訊號微弱', 1], ['頻率校準中', 3], ['斷斷續續', 2], ['正在搜尋…', 2], ['若有若無', 1], ['努力中…', 2]];
+  var LINK_EVERY = { m15: ['10～20 分鐘', 10, 20], m45: ['30～60 分鐘', 30, 60], h1: ['1～2 小時', 60, 120], h3: ['2～3 小時', 120, 180] };
+  function linkList() { var l = Array.isArray(X.link.list) && X.link.list.length ? X.link.list : LINKS; return l; }
+  function linkNext() { var e = LINK_EVERY[X.link.every] || LINK_EVERY.h1; X.link.next = Date.now() + rnd(e[1], e[2]) * 60e3; }
   function linkTick() {
+    var L = linkList();
+    if (X.link.i >= L.length) X.link.i = 0;
     if (Date.now() < (X.link.next || 0)) return false;
-    var i; do { i = Math.floor(Math.random() * LINKS.length); } while (i === X.link.i && LINKS.length > 1);
-    X.link.i = i; X.link.next = Date.now() + rnd(2, 3) * 3600e3; return true;
+    var i; do { i = Math.floor(Math.random() * L.length); } while (i === X.link.i && L.length > 1);
+    X.link.i = i; linkNext(); return true;
   }
   function linkRender() {
     var host = document.querySelector('#partner-status'); if (!host) return;
@@ -829,15 +835,95 @@
     if (!X.link.on) { if (el) el.remove(); return; }
     if (!el) {
       el = document.createElement('div'); el.id = 'cx-link'; el.setAttribute('role', 'button'); el.tabIndex = 0;
-      el.addEventListener('click', function (e) { e.stopPropagation(); var L = LINKS[X.link.i] || LINKS[0]; toast('與 ' + pname() + ' 的連結：' + L[0] + '（' + L[1] + ' / 5）· ' + fmtLeft(X.link.next - Date.now()) + '更新', 'info'); });
+      el.addEventListener('click', function (e) { e.stopPropagation(); var L = linkList()[X.link.i] || linkList()[0]; toast('與 ' + pname() + ' 的連結：' + L[0] + '（' + L[1] + ' / 5）· ' + fmtLeft(X.link.next - Date.now()) + '更新', 'info'); });
       host.parentNode.insertBefore(el, host.nextSibling);
     }
-    var L = LINKS[X.link.i] || LINKS[0], hearts = '';
+    var L = linkList()[X.link.i] || linkList()[0], hearts = '';
     for (var k = 1; k <= 5; k++) hearts += '<i class="' + (k <= L[1] ? 'on' : '') + '"></i>';
     el.className = 'lv' + L[1]; el.title = '連結狀態：' + L[0];
     el.innerHTML = '<span class="hs">' + hearts + '</span><span class="tx">' + esc(L[0]) + '</span>';
   }
   function fmtLeft(ms) { var m = Math.max(1, Math.round(ms / 60e3)); return m < 60 ? '約 ' + m + ' 分鐘後' : '約 ' + Math.round(m / 6) / 10 + ' 小時後'; }
+
+  /* ================= 他的日記 ================= */
+  var MOODS = ['開心', '想你', '有點累', '平靜', '甜甜的', '想見你', '安心', '有點寂寞'];
+  var WEATHERS = ['晴', '多雲', '小雨', '陰', '起風', '晴轉多雲'];
+  var SKIP_GROUPS = ['日期暗號', '身體部位', '顏文字', '連結暗號', '月份'];
+  function diaryPool() {
+    var off = {}; replyGroups().forEach(function (g) { if (g.disabled || SKIP_GROUPS.indexOf(g.name) >= 0) g.items.forEach(function (t) { off[t] = 1; }); });
+    return cards().filter(function (t) { return !off[t] && t.length >= 3; });
+  }
+  function diaryText() {
+    var pool = diaryPool(); if (pool.length < 3) return '';
+    var n = Math.round(rnd(4, 8)), used = [], out = '';
+    for (var i = 0; i < n && used.length < pool.length; i++) {
+      var t; do { t = pick(pool); } while (used.indexOf(t) >= 0); used.push(t);
+      var end = /[。！？!?…~～)）✧]$/.test(t) ? '' : (Math.random() < 0.15 ? '……' : Math.random() < 0.2 ? '！' : '。');
+      out += t + end + (Math.random() < 0.3 && i < n - 1 ? '\n' : '');
+    }
+    return out;
+  }
+  function diaryDue() { var p = (X.diary.time || '22:00').split(':'), d = new Date(); d.setHours(+p[0] || 0, +p[1] || 0, 0, 0); return d.getTime(); }
+  function diaryUnread() { return X ? X.diary.entries.filter(function (e) { return !e.read; }).length : 0; }
+  function diaryTick() {
+    if (!X.diary.on) return false;
+    var today = ymd(new Date());
+    if (Date.now() < diaryDue() || X.diary.entries.some(function (e) { return e.d === today; })) return false;
+    var text = diaryText(); if (!text) return false;
+    // answer yesterday's note, if you left one
+    var last = X.diary.entries.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; })[0];
+    if (last && last.note && !last.reply) last.reply = pick(diaryPool()) || '看到了';
+    X.diary.entries.push({ d: today, at: Date.now(), mood: pick(MOODS), weather: pick(WEATHERS), text: text, read: false });
+    if (X.diary.entries.length > 400) X.diary.entries = X.diary.entries.slice(-400);
+    sound(); toast(pname() + ' 寫好今天的日記了', 'success'); sysNotify(pname(), '寫好今天的日記了 📔', 'diary');
+    return true;
+  }
+  var dM = null;
+  function diaryOpen() {
+    if (!dM) {
+      dM = makeModal('cx-diary-modal', 'fa-book', pname() + ' 的日記');
+      dM.body.addEventListener('change', async function (e) {
+        var t = e.target;
+        if (t.id === 'cx-d-on') X.diary.on = t.checked;
+        else if (t.id === 'cx-d-time' && /^\d{2}:\d{2}$/.test(t.value)) X.diary.time = t.value;
+        else return;
+        await save(); diaryRender();
+      });
+      dM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.note) {
+          var en = X.diary.entries.find(function (x) { return x.d === b.dataset.note; }); var inp = dM.body.querySelector('#cx-dn-' + b.dataset.note);
+          var v = inp ? inp.value.trim() : ''; if (!en || !v) return;
+          en.note = v; en.noteAt = Date.now(); delete en.reply; await save(); toast(pname() + ' 明天寫日記時會看到', 'success'); diaryRender(); return;
+        }
+        if (b.dataset.deld) {
+          if (!(await confirmAsync('刪除這篇日記？'))) return;
+          X.diary.entries = X.diary.entries.filter(function (x) { return x.d !== b.dataset.deld; }); await save(); diaryRender(); refreshBadge();
+        }
+      });
+    }
+    dM.el.querySelector('.modal-title span').textContent = pname() + ' 的日記';
+    diaryRender(); dM.open();
+    var changed = false; X.diary.entries.forEach(function (e) { if (!e.read) { e.read = true; changed = true; } });
+    if (changed) { save(); refreshBadge(); }
+  }
+  function diaryRender() {
+    var D = X.diary, list = D.entries.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }), today = ymd(new Date());
+    var has = list.length && list[0].d === today;
+    var h = '<div class="cx-card" style="display:flex;flex-direction:column;gap:8px"><label class="qa-chk"><input type="checkbox" id="cx-d-on"' + (D.on ? ' checked' : '') + '>每天固定時間寫一篇</label>' +
+      '<label class="cx-row"><span>每天幾點收到</span><input type="time" id="cx-d-time" value="' + esc(D.time) + '" class="cx-in" style="width:auto"></label>' +
+      '<div class="cx-muted">' + (!D.on ? '已暫停' : has ? '今天的已經寫好了，明天 ' + esc(D.time) + ' 再來看' : '今天的日記 ' + esc(D.time) + ' 寫好') + '。日記從你的字卡裡寫，你可以在下面留言，' + esc(pname()) + ' 寫下一篇時會回你。</div></div>';
+    if (!list.length) h += '<div class="cx-muted" style="text-align:center;padding:16px 0">還沒有日記</div>';
+    list.forEach(function (e) {
+      var dt = parseYmd(e.d), wk = '日一二三四五六'.charAt(dt.getDay());
+      h += '<div class="cx-card" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><b style="font-size:15px;color:var(--text-primary)">' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 星期' + wk + '</b><span class="cx-muted">' + esc(e.weather) + ' · ' + esc(e.mood) + '</span></div>' +
+        '<div style="font-size:15px;line-height:1.9;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;font-family:var(--font-family,serif)">' + esc(e.text) + '</div>';
+      if (e.note) h += '<div class="cx-muted" style="border-left:2px solid var(--accent-color);padding-left:8px">我：' + esc(e.note) + (e.reply ? '<br>' + esc(pname()) + '：' + esc(e.reply) : '') + '</div>';
+      else h += '<div class="qa-own" style="margin-top:0"><input type="text" id="cx-dn-' + e.d + '" placeholder="留言給 ' + esc(pname()) + '" maxlength="100"><button data-note="' + e.d + '">留言</button></div>';
+      h += '<div class="qa-meta" style="margin-top:0"><span></span><span><button data-deld="' + e.d + '">刪除</button></span></div></div>';
+    });
+    dM.body.innerHTML = h;
+  }
 
   /* ================= 回覆與來信設定 ================= */
   var sM = null;
@@ -849,6 +935,15 @@
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.j !== undefined) { var j = b.dataset.j, i = X.combine.joins.indexOf(j); if (i >= 0) X.combine.joins.splice(i, 1); else X.combine.joins.push(j); await save(); setRender(); return; }
         if (b.dataset.cg !== undefined) { var cur = comboGroups(), n = b.dataset.cg; if (n === '') cur = []; else { var ix = cur.indexOf(n); if (ix >= 0) cur.splice(ix, 1); else cur.push(n); } X.combine.groups = cur; await save(); setRender(); return; }
+        if (b.dataset.a === 'savelink') {
+          var rows = sM.body.querySelector('#cx-link-list').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean).map(function (x) {
+            var m = /^(.*?)[\s　]*([1-5１-５])$/.exec(x); var lv = m ? +String(m[2]).replace(/[１-５]/, function (c) { return c.charCodeAt(0) - 0xFF10; }) : 3; var t = (m ? m[1] : x).trim().slice(0, 12);
+            return t ? [t, lv] : null; }).filter(Boolean);
+          if (!rows.length) { toast('至少要一個狀態', 'warning'); return; }
+          X.link.list = rows; X.link.i = 0; X.link.next = 0; linkTick(); await save(); linkRender(); setRender(); toast('已儲存 ' + rows.length + ' 個狀態', 'success'); return;
+        }
+        if (b.dataset.a === 'resetlink') { X.link.list = null; X.link.next = 0; linkTick(); await save(); linkRender(); setRender(); return; }
+        if (b.dataset.a === 'linknow') { X.link.next = 0; linkTick(); await save(); linkRender(); var L = linkList()[X.link.i]; toast('現在：' + L[0], 'success'); return; }
         if (b.dataset.a === 'preview') { var pool = comboPool(); var out = pool.length >= 2 ? buildCombos(pool, 3) : []; sM.body.querySelector('#cx-prev').innerHTML = out.length ? out.map(function (x) { return sayHtml(x); }).join('') : '<div class="cx-muted">字卡至少要 2 張</div>'; }
       });
       sM.body.addEventListener('change', async function (e) {
@@ -859,6 +954,8 @@
         else if (t.id === 'cx-lt') { X.letters.freq = t.value; scheduleLetter(); }
         else if (t.id === 'cx-rpc') X.rp.chance = parseFloat(t.value) || 0;
         else if (t.id === 'cx-link-on') { X.link.on = t.checked; linkRender(); }
+        else if (t.id === 'cx-link-every') { X.link.every = t.value; linkNext(); }
+        else if (t.id === 'cx-link-list') return;
         else return;
         if (X.combine.max < X.combine.min) X.combine.max = X.combine.min;
         await save(); setRender();
@@ -879,13 +976,19 @@
       '<button class="cx-btn" data-a="preview">預覽看看</button><div id="cx-prev" class="cx-list"></div></div>' +
       '<div class="cx-sec"><h4>主動來信</h4><select class="cx-sel" id="cx-lt">' + Object.keys(LETTER_FREQ).map(function (k) { return '<option value="' + k + '"' + (X.letters.freq === k ? ' selected' : '') + '>' + LETTER_FREQ[k].label + '</option>'; }).join('') + '</select>' +
       (X.letters.freq !== 'off' && nxt ? '<div class="cx-muted">下一封大約在 ' + fmtTime(nxt) + ' 寄到信封投遞</div>' : '<div class="cx-muted">' + esc(pname()) + ' 會用你的字卡寫信，自己寄到「信封投遞」</div>') + '</div>' +
-      '<div class="cx-sec"><h4>連結狀態</h4><label class="qa-chk"><input type="checkbox" id="cx-link-on"' + (X.link.on ? ' checked' : '') + '>在 ' + esc(pname()) + ' 的頭像下面顯示連結狀態（每 2～3 小時變化）</label></div>' +
+      '<div class="cx-sec"><h4>連結狀態</h4><label class="qa-chk"><input type="checkbox" id="cx-link-on"' + (X.link.on ? ' checked' : '') + '>在 ' + esc(pname()) + ' 的頭像下面顯示連結狀態</label>' +
+      '<label class="cx-row"><span>多久變一次</span><select class="cx-sel" id="cx-link-every" style="width:auto">' + Object.keys(LINK_EVERY).map(function (k) { return '<option value="' + k + '"' + (X.link.every === k ? ' selected' : '') + '>' + LINK_EVERY[k][0] + '</option>'; }).join('') + '</select></label>' +
+      '<div class="cx-muted">狀態文字，一行一個，後面寫幾顆心（1～5），例如「共鳴中 5」。沒寫數字就是 3 顆。</div>' +
+      '<textarea class="cx-ta" id="cx-link-list" style="min-height:160px">' + esc(linkList().map(function (x) { return x[0] + ' ' + x[1]; }).join('\n')) + '</textarea>' +
+      '<div class="cx-btns"><button class="cx-btn pri" data-a="savelink">儲存狀態</button><button class="cx-btn" data-a="resetlink">恢復預設</button><button class="cx-btn" data-a="linknow">現在換一個</button></div></div>' +
       '<div class="cx-sec"><h4>' + esc(pname()) + ' 發紅包給你</h4><select class="cx-sel" id="cx-rpc">' + [[0, '不要發'], [0.03, '偶爾'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.rp.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
   }
 
   /* ================= 角標 + 定時 ================= */
   function refreshBadge() {
-    window.__cxExtraBadge = unopened();
+    window.__cxExtraBadge = unopened() + diaryUnread();
+    var de = document.getElementById('cx-diary-entry');
+    if (de) { var db2 = de.querySelector('.cx-badge'), dn = diaryUnread(); if (dn && !db2) { db2 = document.createElement('span'); db2.className = 'cx-badge'; de.appendChild(db2); } if (db2) { if (dn) db2.textContent = dn; else db2.remove(); } }
     var el = document.getElementById('cx-rp-entry');
     if (el) { var bd = el.querySelector('.cx-badge'), n = unopened(); if (n && !bd) { bd = document.createElement('span'); bd.className = 'cx-badge'; el.appendChild(bd); } if (bd) { if (n) bd.textContent = n; else bd.remove(); } }
     if (typeof window.__cxBadge === 'function') window.__cxBadge();
@@ -900,6 +1003,7 @@
       if (await rpTick()) ch = true;
       if (periodCare()) ch = true;
       if (linkTick()) ch = true;
+      if (diaryTick()) ch = true;
       if (ch) await save();
       refreshBadge(); linkRender();
     } catch (e) { console.warn('[cx extras]', e); }
@@ -910,6 +1014,7 @@
     var h = Array.prototype.find.call(document.querySelectorAll('h3,h4'), function (x) { return /特別鳴謝/.test(x.textContent); });
     if (h && !document.getElementById('cx-credit')) { var c = document.createElement('p'); c.id = 'cx-credit'; c.style.cssText = 'font-size:12px;opacity:.75;margin-top:8px'; c.textContent = '潮汐、番茄鐘、陪伴中心、紅包、狀態檢測、拼字卡、主動來信的功能靈感來自「渡念」（小紅書 @我要學英語），程式為重新撰寫。'; h.parentNode.appendChild(c); }
   })();
+  addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
   addEntry('cx-period-entry', 'fa-droplet', '潮汐', pOpen);
   addEntry('cx-pomo-entry', 'fa-clock', '番茄鐘', pomoOpen);
   addEntry('cx-comp-entry', 'fa-headphones', '陪伴中心', compOpen);
