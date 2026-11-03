@@ -188,6 +188,22 @@
     }
     return out;
   }
+  function replyGroups() { return Array.isArray(window.customReplyGroups) ? window.customReplyGroups.filter(function (g) { return g && g.name && Array.isArray(g.items); }) : []; }
+  function comboGroups() {
+    var names = replyGroups().map(function (g) { return g.name; });
+    if (!Array.isArray(X.combine.groups)) return names.indexOf('拼字卡短句') >= 0 ? ['拼字卡短句'] : [];
+    return X.combine.groups.filter(function (n) { return names.indexOf(n) >= 0; });
+  }
+  function comboPool() {
+    var sel = comboGroups();
+    if (sel.length) {
+      var seen = {}, out = [];
+      replyGroups().forEach(function (g) { if (sel.indexOf(g.name) >= 0) g.items.forEach(function (t) { t = String(t || '').trim(); if (t && !seen[t]) { seen[t] = 1; out.push(t); } }); });
+      return out;
+    }
+    var off = {}; replyGroups().forEach(function (g) { if (g.disabled) g.items.forEach(function (t) { off[t] = 1; }); });
+    return cards().filter(function (t) { return !off[t]; });
+  }
   function wrapReply() {
     if (typeof window.simulateReply !== 'function' || window.simulateReply.__cx) return;
     var orig = window.simulateReply;
@@ -195,7 +211,7 @@
       var saved = null;
       try {
         if (X && X.combine.on && typeof customReplies !== 'undefined') {
-          var pool = cards();
+          var pool = comboPool();
           if (pool.length >= 2) { saved = customReplies; customReplies = buildCombos(pool, 40); }
         }
       } catch (e) { saved = null; }
@@ -832,7 +848,8 @@
       sM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.j !== undefined) { var j = b.dataset.j, i = X.combine.joins.indexOf(j); if (i >= 0) X.combine.joins.splice(i, 1); else X.combine.joins.push(j); await save(); setRender(); return; }
-        if (b.dataset.a === 'preview') { var pool = cards(); var out = pool.length >= 2 ? buildCombos(pool, 3) : []; sM.body.querySelector('#cx-prev').innerHTML = out.length ? out.map(function (x) { return sayHtml(x); }).join('') : '<div class="cx-muted">字卡至少要 2 張</div>'; }
+        if (b.dataset.cg !== undefined) { var cur = comboGroups(), n = b.dataset.cg; if (n === '') cur = []; else { var ix = cur.indexOf(n); if (ix >= 0) cur.splice(ix, 1); else cur.push(n); } X.combine.groups = cur; await save(); setRender(); return; }
+        if (b.dataset.a === 'preview') { var pool = comboPool(); var out = pool.length >= 2 ? buildCombos(pool, 3) : []; sM.body.querySelector('#cx-prev').innerHTML = out.length ? out.map(function (x) { return sayHtml(x); }).join('') : '<div class="cx-muted">字卡至少要 2 張</div>'; }
       });
       sM.body.addEventListener('change', async function (e) {
         var t = e.target;
@@ -855,6 +872,10 @@
       '<label class="cx-row"><span>最少幾張</span><input type="number" id="cx-cb-min" min="1" max="6" value="' + c.min + '"></label>' +
       '<label class="cx-row"><span>最多幾張</span><input type="number" id="cx-cb-max" min="1" max="6" value="' + c.max + '"></label>' +
       '<div class="cx-muted">連接符號（可多選，每次隨機用一個）</div><div class="cx-chips">' + JOINS.map(function (j) { return '<button data-j="' + esc(j) + '" class="' + (c.joins.indexOf(j) >= 0 ? 'on' : '') + '">' + (j === '　' ? '空格' : esc(j)) + '</button>'; }).join('') + '</div>' +
+      '<div class="cx-muted">用哪些分組來拼（不選就用全部字卡；關掉的分組也能拿來拼）</div><div class="cx-chips">' +
+      '<button data-cg="" class="' + (comboGroups().length ? '' : 'on') + '">全部字卡</button>' +
+      replyGroups().map(function (g) { return '<button data-cg="' + esc(g.name) + '" class="' + (comboGroups().indexOf(g.name) >= 0 ? 'on' : '') + '">' + esc(g.name) + '</button>'; }).join('') + '</div>' +
+      '<div class="cx-muted">現在可以抽的字卡：' + comboPool().length + ' 張</div>' +
       '<button class="cx-btn" data-a="preview">預覽看看</button><div id="cx-prev" class="cx-list"></div></div>' +
       '<div class="cx-sec"><h4>主動來信</h4><select class="cx-sel" id="cx-lt">' + Object.keys(LETTER_FREQ).map(function (k) { return '<option value="' + k + '"' + (X.letters.freq === k ? ' selected' : '') + '>' + LETTER_FREQ[k].label + '</option>'; }).join('') + '</select>' +
       (X.letters.freq !== 'off' && nxt ? '<div class="cx-muted">下一封大約在 ' + fmtTime(nxt) + ' 寄到信封投遞</div>' : '<div class="cx-muted">' + esc(pname()) + ' 會用你的字卡寫信，自己寄到「信封投遞」</div>') + '</div>' +
