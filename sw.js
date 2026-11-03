@@ -4,7 +4,7 @@
  * 聊天資料本來就存在本機（IndexedDB），同步資料（Firebase）不經過這裡。
  * 更新網站後，把下面的 VERSION 改一下（例如 v8），所有裝置會自動換成新版本。
  */
-const VERSION = 'v7-tw';
+const VERSION = 'v8-tw';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
@@ -81,3 +81,13 @@ async function staleWhileRevalidate(event, key, realReq) {
   const res = await fresh;
   return res || new Response('離線中，且這臺裝置還沒有存下網站。請先連網開啟一次。', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }
+
+// 點通知：回到已開著的傳訊，沒有的話就打開它
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of all) { if (c.url.startsWith(BASE) && 'focus' in c) return c.focus(); }
+    if (self.clients.openWindow) return self.clients.openWindow(BASE);
+  })());
+});

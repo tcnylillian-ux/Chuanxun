@@ -77,6 +77,7 @@
     if (!Array.isArray(d.bank.off)) d.bank.off = [];
     if (!Array.isArray(d.asked)) d.asked = [];
     if (!FREQ[d.freq]) d.freq = 'sometimes';
+    if (!Array.isArray(d.favs)) d.favs = [];
     return d;
   }
   async function load() { try { data = norm(await localforage.getItem(key())); } catch (e) { data = norm(null); } loaded = true; }
@@ -137,6 +138,7 @@
       it.revealed = true; it.revealedAt = now; changed = true;
       var letter = LETTERS[it.pick], opt = it.opts[it.pick];
       notify(pname() + ' 回答了你的問題：選了 ' + letter, 'success');
+      sysNotify(pname(), '回答了你的問題：' + letter + '. ' + opt, 'qa-answer');
       if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} }
       if (it.toChat && typeof addMessage === 'function') {
         addMessage({ id: Date.now() + i, sender: pname(), text: '【問題箱】' + it.q + '\n我選 ' + letter + '. ' + opt + (it.note ? '\n' + it.note : ''), timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
@@ -148,6 +150,7 @@
       if (data.next && now >= data.next.at && unansweredIn() === 0) {
         if (deliver(data.next.qid, data.next.at)) {
           notify(pname() + ' 有個問題想問你，去問題箱看看吧', 'info');
+          sysNotify(pname(), '有個問題想問你：' + (data.inbox[data.inbox.length - 1] || {}).q, 'qa-ask');
           if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} }
         }
         data.next = null; changed = true;
@@ -157,7 +160,7 @@
     await refreshBadges();
   }
   /* ---------- red numbers: unanswered questions + unread letters ---------- */
-  var unreadLetters = 0;
+  var unreadLetters = 0, lettersCounted = false;
   function setBadge(el, n, cls) {
     if (!el) return;
     var b = el.querySelector(':scope > .' + cls);
@@ -169,12 +172,16 @@
     setBadge(document.getElementById('qa-function'), q, 'qa-badge');
     setBadge(document.getElementById('envelope-function'), l, 'qa-badge');
     setBadge(document.getElementById('advanced-settings'), total, 'qa-badge-corner');
-    setBadge(document.getElementById('settings-btn'), total, 'qa-badge-corner');
+    setBadge(document.getElementById('qa-top-btn'), q, 'qa-badge-corner');
+    setBadge(document.getElementById('settings-btn'), l, 'qa-badge-corner');
     var tab = document.querySelector('#qa-tabs [data-v="his"] .qa-dot'); if (tab) tab.hidden = !q;
   }
   async function countLetters() {
+    var before = unreadLetters;
     try { var env = await localforage.getItem(getStorageKey('envelopeData')); unreadLetters = env && Array.isArray(env.inbox) ? env.inbox.filter(function (x) { return x && x.isNew; }).length : 0; }
     catch (e) { unreadLetters = 0; }
+    if (lettersCounted && unreadLetters > before) sysNotify(pname(), '回信了，去信封投遞看看吧', 'letter');
+    lettersCounted = true;
   }
   var lastEnvCheck = 0;
   async function refreshBadges() {
@@ -206,9 +213,16 @@
     '.qa-tabs button[aria-selected="true"]{background:var(--secondary-bg);color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}' +
     '.qa-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#e5534b;margin-left:5px;vertical-align:2px}.qa-dot[hidden]{display:none}' +
     '.qa-badge-corner{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#e5534b;color:#fff;font:600 10px/16px -apple-system,sans-serif;text-align:center;pointer-events:none;z-index:2}' +
-    '#settings-btn,#advanced-settings{position:relative}' +
+    '#qa-top-btn,#settings-btn,#advanced-settings{position:relative}' +
     '#advanced-settings>.qa-badge-corner{top:8px;right:8px}' +
     '.qa-badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e5534b;color:#fff;font-size:11px;line-height:18px;text-align:center}' +
+    '.qa-favs{display:flex;flex-direction:column;gap:6px}' +
+    '.qa-favs-t{font-size:12px;color:var(--text-secondary)}.qa-favs-t i{color:var(--accent-color);margin-right:3px}' +
+    '.qa-favs-l{display:flex;flex-wrap:wrap;gap:6px}' +
+    '.qa-chip{display:inline-flex;align-items:center;max-width:100%;border:1px solid var(--border-color);background:var(--primary-bg);border-radius:99px;overflow:hidden}' +
+    '.qa-chip button{border:none;background:none;font:inherit;font-size:13px;color:var(--text-primary);padding:6px 4px 6px 12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}' +
+    '.qa-chip button.x{padding:6px 10px 6px 4px;color:var(--text-secondary);font-size:11px}' +
+    '.qa-form+.qa-favs,.qa-favs+.qa-form{margin-top:4px}' +
     '.qa-new{width:100%;padding:12px;border-radius:14px;border:1px dashed var(--accent-color);background:transparent;color:var(--accent-color);font:inherit;font-size:14px;cursor:pointer}' +
     '.qa-empty{text-align:center;color:var(--text-secondary);font-size:13px;line-height:1.8;padding:18px 8px}' +
     '.qa-card{background:var(--primary-bg);border:1px solid var(--border-color);border-radius:14px;padding:14px}' +
@@ -247,12 +261,13 @@
   document.head.appendChild(st);
   var body = modal.querySelector('#qa-body');
   function isOpen() { return modal.style.display === 'flex'; }
-  function open(v) { view = v || (unansweredIn() ? 'his' : 'mine'); sub = 'list'; load().then(function () { if (!v) view = unansweredIn() ? 'his' : 'mine'; render(); showModal(modal); tick(); }); }
+  var fromTop = false;
+  function open(v, top) { fromTop = !!top; view = v || (unansweredIn() ? 'his' : 'mine'); sub = 'list'; load().then(function () { if (!v) view = unansweredIn() ? 'his' : 'mine'; render(); showModal(modal); tick(); }); }
   function close() { hideModal(modal); }
   modal.querySelector('#qa-close').onclick = close;
   modal.querySelector('#qa-back').onclick = function () {
     if (sub !== 'list') { sub = 'list'; draft = null; render(); return; }
-    close(); var adv = document.getElementById('advanced-modal'); if (adv) showModal(adv);
+    close(); if (fromTop) return; var adv = document.getElementById('advanced-modal'); if (adv) showModal(adv);
   };
   modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
   modal.querySelector('#qa-tabs').addEventListener('click', function (e) {
@@ -270,6 +285,7 @@
   function renderMine() {
     var items = data.items.slice().sort(function (a, b) { return b.askedAt - a.askedAt; });
     var h = '<button class="qa-new" data-act="new"><i class="fas fa-plus"></i> 問 ' + esc(pname()) + ' 一個問題</button>';
+    h += favChips();
     if (!items.length) h += '<div class="qa-empty">寫一個問題，給幾個選項，<br>' + esc(pname()) + ' 會挑一個回答你。</div>';
     var now = Date.now();
     items.forEach(function (it) {
@@ -278,6 +294,7 @@
       if (it.revealed) { if (it.note) h += '<div class="qa-note">' + esc(it.note) + '</div>'; }
       else h += '<div class="qa-wait"><i class="fas fa-hourglass-half"></i> ' + esc(pname()) + ' 正在想… ' + fmtLeft(it.dueAt - now) + '</div>';
       h += '<div class="qa-meta"><span>' + fmtTime(it.askedAt) + '</span><span>' +
+        '<button data-fav="' + esc(it.id) + '">' + (isFav(it.q) ? '<i class="fas fa-star" style="color:var(--accent-color)"></i> 已收藏' : '<i class="far fa-star"></i> 收藏') + '</button>' +
         (it.revealed ? '<button data-again="' + esc(it.id) + '">再問一次</button>' : '') +
         '<button data-del="' + esc(it.id) + '">刪除</button></span></div></div>';
     });
@@ -320,11 +337,17 @@
     body.innerHTML = h;
   }
 
+  function isFav(q) { return data.favs.some(function (f) { return f.q === q; }); }
+  function favChips(inForm) {
+    if (!data.favs.length) return '';
+    return '<div class="qa-favs"><div class="qa-favs-t"><i class="fas fa-star"></i> 常問的問題' + (inForm ? '（點一下填入）' : '') + '</div><div class="qa-favs-l">' +
+      data.favs.map(function (f) { return '<span class="qa-chip"><button data-usefav="' + esc(f.id) + '">' + esc(f.q) + '</button><button class="x" data-unfav="' + esc(f.id) + '" aria-label="取消收藏"><i class="fas fa-xmark"></i></button></span>'; }).join('') + '</div></div>';
+  }
   var draft = null;
   function renderForm() {
     var asking = sub === 'new';
     if (!draft) draft = { q: '', opts: ['', '', ''], speed: 'soon', toChat: true, withCard: true };
-    var h = '<div class="qa-form"><label class="t" for="qa-q">' + (asking ? '問題' : '題目（' + esc(pname()) + ' 會問你這題）') + '</label><textarea id="qa-q" placeholder="' + (asking ? '例如：週末想和我去哪裡？' : '例如：今天想吃什麼？') + '">' + esc(draft.q) + '</textarea>' +
+    var h = (asking ? favChips(true) : '') + '<div class="qa-form"><label class="t" for="qa-q">' + (asking ? '問題' : '題目（' + esc(pname()) + ' 會問你這題）') + '</label><textarea id="qa-q" placeholder="' + (asking ? '例如：週末想和我去哪裡？' : '例如：今天想吃什麼？') + '">' + esc(draft.q) + '</textarea>' +
       '<label class="t">選項</label>';
     draft.opts.forEach(function (o, i) {
       h += '<div class="qa-orow"><span>' + LETTERS[i] + '</span><input type="text" id="qa-o' + i + '" data-i="' + i + '" value="' + esc(o) + '" placeholder="選項 ' + LETTERS[i] + '">' +
@@ -411,6 +434,21 @@
       if (data.next && data.next.qid === qid) scheduleNext();
       await save(); render(); return;
     }
+    if (b.dataset.fav) {
+      var fi = data.items.find(function (x) { return x.id === b.dataset.fav; }); if (!fi) return;
+      if (isFav(fi.q)) data.favs = data.favs.filter(function (f) { return f.q !== fi.q; });
+      else { data.favs.push({ id: 'f' + Date.now().toString(36), q: fi.q, opts: fi.opts.slice() }); notify('已收藏，下次在「問 ' + pname() + ' 一個問題」上方一點就能再問', 'success'); }
+      await save(); render(); return;
+    }
+    if (b.dataset.usefav) {
+      var fv = data.favs.find(function (f) { return f.id === b.dataset.usefav; }); if (!fv) return;
+      var keep = draft || {};
+      draft = { q: fv.q, opts: fv.opts.slice(), speed: keep.speed || 'soon', toChat: keep.toChat !== false, withCard: keep.withCard !== false }; sub = 'new'; render(); return;
+    }
+    if (b.dataset.unfav) {
+      if (sub === 'new') syncDraft();
+      data.favs = data.favs.filter(function (f) { return f.id !== b.dataset.unfav; }); await save(); render(); return;
+    }
     if (b.dataset.again) {
       var it2 = data.items.find(function (x) { return x.id === b.dataset.again; }); if (!it2) return;
       draft = { q: it2.q, opts: it2.opts.slice(), speed: it2.speed || 'soon', toChat: it2.toChat, withCard: it2.withCard }; sub = 'new'; render();
@@ -449,6 +487,51 @@
     if (anchor && anchor.nextSibling) list.insertBefore(el, anchor.nextSibling); else list.appendChild(el);
   }
   addEntry();
+
+  /* ---------- top bar: 問題箱 next to 設定 ---------- */
+  function addTopButtons() {
+    var gear = document.getElementById('settings-btn'); if (!gear || document.getElementById('qa-top-btn')) return;
+    var qa = document.createElement('button'); qa.id = 'qa-top-btn'; qa.className = 'action-btn'; qa.title = '問題箱'; qa.setAttribute('aria-label', '問題箱');
+    qa.innerHTML = '<i class="fas fa-box-open"></i>';
+    qa.addEventListener('click', function () { open(null, true); });
+    gear.parentNode.insertBefore(qa, gear);
+  }
+  addTopButtons();
+
+  /* ---------- system notifications (work on phones via the offline worker) ---------- */
+  async function sysNotify(title, body, tag) {
+    try {
+      if (localStorage.getItem('notifEnabled') !== '1') return;
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      if (!document.hidden) return;
+      var opts = { body: body || '傳來了訊息', tag: tag || 'partner-msg', renotify: true };
+      var reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+      if (reg && reg.showNotification) { await reg.showNotification(title || '傳訊', opts); return; }
+      new Notification(title || '傳訊', opts);
+    } catch (e) {}
+  }
+  window._sendPartnerNotification = function (title, body) { sysNotify(title, body, 'partner-msg'); };
+  function notifStatus(t) { var el = document.getElementById('notif-status-text'); if (el) el.textContent = t; }
+  window.handleNotifToggle = function (cb) {
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+    if (!('Notification' in window)) {
+      cb.checked = false;
+      notifStatus(ios && !standalone ? '⚠️ iPhone 要先「加入主畫面」，再從主畫面開啟傳訊，才能開通知' : '⚠️ 這個瀏覽器不支援通知');
+      return;
+    }
+    if (!cb.checked) { localStorage.setItem('notifEnabled', '0'); notifStatus('已關閉 — 不會再跳出訊息通知'); return; }
+    Notification.requestPermission().then(async function (perm) {
+      if (perm === 'granted') {
+        localStorage.setItem('notifEnabled', '1');
+        notifStatus('✅ 已開啟 — 傳訊開著但不在畫面上時，收到訊息會跳出通知');
+        try { var reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+          if (reg) reg.showNotification('傳訊通知已開啟 ✨', { body: pname() + ' 傳訊息時會在這裡通知你', tag: 'notif-test' }); else new Notification('傳訊通知已開啟 ✨'); } catch (e) {}
+      } else {
+        cb.checked = false; localStorage.setItem('notifEnabled', '0');
+        notifStatus(perm === 'denied' ? '❌ 通知被擋住了，請到手機或瀏覽器的設定裡允許這個網站通知' : '⚠️ 沒有選擇，請再試一次');
+      }
+    }).catch(function () { cb.checked = false; localStorage.setItem('notifEnabled', '0'); notifStatus('❌ 沒辦法開啟通知'); });
+  };
   setTimeout(tick, 2500);
   setInterval(tick, 20000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
