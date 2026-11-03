@@ -78,6 +78,8 @@
     if (!Array.isArray(d.asked)) d.asked = [];
     if (!FREQ[d.freq]) d.freq = 'sometimes';
     if (!Array.isArray(d.favs)) d.favs = [];
+    if (!Array.isArray(d.askedCards)) d.askedCards = [];
+    if (typeof d.fromCards !== 'boolean') d.fromCards = true;
     return d;
   }
   async function load() { try { data = norm(await localforage.getItem(key())); } catch (e) { data = norm(null); } loaded = true; }
@@ -104,25 +106,51 @@
     data.bank.custom.forEach(function (c) { out.push({ id: c.id, q: c.q, opts: c.opts, builtIn: false }); });
     return out;
   }
-  function pickQid() {
-    var all = bankAll(); if (!all.length) return null;
+  /* 字卡出題：問句從字卡挑，A/B/C 也從字卡抽 */
+  var QUESTION_RE = /[？?]|[嗎吗]\s*[～~…。！!]*\s*$|了[沒没]\s*$|幹嘛|干嘛|怎樣|怎样|如何|什麼|什么|怎麼|怎么|為什麼|为什么|哪|誰|谁|幾|几|要不要|是不是|好不好|會不會|会不会|有沒有|有没有|可不可以|能不能/;
+  function cardPool() {
+    var pool = (typeof customReplies !== 'undefined' && Array.isArray(customReplies)) ? customReplies : [];
+    try { var off = new Set(JSON.parse(localStorage.getItem('disabledReplyItems') || '[]')); pool = pool.filter(function (x) { return !off.has(x); }); } catch (e) {}
+    var seen = {};
+    return pool.map(function (x) { return String(x || '').replace(/<[^>]*>/g, '').trim(); }).filter(function (x) { if (!x || x.length > 60 || seen[x]) return false; seen[x] = 1; return true; });
+  }
+  function isQ(x) { return /[？?]/.test(x) || (QUESTION_RE.test(x) && !/[哪誰谁什].{0,3}[都也]/.test(x)); }
+  function cardQuestions(pool) { return (pool || cardPool()).filter(function (x) { return x.length >= 2 && isQ(x); }); }
+  function makeCardQ() {
+    var pool = cardPool(), qs = cardQuestions(pool);
+    if (!qs.length) return null;
+    var asked = new Set(data.askedCards), fresh = qs.filter(function (x) { return !asked.has(x); });
+    if (!fresh.length) { data.askedCards = []; fresh = qs; }
+    var q = fresh[Math.floor(Math.random() * fresh.length)];
+    var answers = pool.filter(function (x) { return x !== q && x.length <= 30 && !isQ(x); });
+    if (answers.length < 2) answers = pool.filter(function (x) { return x !== q && x.length <= 30; });
+    if (answers.length < 2) return null;
+    var opts = [];
+    while (opts.length < Math.min(3, answers.length)) { var o = answers[Math.floor(Math.random() * answers.length)]; if (opts.indexOf(o) < 0) opts.push(o); }
+    return { q: q, opts: opts };
+  }
+  function pickNext() {
+    var all = bankAll(), useCards = data.fromCards && cardQuestions().length > 0;
+    if (useCards && (!all.length || Math.random() < 0.5)) { var c = makeCardQ(); if (c) return { qid: 'card', card: c }; }
+    if (!all.length) return null;
     var asked = new Set(data.asked), fresh = all.filter(function (x) { return !asked.has(x.id); });
     if (!fresh.length) { data.asked = []; fresh = all; }
-    return fresh[Math.floor(Math.random() * fresh.length)].id;
+    return { qid: fresh[Math.floor(Math.random() * fresh.length)].id };
   }
   function scheduleNext(from) {
-    var f = FREQ[data.freq], qid = pickQid();
-    if (!f || !f.min || !qid) { data.next = null; return; }
-    data.next = { at: (from || Date.now()) + rnd(f.min, f.max) * 3600e3, qid: qid };
+    var f = FREQ[data.freq], n = pickNext();
+    if (!f || !f.min || !n) { data.next = null; return; }
+    data.next = { at: (from || Date.now()) + rnd(f.min, f.max) * 3600e3, qid: n.qid, card: n.card || null };
   }
-  function deliver(qid, at) {
-    var q = bankAll().find(function (x) { return x.id === qid; });
-    if (!q) return null;
-    var id = 'in_' + Math.round(at).toString(36) + '_' + qid;
+  function deliver(next, at) {
+    var q = next.card || bankAll().find(function (x) { return x.id === next.qid; });
+    if (!q) { var c = makeCardQ(); if (!c) return null; q = c; next = { qid: 'card', card: c }; }
+    var id = 'in_' + Math.round(at).toString(36) + '_' + next.qid;
     if (data.inbox.some(function (x) { return x.id === id; })) return null;
-    var item = { id: id, qid: qid, q: q.q, opts: q.opts.slice(), at: at, answer: null, react: pickCard() };
+    var item = { id: id, qid: next.qid, q: q.q, opts: q.opts.slice(), at: at, answer: null, react: pickCard(), fromCard: !!next.card };
     data.inbox.push(item);
-    if (data.asked.indexOf(qid) < 0) data.asked.push(qid);
+    if (next.card) { if (data.askedCards.indexOf(q.q) < 0) data.askedCards.push(q.q); }
+    else if (data.asked.indexOf(next.qid) < 0) data.asked.push(next.qid);
     return item;
   }
   function unansweredIn() { return data ? data.inbox.filter(function (x) { return !x.answer; }).length : 0; }
@@ -148,7 +176,7 @@
       if (!data.next) { scheduleNext(now - 0.9 * 3600e3 * (FREQ[data.freq].min)); changed = true; } // first question comes fairly soon
       // only one unanswered question at a time; the next is scheduled after you answer
       if (data.next && now >= data.next.at && unansweredIn() === 0) {
-        if (deliver(data.next.qid, data.next.at)) {
+        if (deliver(data.next, data.next.at)) {
           notify(pname() + ' 有個問題想問你，去問題箱看看吧', 'info');
           sysNotify(pname(), '有個問題想問你：' + (data.inbox[data.inbox.length - 1] || {}).q, 'qa-ask');
           if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} }
@@ -310,7 +338,7 @@
     h += '</span><span><button class="qa-link" data-act="now">現在問我一題</button> · <button class="qa-link" data-act="bank">題庫與頻率</button></span></div>';
     if (!items.length) h += '<div class="qa-empty">' + p + ' 還沒有問你問題。<br>可以等他來問，或點「現在問我一題」。</div>';
     items.forEach(function (it) {
-      h += '<div class="qa-card' + (it.answer ? '' : ' ask') + '"><div class="qa-from">' + p + ' 問你</div><div class="qa-q">' + esc(it.q) + '</div>';
+      h += '<div class="qa-card' + (it.answer ? '' : ' ask') + '"><div class="qa-from">' + p + ' 問你' + (it.fromCard ? ' · 字卡' : '') + '</div><div class="qa-q">' + esc(it.q) + '</div>';
       if (!it.answer) {
         it.opts.forEach(function (o, i) { h += '<button class="qa-opt" data-ans="' + esc(it.id) + '" data-i="' + i + '"><b>' + LETTERS[i] + '.</b><span>' + esc(o) + '</span></button>'; });
         h += '<div class="qa-own"><input type="text" id="own-' + esc(it.id) + '" placeholder="都不是？自己寫" maxlength="80"><button data-own="' + esc(it.id) + '">回答</button></div>';
@@ -327,6 +355,8 @@
     var all = bankAll();
     var h = '<div class="qa-form"><label class="t" for="qa-freq">' + esc(pname()) + ' 多久問你一次</label><select class="qa-sel" id="qa-freq">' +
       Object.keys(FREQ).map(function (k) { return '<option value="' + k + '"' + (data.freq === k ? ' selected' : '') + '>' + FREQ[k].label + '</option>'; }).join('') + '</select></div>' +
+      '<label class="qa-chk"><input type="checkbox" id="qa-fromcards"' + (data.fromCards ? ' checked' : '') + '>也從我的字卡出題（問句和選項都從字卡抽）</label>' +
+      '<div class="qa-bar"><span>字卡裡找到 ' + cardQuestions().length + ' 句問句' + (cardQuestions().length ? '，會和下面的題庫輪流問' : '（含「？」「嗎」「呢」等的句子才算）') + '</span></div>' +
       '<button class="qa-new" data-act="addq"><i class="fas fa-plus"></i> 新增題目</button>' +
       '<div class="qa-bar"><span>題庫共 ' + all.length + ' 題，會輪流問，問完一輪再重來</span>' + (data.bank.off.length ? '<button class="qa-link" data-act="restore">恢復內建題目</button>' : '') + '</div><div class="qa-bank">';
     all.slice().reverse().forEach(function (q) {
@@ -381,6 +411,7 @@
   body.addEventListener('input', syncDraft);
   body.addEventListener('change', async function (e) {
     syncDraft();
+    if (e.target.id === 'qa-fromcards') { data.fromCards = e.target.checked; scheduleNext(); await save(); render(); return; }
     if (e.target.id === 'qa-freq') { data.freq = e.target.value; scheduleNext(); await save(); notify(FREQ[data.freq].min ? '已設定：' + FREQ[data.freq].label : '好的，' + pname() + ' 先不問你了', 'success'); }
   });
   body.addEventListener('keydown', function (e) {
@@ -403,8 +434,8 @@
     if (act === 'restore') { data.bank.off = []; await save(); render(); return; }
     if (act === 'now') {
       if (unansweredIn()) { notify('先回答 ' + pname() + ' 現在的問題吧', 'info'); return; }
-      if (!bankAll().length) { notify('題庫是空的，先新增題目吧', 'warning'); return; }
-      var it = deliver((data.next && data.next.qid) || pickQid(), Date.now()); data.next = null;
+      var nx = data.next || pickNext(); if (!nx) { notify('題庫和字卡裡都沒有可以問的題目', 'warning'); return; }
+      var it = deliver(nx, Date.now()); data.next = null;
       await save(); render(); badge(); if (!it) notify('出了點問題，再試一次', 'warning'); return;
     }
     if (b.dataset.ans || b.dataset.own) {
