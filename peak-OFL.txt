@@ -1,0 +1,11 @@
+隨峰體 Plus（The Peak Font Plus）V1.002
+原作：阿坤　Plus 版：阿坤、Jeffrey Xuan、宇文滿月　技術處理：cjkFonts
+下載：https://cjkfonts.io/blog/ThePeakFontPlus
+
+cjkFonts
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This Font Software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the SIL Open Font License for the specific language, permissions and limitations governing your use of this Font Software.
+
+
+這裡的 peak-*.woff2 是為了網頁載入而切成小檔的子集，字形未經修改。
+完整授權條款：https://openfontlicense.org/open-font-license-official-text/
