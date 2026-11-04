@@ -30,11 +30,13 @@
     link: { on: true, i: 0, next: 0, every: 'h1', list: null },
     diary: { on: true, time: '22:00', entries: [] },
     hang: { on: true, min: 5, max: 30, say: true, lines: null },
+    phone: { chance: 0.04, items: [], seen: null, unread: 0, notes: null, seeded: false },
+    toss: { back: 0.35 },
     comp: { books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
       read: ['讀到哪了？', '這段寫得好好', '你看得好快', '我也想知道後面怎樣', '這個角色好可愛', '累了就休息一下', '看書的樣子好認真']
-    }, history: [] }
+    }, history: [], invite: 'low', inviteNext: 0, noise: 'off', modeLines: null }
   };
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
   function fill(d, def) { for (var k in def) { if (d[k] === undefined || d[k] === null && def[k] !== null) d[k] = clone(def[k]); else if (def[k] && typeof def[k] === 'object' && !Array.isArray(def[k]) && typeof d[k] === 'object') fill(d[k], def[k]); } return d; }
@@ -137,6 +139,28 @@
     '.cx-stage{position:relative;overflow:hidden;border-radius:12px}.cx-dm{position:absolute;white-space:nowrap;font-size:15px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;animation:cxdm 8s linear forwards}' +
     '@keyframes cxdm{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}' +
     '.cx-feed{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto}' +
+    '.cx-dim{opacity:.4}.cx-call{cursor:pointer}.cx-call>i:first-child{color:var(--accent-color);width:22px;text-align:center}.cx-call.miss>i:first-child{color:#e46a7a}' +
+    '.cx-flash{animation:cxFlash 1.8s ease}@keyframes cxFlash{0%,100%{background:transparent}20%,60%{background:rgba(var(--accent-color-rgb),.18)}}' +
+    '.cx-toss{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.cx-toss button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-toss svg{width:40px;height:40px}.cx-toss button:active{transform:scale(.94)}' +
+    '.cx-fly{position:fixed;left:0;top:0;width:44px;height:44px;z-index:9999;pointer-events:none}.cx-fly svg{width:100%;height:100%}' +
+    '.cx-splat{position:fixed;width:80px;height:80px;z-index:9998;pointer-events:none;animation:cxSplat .35s cubic-bezier(.2,1.6,.5,1)}.cx-splat svg{width:100%;height:100%}.cx-splat.out{transition:opacity .7s;opacity:0}' +
+    '@keyframes cxSplat{from{transform:scale(.2)}to{transform:scale(1)}}' +
+    '.cx-shake{animation:cxShake .6s}@keyframes cxShake{0%,100%{transform:none}20%{transform:translateX(-5px) rotate(-6deg)}40%{transform:translateX(5px) rotate(5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}' +
+    '.cx-phone{margin:0 auto;width:100%;max-width:300px;border:2px solid var(--text-primary);border-radius:28px;padding:10px 10px 14px;background:var(--primary-bg);box-shadow:0 6px 18px rgba(0,0,0,.08)}' +
+    '.cx-phone-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-secondary);padding:0 8px 6px}.cx-phone-top .notch{width:70px;height:16px;border-radius:99px;background:var(--text-primary);opacity:.85}' +
+    '.cx-phone-h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;padding:6px 4px 8px;color:var(--text-primary)}.cx-phone-h i{color:#f2b544}.cx-phone-h small{font-weight:400;color:var(--text-secondary)}' +
+    '.cx-phone-sort{margin-left:auto;display:flex;gap:4px}.cx-phone-sort button{font:inherit;font-size:11px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);border-radius:99px;padding:2px 8px;cursor:pointer}.cx-phone-sort button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}' +
+    '.cx-phone-list{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto}' +
+    '.cx-pi{background:var(--secondary-bg);border:1px solid var(--border-color);border-radius:14px;padding:10px 12px}.cx-pi .q{font-size:14px;line-height:1.6;color:var(--text-primary);word-break:break-word}' +
+    '.cx-pi .m{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-secondary);margin-top:6px}.cx-pi .note{color:var(--accent-color)}' +
+    '.cx-pi .act{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}.cx-pi .act button{font:inherit;font-size:11px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;padding:2px 6px}' +
+    '.cx-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cx-modes button{display:flex;align-items:center;gap:8px;padding:12px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:14px;cursor:pointer}.cx-modes span{font-size:20px}' +
+    '.cx-mode{text-align:center;padding:6px 0 4px}.cx-mode .ic{font-size:40px}.cx-mode .t{font-size:14px;color:var(--text-secondary);margin-top:2px}.cx-mode .clock{font-size:40px;font-weight:600;letter-spacing:.05em;color:var(--text-primary);font-variant-numeric:tabular-nums}' +
+    '.cx-note{font-size:12px;color:var(--text-primary);background:var(--secondary-bg);border-radius:8px;padding:6px 8px;margin-top:6px;white-space:pre-wrap}' +
+    '.cx-inv{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:20px}' +
+    '.cx-inv-card{width:100%;max-width:320px;background:var(--secondary-bg);border-radius:22px;padding:22px 20px 16px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.25);animation:cxSplat .35s cubic-bezier(.2,1.4,.5,1)}' +
+    '.cx-inv-card .av{width:64px;height:64px;border-radius:50%;margin:0 auto 10px;overflow:hidden;background:var(--primary-bg);display:grid;place-items:center;color:var(--accent-color);font-size:26px}.cx-inv-card .av img{width:100%;height:100%;object-fit:cover}' +
+    '.cx-inv-card .t{font-weight:600;font-size:16px;color:var(--text-primary)}.cx-inv-card .q{font-size:14px;color:var(--text-secondary);margin:8px 0 14px;line-height:1.6}.cx-inv-card .cx-btns{justify-content:center}' +
     '.cx-reader{font-size:var(--cx-fs,17px);line-height:1.9;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;font-family:var(--font-family,serif);padding:4px 2px}' +
     '.cx-reader h3{font-size:1.1em;margin:0 0 12px;text-align:center}' +
     '.cx-float{position:sticky;bottom:0;margin-top:8px}' +
@@ -664,9 +688,12 @@
     clearInterval(cTimer); cTimer = null;
     var media = cM && cM.body.querySelector('audio,video'); if (media) { try { media.pause(); } catch (e) {} }
     if (cState.url && cState.url.indexOf('blob:') === 0) URL.revokeObjectURL(cState.url);
+    noiseStop();
     if (cState.started) {
       var mins = Math.max(1, Math.round((Date.now() - cState.started) / 60e3));
-      X.comp.history.unshift({ k: cState.kind, t: cState.title, at: cState.started, min: mins }); X.comp.history = X.comp.history.slice(0, 40); save();
+      var isMode = cState.kind === 'mode';
+      X.comp.history.unshift({ k: isMode ? cState.mode : cState.kind, t: cState.title, at: cState.started, min: mins, note: cState.note || '' }); X.comp.history = X.comp.history.slice(0, 200); save();
+      if (isMode) { sysSay(MODES[cState.mode].e + ' ' + MODES[cState.mode].label + '了 ' + mins + ' 分鐘'); if (cState.toChat) partnerSays(MODES[cState.mode].end); }
     }
     cState = {};
   }
@@ -675,12 +702,15 @@
   function compRender() {
     var b = cM.body, v = cM.view, p = esc(pname());
     if (v === 'hub') {
-      b.innerHTML = '<div class="cx-hub"><button data-c="listen"><i class="fas fa-music"></i><div><b>一起聽歌</b><span>和 ' + p + ' 一起聽一首歌</span></div></button>' +
+      b.innerHTML = hubModes(p) + '<div class="cx-sec"><h4>一起做點什麼</h4>' + '<div class="cx-hub"><button data-c="listen"><i class="fas fa-music"></i><div><b>一起聽歌</b><span>和 ' + p + ' 一起聽一首歌</span></div></button>' +
         '<button data-c="watch"><i class="fas fa-film"></i><div><b>一起看影片</b><span>邊看邊聽 ' + p + ' 的彈幕</span></div></button>' +
-        '<button data-c="books"><i class="fas fa-book-open"></i><div><b>一起看小說</b><span>上傳 txt，和 ' + p + ' 共讀</span></div></button></div>' +
-        (X.comp.history.length ? '<div class="cx-sec"><h4>最近一起做的事</h4><div class="cx-list">' + X.comp.history.slice(0, 6).map(function (h) { return '<div class="cx-li"><div>' + ({ listen: '🎵 ', watch: '🎬 ', read: '📖 ' }[h.k] || '') + esc(h.t) + '<div class="s">' + fmtTime(h.at) + ' · ' + h.min + ' 分鐘</div></div></div>'; }).join('') + '</div></div>' : '');
+        '<button data-c="books"><i class="fas fa-book-open"></i><div><b>一起看小說</b><span>上傳 txt，和 ' + p + ' 共讀</span></div></button></div>' + '</div>' +
+        (X.comp.history.length ? '<div class="cx-sec"><h4>陪伴日記 <button class="qa-link" data-c="diary" style="float:right">全部 ' + X.comp.history.length + ' 則</button></h4><div class="cx-list">' + X.comp.history.slice(0, 4).map(function (h, i) { return histLi(h, i, false); }).join('') + '</div></div>' : '') +
+        '<div class="cx-sec">' + hubInvite(p) + '<div class="cx-muted">' + p + ' 會在適合的時間約你讀書、工作、運動或睡覺</div></div>';
       return;
     }
+    if (v === 'mode') { modeRender(b, p); return; }
+    if (v === 'diary') { b.innerHTML = '<div class="cx-list">' + X.comp.history.map(function (h, i) { return histLi(h, i, cState.editNote === i); }).join('') + '</div>'; return; }
     if (v === 'listen' || v === 'watch') {
       var isV = v === 'watch';
       b.innerHTML = '<div class="cx-sec"><h4>' + (isV ? '選一部影片' : '選一首歌') + '</h4>' +
@@ -752,6 +782,12 @@
   async function compClick(e) {
     var b = e.target.closest('button'); if (!b) return; var c = b.dataset.c;
     if (c === 'listen' || c === 'watch' || c === 'books') { cM.view = c; compRender(); return; }
+    if (b.dataset.m) { startMode(b.dataset.m); return; }
+    if (c === 'mend') { clearInterval(cTimer); noiseStop(); cState.ending = true; compRender(); return; }
+    if (c === 'msave') { var nt = cM.body.querySelector('#cx-m-note'); cState.note = nt ? nt.value.trim() : ''; compStop(); cM.view = 'hub'; compRender(); toast('已寫進陪伴日記', 'success'); return; }
+    if (c === 'diary') { cState.editNote = null; cM.view = 'diary'; compRender(); return; }
+    if (b.dataset.editnote !== undefined) { var ei = +b.dataset.editnote; if (cM.view !== 'diary') cM.view = 'diary'; cState.editNote = ei; compRender(); var ta = cM.body.querySelector('#cx-hn-' + ei); if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center' }); } return; }
+    if (b.dataset.savenote !== undefined) { var si = +b.dataset.savenote, tv = cM.body.querySelector('#cx-hn-' + si); if (X.comp.history[si] && tv) X.comp.history[si].note = tv.value.trim(); cState.editNote = null; await save(); compRender(); return; }
     if (c === 'go') {
       var kind = cM.view, url = cM.body.querySelector('#cx-c-url').value.trim(), title = cM.body.querySelector('#cx-c-title').value.trim();
       if (!/^https?:\/\//.test(url)) { toast('請選一個檔案，或貼上 https:// 開頭的連結', 'warning'); return; }
@@ -778,6 +814,8 @@
     var t = e.target;
     if (t.id === 'cx-c-file' && t.files[0]) { var f = t.files[0]; startRoom(cM.view, URL.createObjectURL(f), f.name.replace(/\.[^.]+$/, '').slice(0, 40)); return; }
     if (t.id === 'cx-c-chat') { cState.toChat = t.checked; return; }
+    if (t.id === 'cx-m-noise') { X.comp.noise = t.value; save(); noiseStart(t.value); return; }
+    if (t.id === 'cx-inv-freq') { X.comp.invite = t.value; invSchedule(); await save(); toast(t.value === 'off' ? pname() + ' 不會主動約你了' : '好，' + pname() + ' 會找時間約你', 'success'); return; }
     if (t.id === 'cx-c-ch') { cState.book.ch = +t.value; cState.say = line(X.comp.lines.read); bookSave(); compRender(); cM.body.scrollTop = 0; return; }
     if (t.id === 'cx-c-txt' && t.files[0]) {
       var file = t.files[0];
@@ -1001,7 +1039,10 @@
 
   /* ================= 角標 + 定時 ================= */
   function refreshBadge() {
-    window.__cxExtraBadge = unopened() + diaryUnread();
+    var phU = X ? (X.phone.unread || 0) : 0;
+    window.__cxExtraBadge = unopened() + diaryUnread() + phU;
+    var pe = document.getElementById('cx-phone-entry');
+    if (pe) { var pb = pe.querySelector('.cx-badge'); if (phU && !pb) { pb = document.createElement('span'); pb.className = 'cx-badge'; pe.appendChild(pb); } if (pb) { if (phU) pb.textContent = phU; else pb.remove(); } }
     var de = document.getElementById('cx-diary-entry');
     if (de) { var db2 = de.querySelector('.cx-badge'), dn = diaryUnread(); if (dn && !db2) { db2 = document.createElement('span'); db2.className = 'cx-badge'; de.appendChild(db2); } if (db2) { if (dn) db2.textContent = dn; else db2.remove(); } }
     var el = document.getElementById('cx-rp-entry');
@@ -1019,6 +1060,8 @@
       if (periodCare()) ch = true;
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
+      if (phoneTick()) ch = true;
+      if (inviteTick()) ch = true;
       if (ch) await save();
       refreshBadge(); linkRender();
     } catch (e) { console.warn('[cx extras]', e); }
@@ -1054,6 +1097,298 @@
   }
   setInterval(hangWatch, 3000);
 
+  /* ================= 通話紀錄 ================= */
+  var clM = null, clF = 'all';
+  function allMsgs() { try { return (typeof messages !== 'undefined' && Array.isArray(messages)) ? messages : []; } catch (e) { return []; } }
+  function callList() { return allMsgs().filter(function (m) { return m && m.type === 'call-event'; }).slice().reverse(); }
+  function callMissed(m) { return m.callIcon === 'fa-phone-slash' || /未接|拒絕|無法接聽|正在忙|錯過/.test(m.text || ''); }
+  function durSec(d) { if (!d) return 0; var p = String(d).split(':').map(Number); if (p.some(isNaN)) return 0; return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : 0; }
+  function fmtDur(s) { var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + ' 小時 ' + m + ' 分' : m ? m + ' 分 ' + (s % 60) + ' 秒' : (s % 60) + ' 秒'; }
+  function jumpTo(id) {
+    var el = null;
+    document.querySelectorAll('.chat-container [data-id]').forEach(function (x) { if (String(x.dataset.id) === String(id)) el = x; });
+    if (!el) { toast('這則在比較前面，往上捲一點就看得到'); return; }
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.classList.add('cx-flash'); setTimeout(function () { el.classList.remove('cx-flash'); }, 1900);
+  }
+  function clOpen() {
+    if (!clM) {
+      clM = makeModal('cx-calllog-modal', 'fa-phone', '通話紀錄');
+      clM.body.addEventListener('click', function (e) {
+        var f = e.target.closest('[data-f]'); if (f) { clF = f.dataset.f; clRender(); return; }
+        var r = e.target.closest('[data-mid]'); if (r) { var id = r.dataset.mid; clM.close(); setTimeout(function () { jumpTo(id); }, 300); }
+      });
+    }
+    clF = 'all'; clRender(); clM.open();
+  }
+  function clRender() {
+    var all = callList(), miss = all.filter(callMissed), ok = all.filter(function (m) { return !callMissed(m); });
+    var tot = ok.reduce(function (s, m) { return s + durSec(m.callDetail); }, 0);
+    var list = clF === 'ok' ? ok : clF === 'miss' ? miss : all;
+    clM.body.innerHTML = '<div class="cx-stat"><div><b>' + all.length + '</b><span>全部通話</span></div><div><b>' + miss.length + '</b><span>未接／拒接</span></div><div><b>' + fmtDur(tot) + '</b><span>一起聊了</span></div></div>' +
+      '<div class="cx-chips">' + [['all', '全部'], ['ok', '已接通'], ['miss', '未接']].map(function (x) { return '<button data-f="' + x[0] + '" class="' + (clF === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="cx-list">' + (list.length ? list.map(function (m) {
+        var ms = callMissed(m);
+        return '<div class="cx-li cx-call' + (ms ? ' miss' : '') + '" data-mid="' + esc(m.id) + '"><i class="fas ' + (ms ? 'fa-phone-slash' : 'fa-video') + '"></i><div>' + esc(String(m.text || '').replace(/ · .*/, '')) +
+          '<div class="s">' + fmtTime(m.timestamp) + (m.callDetail && !ms ? ' · ' + esc(m.callDetail) : '') + '</div></div><i class="fas fa-chevron-right cx-dim"></i></div>';
+      }).join('') : '<div class="cx-muted" style="text-align:center;padding:24px 0">還沒有通話紀錄</div>') + '</div>' +
+      '<div class="cx-muted" style="text-align:center">點一通就會跳到聊天裡那一則</div>';
+  }
+
+  /* ================= 搞怪丟東西 ================= */
+  var INK = '#4a4058';
+  function svgWrap(inner, vb) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (vb || '0 0 48 48') + '" stroke="' + INK + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>'; }
+  var TOSS = {
+    tomato: { n: '番茄', v: '丟了番茄',
+      icon: '<circle cx="24" cy="27" r="15" fill="#f0776a"/><path d="M24 13 L19 9 M24 13 L29 9 M24 13 L24 7 M24 13 L17 14 M24 13 L31 14" stroke="#5f9a5c" stroke-width="2.6" fill="none"/><path d="M15 24 q1.5 -4 5 -5" stroke="#fff" stroke-width="2.2" fill="none" opacity=".75"/>',
+      splat: '<path d="M32 8 C38 14 46 8 48 16 C50 24 58 22 56 30 C54 38 60 44 52 48 C44 52 46 60 36 58 C28 56 24 62 18 56 C12 50 4 52 6 44 C8 36 2 32 8 26 C14 20 10 12 18 12 C24 12 26 4 32 8 Z" fill="#f0776a" fill-opacity=".9"/><circle cx="26" cy="30" r="2" fill="#ffe08a" stroke="none"/><circle cx="36" cy="26" r="2" fill="#ffe08a" stroke="none"/><circle cx="32" cy="38" r="2" fill="#ffe08a" stroke="none"/><path d="M20 56 q-1 6 -3 8 M44 54 q1 5 3 7" stroke="#f0776a" stroke-width="3" fill="none"/>',
+      say: ['欸！番茄汁噴到眼睛了', '好啊你，敢丟我', '……我要報仇', '你完了', '我的臉！'] },
+    egg: { n: '雞蛋', v: '丟了雞蛋',
+      icon: '<ellipse cx="24" cy="26" rx="12" ry="15" fill="#fffaf0"/><path d="M17 20 q2 -5 6 -6" stroke="#e8dcc8" stroke-width="2" fill="none"/>',
+      splat: '<path d="M30 6 C38 10 44 6 48 14 C52 22 60 26 56 34 C52 42 58 50 48 52 C40 54 38 62 30 58 C22 54 14 58 10 50 C6 42 2 36 8 28 C12 22 8 14 16 10 C22 8 24 2 30 6 Z" fill="#fffdf5" fill-opacity=".95"/><circle cx="31" cy="31" r="10" fill="#ffc94d"/><path d="M27 27 q2 -2 5 -2" stroke="#fff" stroke-width="2" fill="none"/><path d="M18 54 q-1 5 -2 8" stroke="#ffc94d" stroke-width="3" fill="none"/>',
+      say: ['蛋黃流下來了……', '頭髮都黏住了啦', '你等著', '好腥……過來幫我擦'] },
+    cake: { n: '蛋糕', v: '砸了蛋糕',
+      icon: '<path d="M7 34 L41 34 L41 24 L7 17 Z" fill="#fbe3c4"/><path d="M7 17 L41 24 L41 20 Q24 9 7 13 Z" fill="#fff7fb"/><path d="M7 26 L41 30" stroke="#f4a7b9" stroke-width="2.6"/><circle cx="23" cy="11" r="3.4" fill="#e95b6b"/><path d="M23 8 q2 -4 5 -4" fill="none"/>',
+      splat: '<path d="M30 4 C40 6 46 2 50 12 C54 20 62 24 58 34 C54 44 60 52 48 54 C38 56 34 62 26 58 C18 54 10 58 8 48 C6 40 0 34 6 26 C10 18 6 10 16 8 C22 6 22 2 30 4 Z" fill="#fff7fb"/><path d="M14 40 C20 34 26 44 32 38 C38 32 44 42 50 36" stroke="#f4a7b9" stroke-width="4" fill="none"/><circle cx="34" cy="22" r="5" fill="#e95b6b"/><circle cx="20" cy="26" r="2" fill="#a8d5a2" stroke="none"/><circle cx="44" cy="30" r="2" fill="#ffd36b" stroke="none"/>',
+      say: ['……好甜', '浪費食物，罰你親我一下', '奶油在臉上，你幫我舔掉', '生日快樂？今天又不是我生日'] },
+    water: { n: '一桶水', v: '潑了一桶水',
+      icon: '<path d="M12 17 L36 17 L32 41 L16 41 Z" fill="#9cc3ea"/><ellipse cx="24" cy="17" rx="12" ry="4" fill="#d6e9f8"/><path d="M12 17 Q24 2 36 17" fill="none"/><path d="M16 26 L32 26" stroke="#d6e9f8" stroke-width="2"/>',
+      splat: '<path d="M32 4 C36 14 30 16 32 22 C34 16 42 14 40 24" fill="none" stroke="#7fb0e0" stroke-width="3"/><path d="M14 16 C10 22 12 28 16 28 C20 28 22 22 14 16 Z" fill="#9cc3ea"/><path d="M48 12 C44 18 46 24 50 24 C54 24 56 18 48 12 Z" fill="#9cc3ea"/><path d="M8 40 C4 46 6 52 10 52 C14 52 16 46 8 40 Z" fill="#9cc3ea"/><path d="M54 38 C50 44 52 50 56 50 C60 50 62 44 54 38 Z" fill="#9cc3ea"/><path d="M30 46 C26 52 28 58 32 58 C36 58 38 52 30 46 Z" fill="#9cc3ea"/><path d="M20 34 q12 6 24 0" stroke="#7fb0e0" stroke-width="3" fill="none"/>',
+      say: ['全濕了！', '冷死了，過來給我抱', '你是不是想看我濕透', '……我要換衣服了，你負責'] },
+    pillow: { n: '枕頭', v: '丟了枕頭',
+      icon: '<path d="M8 16 C8 11 12 12 24 12 C36 12 40 11 40 16 L40 32 C40 37 36 36 24 36 C12 36 8 37 8 32 Z" fill="#ffffff"/><path d="M8 16 l-3 -3 M40 16 l3 -3 M8 32 l-3 3 M40 32 l3 3" fill="none"/><path d="M18 22 q6 4 12 0" stroke="#e8dcf2" stroke-width="2" fill="none"/>',
+      splat: '<path d="M32 6 L36 22 L52 18 L40 30 L54 42 L36 38 L32 56 L28 38 L10 42 L24 30 L12 18 L28 22 Z" fill="#fff3c4"/><path d="M8 10 q6 2 6 8 q-4 -2 -6 -8 Z M52 50 q6 2 6 8 q-4 -2 -6 -8 Z M50 6 q-2 6 2 10 q2 -6 -2 -10 Z" fill="#ffffff"/>',
+      say: ['來啊，枕頭大戰', '哈哈哈哈好痛', '再丟我就親你喔', '你力氣好大'] }
+  };
+  var TOSS_BACK = ['換你了！', '接招！', '吃我這招', '看我的'];
+  var tM = null, tBusy = false;
+  function tossOpen() {
+    if (!tM) {
+      tM = makeModal('cx-toss-modal', 'fa-face-grin-squint-tears', '搞怪');
+      tM.body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-toss]'); if (!b) return;
+        var k = b.dataset.toss; tM.close(); setTimeout(function () { tossAt(k); }, 280);
+      });
+      tM.body.addEventListener('change', async function (e) { if (e.target.id === 'cx-toss-back') { X.toss.back = parseFloat(e.target.value) || 0; await save(); } });
+    }
+    var p = esc(pname());
+    tM.body.innerHTML = '<div class="cx-muted" style="text-align:center">選一個，朝 ' + p + ' 的頭像丟過去</div><div class="cx-toss">' +
+      Object.keys(TOSS).map(function (k) { return '<button data-toss="' + k + '">' + svgWrap(TOSS[k].icon) + '<span>' + TOSS[k].n + '</span></button>'; }).join('') + '</div>' +
+      '<label class="cx-row"><span>' + p + ' 會不會丟回來</span><select class="cx-sel" id="cx-toss-back" style="width:auto">' +
+      [[0, '不會'], [0.2, '偶爾'], [0.35, '有時'], [0.6, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs((X.toss.back || 0) - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
+    tM.open();
+  }
+  function centerOf(sel, fb) {
+    var el = document.querySelector(sel), r = el && el.getBoundingClientRect();
+    if (r && r.width) return { x: r.left + r.width / 2, y: r.top + r.height / 2, el: el };
+    return fb;
+  }
+  function fly(k, from, to, done) {
+    var d = document.createElement('div'); d.className = 'cx-fly'; d.innerHTML = svgWrap(TOSS[k].icon);
+    document.body.appendChild(d);
+    var dx = to.x - from.x, dy = to.y - from.y, lift = Math.min(160, Math.abs(dy) * 0.35 + 60);
+    var kf = [
+      { transform: 'translate(' + (from.x - 22) + 'px,' + (from.y - 22) + 'px) rotate(0deg) scale(1)' },
+      { transform: 'translate(' + (from.x + dx * 0.5 - 22) + 'px,' + (Math.min(from.y, to.y) - lift - 22) + 'px) rotate(260deg) scale(1.15)' },
+      { transform: 'translate(' + (to.x - 22) + 'px,' + (to.y - 22) + 'px) rotate(520deg) scale(.9)' }
+    ];
+    var a = d.animate ? d.animate(kf, { duration: 720, easing: 'cubic-bezier(.35,.1,.55,1)' }) : null;
+    var fin = function () { d.remove(); splat(k, to); if (done) done(); };
+    if (a) a.onfinish = fin; else setTimeout(fin, 720);
+  }
+  function splat(k, at) {
+    var s = document.createElement('div'); s.className = 'cx-splat'; s.innerHTML = svgWrap(TOSS[k].splat, '0 0 64 64');
+    s.style.left = (at.x - 40) + 'px'; s.style.top = (at.y - 40) + 'px';
+    document.body.appendChild(s);
+    if (at.el) { at.el.classList.remove('cx-shake'); void at.el.offsetWidth; at.el.classList.add('cx-shake'); setTimeout(function () { at.el.classList.remove('cx-shake'); }, 700); }
+    setTimeout(function () { s.classList.add('out'); }, 2600);
+    setTimeout(function () { s.remove(); }, 3300);
+  }
+  function tossAt(k) {
+    if (tBusy) return; tBusy = true;
+    var me = { x: window.innerWidth / 2, y: window.innerHeight - 90 };
+    var him = centerOf('#partner-avatar', { x: 60, y: 90 });
+    fly(k, me, him, function () {
+      sysSay(myname() + ' 向 ' + pname() + ' ' + TOSS[k].v);
+      setTimeout(function () {
+        partnerSays(pick(TOSS[k].say));
+        if (Math.random() < (X.toss.back || 0)) {
+          var k2 = pick(Object.keys(TOSS));
+          setTimeout(function () {
+            partnerSays(pick(TOSS_BACK));
+            setTimeout(function () {
+              var from = centerOf('#partner-avatar', him), to = centerOf('#my-avatar', { x: window.innerWidth - 60, y: 90 });
+              fly(k2, from, to, function () { sysSay(pname() + ' 向 ' + myname() + ' ' + TOSS[k2].v); tBusy = false; });
+            }, 900);
+          }, 1600 + Math.random() * 1600);
+        } else tBusy = false;
+      }, 1200 + Math.random() * 1500);
+    });
+  }
+
+  /* ================= TA 的手機 ================= */
+  var PHONE_NOTES = ['好可愛', '存起來', '這句要記住', '截圖了', '偷偷存一下', '想你的時候拿出來看', '又在撒嬌', '笑死', '嘴硬', '這句我要記一輩子', '今天也好乖', '❤'];
+  var phM = null, phSort = 'got';
+  function phoneNotes() { var l = X.phone.notes; return l && l.length ? l : PHONE_NOTES; }
+  function userMsgs() {
+    return allMsgs().filter(function (m) { return m && m.sender === 'user' && (!m.type || m.type === 'normal') && typeof m.text === 'string' && m.text.trim().length >= 2 && m.text.length <= 200; });
+  }
+  function phoneAdd(m) {
+    if (X.phone.items.some(function (x) { return String(x.mid) === String(m.id); })) return false;
+    X.phone.items.unshift({ mid: m.id, text: m.text.trim(), at: +new Date(m.timestamp) || Date.now(), got: Date.now(), note: pick(phoneNotes()) });
+    X.phone.items = X.phone.items.slice(0, 300); X.phone.unread = (X.phone.unread || 0) + 1; return true;
+  }
+  function phoneTick() {
+    var P = X.phone, u = userMsgs(); if (!u.length) return false;
+    var last = u[u.length - 1].id, ch = false;
+    if (!P.seeded) {
+      P.seeded = true; ch = true;
+      if (P.chance > 0) { var pool = u.slice(0, -1), n = Math.min(5, Math.round(pool.length * 0.03)); for (var i = 0; i < n; i++) phoneAdd(pick(pool)); }
+    } else if (P.chance > 0) {
+      var idx = -1; for (var j = u.length - 1; j >= 0; j--) { if (String(u[j].id) === String(P.seen)) { idx = j; break; } }
+      var fresh = idx < 0 ? u.slice(-3) : u.slice(idx + 1);
+      fresh.forEach(function (m) { if (Math.random() < P.chance && phoneAdd(m)) ch = true; });
+    }
+    if (String(P.seen) !== String(last)) { P.seen = last; ch = true; }
+    return ch;
+  }
+  function phoneOpen() {
+    if (!phM) {
+      phM = makeModal('cx-phone-modal', 'fa-mobile-screen', 'TA 的手機');
+      phM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.sort) { phSort = b.dataset.sort; phoneRender(); return; }
+        if (b.dataset.del !== undefined) {
+          if (!(await confirmAsync('從 ' + pname() + ' 的收藏裡刪掉這句？'))) return;
+          var id = b.dataset.del; X.phone.items = X.phone.items.filter(function (x) { return String(x.mid) !== id; }); await save(); phoneRender(); return;
+        }
+        if (b.dataset.jump !== undefined) { var mid = b.dataset.jump; phM.close(); setTimeout(function () { jumpTo(mid); }, 300); return; }
+        if (b.dataset.a === 'phsave') { var nl = phM.body.querySelector('#cx-ph-notes').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); if (!nl.length) { toast('至少要一句', 'warning'); return; } X.phone.notes = nl; await save(); toast('已儲存 ' + nl.length + ' 句', 'success'); return; }
+        if (b.dataset.a === 'phreset') { X.phone.notes = null; await save(); phoneRender(); }
+      });
+      phM.body.addEventListener('change', async function (e) { if (e.target.id === 'cx-ph-ch') { X.phone.chance = parseFloat(e.target.value) || 0; await save(); } });
+    }
+    phM.el.querySelector('.modal-title span').textContent = pname() + ' 的手機';
+    X.phone.unread = 0; save(); refreshBadge();
+    phoneRender(); phM.open();
+  }
+  function phoneRender() {
+    var p = esc(pname()), items = X.phone.items.slice();
+    if (phSort === 'at') items.sort(function (a, b) { return b.at - a.at; });
+    var now = new Date();
+    phM.body.innerHTML = '<div class="cx-phone"><div class="cx-phone-top"><span>' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + '</span><span class="notch"></span><span><i class="fas fa-signal"></i> <i class="fas fa-battery-three-quarters"></i></span></div>' +
+      '<div class="cx-phone-h"><i class="fas fa-star"></i> 收藏 <small>' + items.length + '</small><span class="cx-phone-sort"><button data-sort="got" class="' + (phSort === 'got' ? 'on' : '') + '">收藏時間</button><button data-sort="at" class="' + (phSort === 'at' ? 'on' : '') + '">說話時間</button></span></div>' +
+      '<div class="cx-phone-list">' + (items.length ? items.map(function (x) {
+        return '<div class="cx-pi"><div class="q">' + esc(x.text) + '</div><div class="m"><span class="note">✎ ' + esc(x.note) + '</span><span>' + fmtTime(phSort === 'at' ? x.at : x.got) + (phSort === 'at' ? ' 說的' : ' 收藏') + '</span></div>' +
+          '<div class="act"><button data-jump="' + esc(x.mid) + '">看原文</button><button data-del="' + esc(x.mid) + '" aria-label="刪除"><i class="fas fa-trash"></i></button></div></div>';
+      }).join('') : '<div class="cx-muted" style="text-align:center;padding:30px 10px">還沒有收藏<br>多跟 ' + p + ' 聊天，他會偷偷存下你說的話</div>') + '</div></div>' +
+      '<div class="cx-sec"><h4>偷偷收藏的頻率</h4><select class="cx-sel" id="cx-ph-ch">' + [[0, '不要收藏'], [0.02, '偶爾'], [0.04, '有時'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.phone.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+      '<div class="cx-muted">你在聊天裡說的話，' + p + ' 有時會偷偷存進手機，還會寫一句小備註。</div>' +
+      '<details><summary class="cx-muted" style="cursor:pointer">他寫的小備註（一行一句）</summary><textarea class="cx-ta" id="cx-ph-notes">' + esc(phoneNotes().join('\n')) + '</textarea>' +
+      '<div class="cx-btns"><button class="cx-btn pri" data-a="phsave">儲存備註</button><button class="cx-btn" data-a="phreset">恢復預設</button></div></details></div>';
+  }
+
+  /* ================= 陪伴模式 + 他來約你 ================= */
+  var MODES = {
+    study: { e: '📚', label: '一起讀書', hours: [9, 23], gap: [180, 420],
+      say: ['專心喔，我在旁邊陪你', '寫到哪了？', '累了就喝口水', '你認真的樣子好好看', '不准偷看手機', '再撐一下下', '我也在看書，陪你'],
+      ask: ['要不要一起讀書？我陪你', '該念書囉，我陪你一起'], end: '辛苦了，今天也很努力' },
+    work: { e: '💼', label: '一起工作', hours: [9, 19], gap: [180, 420],
+      say: ['今天也辛苦了', '我在，慢慢來', '記得伸個懶腰', '忙完了要來找我', '加油，你最棒', '別太累了', '要不要休息五分鐘'],
+      ask: ['一起努力工作吧，我陪你', '今天也一起上班吧'], end: '下班囉，過來讓我抱一下' },
+    exercise: { e: '🏃', label: '一起運動', hours: [7, 21], gap: [60, 150],
+      say: ['衝啊！', '再一組！', '記得補水', '流汗的樣子也好看', '呼吸跟上', '最後一下了', '好厲害，我好驕傲'],
+      ask: ['走，一起去運動！', '動一動吧，我陪你'], end: '好棒！記得拉筋喔' },
+    sleep: { e: '🌙', label: '一起睡覺', hours: [21, 25], gap: [60, 120],
+      say: ['閉上眼睛', '我在這裡，不走', '晚安，做個好夢', '抱著你睡', '別滑手機了，乖', '睡吧，我守著你'],
+      ask: ['該睡覺了，我陪你睡好不好？', '很晚了，我們一起睡吧'], end: '早安，睡得好嗎？' }
+  };
+  var DECLINE = ['好吧，那我等你', '下次一定要陪我喔', '哼，好啦', '那你忙，我在這裡'];
+  var INV_GAP = { low: [18, 36], mid: [6, 12] };
+  function modeOk(k, h) { var r = MODES[k].hours; return r[1] > 24 ? (h >= r[0] || h < r[1] - 24) : (h >= r[0] && h < r[1]); }
+  function invSchedule() { var g = INV_GAP[X.comp.invite]; X.comp.inviteNext = g ? Date.now() + rnd(g[0], g[1]) * 3600e3 : 0; }
+  function busyNow() { return callConnected() || !!(cState && cState.started) || !!document.getElementById('cx-inv'); }
+  function inviteTick() {
+    var C = X.comp; if (!INV_GAP[C.invite]) return false;
+    if (!C.inviteNext) { invSchedule(); return true; }
+    if (Date.now() < C.inviteNext) return false;
+    var h = new Date().getHours(), ok = Object.keys(MODES).filter(function (k) { return modeOk(k, h); });
+    if (!ok.length || busyNow()) { C.inviteNext = Date.now() + rnd(1, 3) * 3600e3; return true; }
+    var k = pick(ok), ask = pick(MODES[k].ask);
+    partnerSays(ask); showInvite(k, ask); invSchedule(); return true;
+  }
+  function showInvite(k, ask) {
+    var o = document.createElement('div'); o.id = 'cx-inv'; o.className = 'cx-inv';
+    o.innerHTML = '<div class="cx-inv-card"><div class="av">' + partnerAvatar() + '</div><div class="t">' + esc(pname()) + ' 約你' + MODES[k].label + ' ' + MODES[k].e + '</div><div class="q">「' + esc(ask) + '」</div>' +
+      '<div class="cx-btns"><button class="cx-btn" data-i="no">下次吧</button><button class="cx-btn pri" data-i="yes">好啊</button></div></div>';
+    document.body.appendChild(o);
+    o.addEventListener('click', async function (e) {
+      var b = e.target.closest('[data-i]'); if (!b) return; o.remove();
+      if (b.dataset.i === 'yes') { await load(); compOpen(); startMode(k); }
+      else setTimeout(function () { partnerSays(pick(DECLINE)); }, 1200);
+    });
+  }
+  function modeLines(k) { var c = X.comp.modeLines && X.comp.modeLines[k]; return c && c.length ? c : MODES[k].say; }
+  function startMode(k) {
+    if (cState && cState.started) compStop();
+    cState = { kind: 'mode', mode: k, title: MODES[k].label, started: Date.now(), toChat: false };
+    sysSay(MODES[k].e + ' 和 ' + pname() + ' ' + MODES[k].label + '中');
+    cM.view = 'mode'; compRender(); modeLive();
+  }
+  function modeLive() {
+    clearInterval(cTimer);
+    var M = cState.mode, g = MODES[M].gap, said = 0, next = Date.now() + rnd(g[0], g[1]) * 1000;
+    cTimer = setInterval(function () {
+      if (!cM.isOpen() || !cState.started) return;
+      var el = cM.body.querySelector('#cx-m-clock');
+      if (el) { var s = Math.floor((Date.now() - cState.started) / 1000); el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60); }
+      if (M === 'sleep' && said >= 3) return;
+      if (Date.now() >= next) { compSay(line(modeLines(M))); said++; next = Date.now() + rnd(g[0], g[1]) * 1000; }
+    }, 1000);
+  }
+  var noise = null;
+  function noiseStop() { if (!noise) return; try { noise.src.stop(); noise.ctx.close(); } catch (e) {} noise = null; }
+  function noiseStart(kind) {
+    noiseStop(); if (!kind || kind === 'off') return;
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    var ctx = new AC(), len = ctx.sampleRate * 6, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0), last = 0;
+    for (var i = 0; i < len; i++) { var w = Math.random() * 2 - 1; if (kind === 'white') d[i] = w * 0.2; else { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; } }
+    var src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    var gain = ctx.createGain(); gain.gain.value = kind === 'white' ? 0.35 : 0.9;
+    var node = src;
+    if (kind === 'rain') { var hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 400; var nb = ctx.createBufferSource(); var b2 = ctx.createBuffer(1, len, ctx.sampleRate), d2 = b2.getChannelData(0); for (var j = 0; j < len; j++) d2[j] = (Math.random() * 2 - 1) * 0.12; nb.buffer = b2; nb.loop = true; var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; nb.connect(hp); hp.connect(lp); lp.connect(gain); nb.start(); }
+    if (kind === 'waves') { var lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.09; lg.gain.value = 0.45; lfo.connect(lg); lg.connect(gain.gain); lfo.start(); }
+    node.connect(gain); gain.connect(ctx.destination); src.start();
+    noise = { ctx: ctx, src: src };
+  }
+  var NOISES = [['off', '不要'], ['white', '白噪音'], ['rain', '雨聲'], ['waves', '海浪']];
+  function modeRender(b, p) {
+    var M = MODES[cState.mode];
+    if (cState.ending) {
+      b.innerHTML = '<div class="cx-mode"><div class="ic">' + M.e + '</div><div class="t">' + M.label + '了 ' + Math.max(1, Math.round((Date.now() - cState.started) / 60e3)) + ' 分鐘</div></div>' +
+        sayHtml(M.end) + '<div class="cx-sec"><h4>寫進陪伴日記</h4><textarea class="cx-ta" id="cx-m-note" placeholder="今天做了什麼、心情怎麼樣（可不填）" maxlength="300"></textarea><button class="cx-btn pri" data-c="msave">存進日記</button></div>';
+      return;
+    }
+    b.innerHTML = '<div class="cx-mode"><div class="ic">' + M.e + '</div><div class="t">和 ' + p + ' ' + M.label + '中</div><div class="clock" id="cx-m-clock">00:00</div></div>' +
+      '<div class="cx-feed" id="cx-feed">' + sayHtml(pick(modeLines(cState.mode))) + '</div>' +
+      '<label class="cx-row"><span>背景聲</span><select class="cx-sel" id="cx-m-noise" style="width:auto">' + NOISES.map(function (n) { return '<option value="' + n[0] + '"' + ((X.comp.noise || 'off') === n[0] ? ' selected' : '') + '>' + n[1] + '</option>'; }).join('') + '</select></label>' +
+      '<label class="qa-chk"><input type="checkbox" id="cx-c-chat"' + (cState.toChat ? ' checked' : '') + '>把 ' + p + ' 說的話也傳到聊天</label>' +
+      '<button class="cx-btn pri" data-c="mend">結束陪伴</button>';
+  }
+  var KIND_ICON = { listen: '🎵 ', watch: '🎬 ', read: '📖 ', study: '📚 ', work: '💼 ', exercise: '🏃 ', sleep: '🌙 ' };
+  function histLi(h, i, edit) {
+    return '<div class="cx-li cx-hist"><div>' + (KIND_ICON[h.k] || '') + esc(h.t) + '<div class="s">' + fmtTime(h.at) + ' · ' + h.min + ' 分鐘</div>' +
+      (edit ? '<textarea class="cx-ta" id="cx-hn-' + i + '" maxlength="300" style="min-height:70px;margin-top:6px">' + esc(h.note || '') + '</textarea><button class="cx-btn pri" data-savenote="' + i + '" style="margin-top:6px">儲存</button>'
+        : (h.note ? '<div class="cx-note">' + esc(h.note) + '</div>' : '')) + '</div>' +
+      (edit ? '' : '<button class="cx-x" data-editnote="' + i + '" aria-label="寫備註"><i class="fas fa-pen"></i></button>') + '</div>';
+  }
+  function hubModes(p) {
+    return '<div class="cx-sec"><h4>陪伴模式</h4><div class="cx-modes">' + Object.keys(MODES).map(function (k) { return '<button data-m="' + k + '"><span>' + MODES[k].e + '</span>' + MODES[k].label + '</button>'; }).join('') + '</div></div>';
+  }
+  function hubInvite(p) {
+    return '<label class="cx-row"><span>' + p + ' 主動來約你</span><select class="cx-sel" id="cx-inv-freq" style="width:auto">' + [['off', '不要'], ['low', '偶爾（一兩天一次）'], ['mid', '常常（一天幾次）']].map(function (o) { return '<option value="' + o[0] + '"' + (X.comp.invite === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
+  }
+
   /* 修正：電腦用滑鼠點通話視窗右上角按鈕沒反應（拖動功能把滑鼠抓走了） */
   document.addEventListener('pointerdown', function (e) {
     if (e.target && e.target.closest && e.target.closest('#call-window-header button')) e.stopPropagation();
@@ -1061,7 +1396,7 @@
 
   (function credit() {
     var h = Array.prototype.find.call(document.querySelectorAll('h3,h4'), function (x) { return /特別鳴謝/.test(x.textContent); });
-    if (h && !document.getElementById('cx-credit')) { var c = document.createElement('p'); c.id = 'cx-credit'; c.style.cssText = 'font-size:12px;opacity:.75;margin-top:8px'; c.textContent = '潮汐、番茄鐘、陪伴中心、紅包、狀態檢測、拼字卡、主動來信的功能靈感來自「渡念」（小紅書 @我要學英語），程式為重新撰寫。'; h.parentNode.appendChild(c); }
+    if (h && !document.getElementById('cx-credit')) { var c = document.createElement('p'); c.id = 'cx-credit'; c.style.cssText = 'font-size:12px;opacity:.75;margin-top:8px'; c.textContent = '潮汐、番茄鐘、陪伴中心、紅包、狀態檢測、拼字卡、主動來信的功能靈感來自「渡念」（小紅書 @我要學英語）；搞怪、TA 的手機、通話紀錄、陪伴模式與邀約的點子參考自「字卡傳訊」二改版（小紅書 @滚筒洗衣机）與「ZY」。程式皆為重新撰寫。'; h.parentNode.appendChild(c); }
   })();
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
   addEntry('cx-period-entry', 'fa-droplet', '潮汐', pOpen);
@@ -1069,6 +1404,9 @@
   addEntry('cx-comp-entry', 'fa-headphones', '陪伴中心', compOpen);
   addEntry('cx-rp-entry', 'fa-gift', '紅包', rpOpen);
   addEntry('cx-status-entry', 'fa-heart-pulse', '狀態檢測', stOpen);
+  addEntry('cx-phone-entry', 'fa-mobile-screen', 'TA 的手機', phoneOpen);
+  addEntry('cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪', tossOpen);
+  addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
   setTimeout(tick, 3000);
   setInterval(tick, 30000);
