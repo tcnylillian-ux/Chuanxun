@@ -139,9 +139,13 @@
     '.cx-stage{position:relative;overflow:hidden;border-radius:12px}.cx-dm{position:absolute;white-space:nowrap;font-size:15px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;animation:cxdm 8s linear forwards}' +
     '@keyframes cxdm{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}' +
     '.cx-feed{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto}' +
+    '.cx-adv-tabs{display:flex;gap:6px;position:sticky;top:-1px;z-index:5;background:var(--secondary-bg);padding:4px 0 10px;margin-bottom:4px}' +
+    '.cx-adv-tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;position:relative;white-space:nowrap}' +
+    '.cx-adv-tabs button span{font-size:18px;line-height:1.2}.cx-adv-tabs button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}' +
+    '.cx-adv-tabs .dot{position:absolute;top:5px;right:8px;width:8px;height:8px;border-radius:50%;background:#ff7b93;display:none}.cx-adv-tabs button.has .dot{display:block}.cx-tab-hide{display:none!important}' +
     '.cx-dim{opacity:.4}.cx-call{cursor:pointer}.cx-call>i:first-child{color:var(--accent-color);width:22px;text-align:center}.cx-call.miss>i:first-child{color:#e46a7a}' +
     '.cx-flash{animation:cxFlash 1.8s ease}@keyframes cxFlash{0%,100%{background:transparent}20%,60%{background:rgba(var(--accent-color-rgb),.18)}}' +
-    '.cx-toss{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.cx-toss button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-toss svg{width:40px;height:40px}.cx-toss button:active{transform:scale(.94)}' +
+    '.cx-toss{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cx-toss button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-toss svg{width:40px;height:40px}.cx-toss button:active{transform:scale(.94)}' +
     '.cx-fly{position:fixed;left:0;top:0;width:44px;height:44px;z-index:9999;pointer-events:none}.cx-fly svg{width:100%;height:100%}' +
     '.cx-splat{position:fixed;width:80px;height:80px;z-index:9998;pointer-events:none;animation:cxSplat .35s cubic-bezier(.2,1.6,.5,1)}.cx-splat svg{width:100%;height:100%}.cx-splat.out{transition:opacity .7s;opacity:0}' +
     '@keyframes cxSplat{from{transform:scale(.2)}to{transform:scale(1)}}' +
@@ -1048,6 +1052,7 @@
     var el = document.getElementById('cx-rp-entry');
     if (el) { var bd = el.querySelector('.cx-badge'), n = unopened(); if (n && !bd) { bd = document.createElement('span'); bd.className = 'cx-badge'; el.appendChild(bd); } if (bd) { if (n) bd.textContent = n; else bd.remove(); } }
     if (typeof window.__cxBadge === 'function') window.__cxBadge();
+    advDots();
   }
   var ticking = false;
   async function tick() {
@@ -1139,6 +1144,10 @@
   var INK = '#4a4058';
   function svgWrap(inner, vb) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (vb || '0 0 48 48') + '" stroke="' + INK + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>'; }
   var TOSS = {
+    heart: { n: '愛心', v: '丟了一顆愛心',
+      icon: '<path d="M24 40 C10 30 5 22 7 15 C9 8 18 6 24 14 C30 6 39 8 41 15 C43 22 38 30 24 40 Z" fill="#f58fa6"/><path d="M14 16 q2 -4 6 -3" stroke="#fff" stroke-width="2.2" fill="none" opacity=".8"/>',
+      splat: '<path d="M32 46 C20 38 16 32 17 26 C18 20 26 18 32 25 C38 18 46 20 47 26 C48 32 44 38 32 46 Z" fill="#f58fa6"/><path d="M12 20 C7 16 6 13 7 11 C8 9 11 8 12 11 C13 8 16 9 17 11 C18 13 17 16 12 20 Z" fill="#ffc2d1"/><path d="M52 16 C47 12 46 9 47 7 C48 5 51 4 52 7 C53 4 56 5 57 7 C58 9 57 12 52 16 Z" fill="#ffc2d1"/><path d="M14 52 C10 49 9 47 10 45 C11 43 13 43 14 45 C15 43 17 43 18 45 C19 47 18 49 14 52 Z" fill="#ffc2d1"/><path d="M52 50 C48 47 47 45 48 43 C49 41 51 41 52 43 C53 41 55 41 56 43 C57 45 56 47 52 50 Z" fill="#ffc2d1"/><path d="M32 8 l1.5 4 l4 1.5 l-4 1.5 l-1.5 4 l-1.5 -4 l-4 -1.5 l4 -1.5 Z" fill="#ffe08a" stroke-width="1.4"/>',
+      say: ['接住了！我收下了', '你也太可愛了吧', '……被你砸得心跳好快', '這顆我要收好', '再丟一顆，我還要'] },
     tomato: { n: '番茄', v: '丟了番茄',
       icon: '<circle cx="24" cy="27" r="15" fill="#f0776a"/><path d="M24 13 L19 9 M24 13 L29 9 M24 13 L24 7 M24 13 L17 14 M24 13 L31 14" stroke="#5f9a5c" stroke-width="2.6" fill="none"/><path d="M15 24 q1.5 -4 5 -5" stroke="#fff" stroke-width="2.2" fill="none" opacity=".75"/>',
       splat: '<path d="M32 8 C38 14 46 8 48 16 C50 24 58 22 56 30 C54 38 60 44 52 48 C44 52 46 60 36 58 C28 56 24 62 18 56 C12 50 4 52 6 44 C8 36 2 32 8 26 C14 20 10 12 18 12 C24 12 26 4 32 8 Z" fill="#f0776a" fill-opacity=".9"/><circle cx="26" cy="30" r="2" fill="#ffe08a" stroke="none"/><circle cx="36" cy="26" r="2" fill="#ffe08a" stroke="none"/><circle cx="32" cy="38" r="2" fill="#ffe08a" stroke="none"/><path d="M20 56 q-1 6 -3 8 M44 54 q1 5 3 7" stroke="#f0776a" stroke-width="3" fill="none"/>',
@@ -1161,6 +1170,7 @@
       say: ['來啊，枕頭大戰', '哈哈哈哈好痛', '再丟我就親你喔', '你力氣好大'] }
   };
   var TOSS_BACK = ['換你了！', '接招！', '吃我這招', '看我的'];
+  var HEART_BACK = ['也給你一顆', '還你一顆，加倍的', '接好喔'];
   var tM = null, tBusy = false;
   function tossOpen() {
     if (!tM) {
@@ -1213,9 +1223,9 @@
       setTimeout(function () {
         partnerSays(pick(TOSS[k].say));
         if (Math.random() < (X.toss.back || 0)) {
-          var k2 = pick(Object.keys(TOSS));
+          var k2 = (k === 'heart' && Math.random() < 0.7) ? 'heart' : pick(Object.keys(TOSS));
           setTimeout(function () {
-            partnerSays(pick(TOSS_BACK));
+            partnerSays(pick(k2 === 'heart' ? HEART_BACK : TOSS_BACK));
             setTimeout(function () {
               var from = centerOf('#partner-avatar', him), to = centerOf('#my-avatar', { x: window.innerWidth - 60, y: 90 });
               fly(k2, from, to, function () { sysSay(pname() + ' 向 ' + myname() + ' ' + TOSS[k2].v); tBusy = false; });
@@ -1389,6 +1399,44 @@
     return '<label class="cx-row"><span>' + p + ' 主動來約你</span><select class="cx-sel" id="cx-inv-freq" style="width:auto">' + [['off', '不要'], ['low', '偶爾（一兩天一次）'], ['mid', '常常（一天幾次）']].map(function (o) { return '<option value="' + o[0] + '"' + (X.comp.invite === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
   }
 
+
+  /* ================= 高階功能分頁 ================= */
+  var ADV_TABS = [
+    ['chat', '💬', '聊天', ['custom-replies-function', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
+    ['us', '💞', '我們倆', ['cx-diary-entry', 'cx-phone-entry', 'envelope-function', 'qa-function', 'cx-rp-entry', 'cx-status-entry', 'anniversary-function']],
+    ['life', '🌿', '生活', ['cx-comp-entry', 'cx-pomo-entry', 'cx-period-entry', 'mood-function']],
+    ['fun', '🎲', '好玩', ['cx-toss-entry', 'decision-function', 'fortune-lenormand-function']]
+  ];
+  var advList = null, advBar = null;
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function advTabs() {
+    var a = document.getElementById('qa-function') || document.getElementById('envelope-function');
+    advList = a && a.parentNode; if (!advList || document.getElementById('cx-adv-tabs')) return;
+    advBar = document.createElement('div'); advBar.id = 'cx-adv-tabs'; advBar.className = 'cx-adv-tabs';
+    advBar.innerHTML = ADV_TABS.map(function (t) { return '<button type="button" data-t="' + t[0] + '"><span>' + t[1] + '</span>' + t[2] + '<i class="dot"></i></button>'; }).join('');
+    advList.parentNode.insertBefore(advBar, advList);
+    ADV_TABS.forEach(function (t) { t[3].forEach(function (id) { var el = document.getElementById(id); if (el && el.parentNode === advList) { el.dataset.cxTab = t[0]; advList.appendChild(el); } }); });
+    Array.prototype.forEach.call(advList.children, function (el) { if (!el.dataset.cxTab) el.dataset.cxTab = 'chat'; });
+    advBar.addEventListener('click', function (e) { var b = e.target.closest('[data-t]'); if (b) advShow(b.dataset.t); });
+    var adv = document.getElementById('advanced-modal');
+    if (adv) new MutationObserver(function () { if (adv.style.display !== 'none') advDots(); }).observe(adv, { attributes: true, attributeFilter: ['style', 'class'] });
+    var t0 = lsGet('cxAdvTab'); advShow(ADV_TABS.some(function (t) { return t[0] === t0; }) ? t0 : 'us');
+  }
+  function advShow(t) {
+    if (!advList) return; lsSet('cxAdvTab', t);
+    Array.prototype.forEach.call(advBar.children, function (b) { b.classList.toggle('on', b.dataset.t === t); });
+    Array.prototype.forEach.call(advList.children, function (el) { el.classList.toggle('cx-tab-hide', (el.dataset.cxTab || 'chat') !== t); });
+    advDots();
+  }
+  function advDots() {
+    if (!advBar) return;
+    Array.prototype.forEach.call(advBar.children, function (b) {
+      var on = Array.prototype.some.call(advList.children, function (el) { return el.dataset.cxTab === b.dataset.t && el.querySelector('.cx-badge, .qa-badge, .qa-badge-corner') && (el.querySelector('.cx-badge, .qa-badge, .qa-badge-corner').textContent || '').trim() && el.querySelector('.cx-badge, .qa-badge, .qa-badge-corner').style.display !== 'none'; });
+      b.classList.toggle('has', on && !b.classList.contains('on'));
+    });
+  }
+
   /* 修正：電腦用滑鼠點通話視窗右上角按鈕沒反應（拖動功能把滑鼠抓走了） */
   document.addEventListener('pointerdown', function (e) {
     if (e.target && e.target.closest && e.target.closest('#call-window-header button')) e.stopPropagation();
@@ -1408,6 +1456,7 @@
   addEntry('cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪', tossOpen);
   addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
+  advTabs();
   setTimeout(tick, 3000);
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
