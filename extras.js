@@ -29,6 +29,7 @@
     period: { list: [], days: {}, cycle: 28, len: 5, care: true, cared: {} },
     link: { on: true, i: 0, next: 0, every: 'h1', list: null },
     diary: { on: true, time: '22:00', entries: [] },
+    hang: { on: true, min: 5, max: 30, say: true, lines: null },
     comp: { books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
@@ -943,6 +944,8 @@
           if (!rows.length) { toast('至少要一個狀態', 'warning'); return; }
           X.link.list = rows; X.link.i = 0; X.link.next = 0; linkTick(); await save(); linkRender(); setRender(); toast('已儲存 ' + rows.length + ' 個狀態', 'success'); return;
         }
+        if (b.dataset.a === 'savehang') { var hl = sM.body.querySelector('#cx-hang-lines').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); if (!hl.length) { toast('至少要一句', 'warning'); return; } X.hang.lines = hl; await save(); setRender(); toast('已儲存 ' + hl.length + ' 句', 'success'); return; }
+        if (b.dataset.a === 'resethang') { X.hang.lines = null; await save(); setRender(); return; }
         if (b.dataset.a === 'resetlink') { X.link.list = null; X.link.next = 0; linkTick(); await save(); linkRender(); setRender(); return; }
         if (b.dataset.a === 'linknow') { X.link.next = 0; linkTick(); await save(); linkRender(); var L = linkList()[X.link.i]; toast('現在：' + L[0], 'success'); return; }
         if (b.dataset.a === 'preview') { var pool = comboPool(); var out = pool.length >= 2 ? buildCombos(pool, 3) : []; sM.body.querySelector('#cx-prev').innerHTML = out.length ? out.map(function (x) { return sayHtml(x); }).join('') : '<div class="cx-muted">字卡至少要 2 張</div>'; }
@@ -956,6 +959,11 @@
         else if (t.id === 'cx-rpc') X.rp.chance = parseFloat(t.value) || 0;
         else if (t.id === 'cx-link-on') { X.link.on = t.checked; linkRender(); }
         else if (t.id === 'cx-link-every') { X.link.every = t.value; linkNext(); }
+        else if (t.id === 'cx-hang-on') X.hang.on = t.checked;
+        else if (t.id === 'cx-hang-say') X.hang.say = t.checked;
+        else if (t.id === 'cx-hang-min') { X.hang.min = Math.max(1, Math.min(600, parseInt(t.value, 10) || 5)); if (X.hang.max < X.hang.min) X.hang.max = X.hang.min; }
+        else if (t.id === 'cx-hang-max') { X.hang.max = Math.max(1, Math.min(600, parseInt(t.value, 10) || 30)); if (X.hang.min > X.hang.max) X.hang.min = X.hang.max; }
+        else if (t.id === 'cx-hang-lines') return;
         else if (t.id === 'cx-link-list') return;
         else return;
         if (X.combine.max < X.combine.min) X.combine.max = X.combine.min;
@@ -982,7 +990,13 @@
       '<div class="cx-muted">狀態文字，一行一個，後面寫幾顆心（1～5），例如「共鳴中 5」。沒寫數字就是 3 顆。</div>' +
       '<textarea class="cx-ta" id="cx-link-list" style="min-height:160px">' + esc(linkList().map(function (x) { return x[0] + ' ' + x[1]; }).join('\n')) + '</textarea>' +
       '<div class="cx-btns"><button class="cx-btn pri" data-a="savelink">儲存狀態</button><button class="cx-btn" data-a="resetlink">恢復預設</button><button class="cx-btn" data-a="linknow">現在換一個</button></div></div>' +
-      '<div class="cx-sec"><h4>' + esc(pname()) + ' 發紅包給你</h4><select class="cx-sel" id="cx-rpc">' + [[0, '不要發'], [0.03, '偶爾'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.rp.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>';
+      '<div class="cx-sec"><h4>' + esc(pname()) + ' 發紅包給你</h4><select class="cx-sel" id="cx-rpc">' + [[0, '不要發'], [0.03, '偶爾'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.rp.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="cx-sec"><h4>' + esc(pname()) + ' 自己掛電話</h4><label class="qa-chk"><input type="checkbox" id="cx-hang-on"' + (X.hang.on ? ' checked' : '') + '>通話中 ' + esc(pname()) + ' 會在隨機的時間自己掛斷（關掉就只有你能掛）</label>' +
+      '<label class="cx-row"><span>最快幾分鐘後</span><input type="number" id="cx-hang-min" min="1" max="600" value="' + X.hang.min + '"></label>' +
+      '<label class="cx-row"><span>最慢幾分鐘後</span><input type="number" id="cx-hang-max" min="1" max="600" value="' + X.hang.max + '"></label>' +
+      '<label class="qa-chk"><input type="checkbox" id="cx-hang-say"' + (X.hang.say ? ' checked' : '') + '>掛斷前先說一句話</label>' +
+      '<div class="cx-muted">掛斷前會說的話，一行一句，每次隨機挑一句</div><textarea class="cx-ta" id="cx-hang-lines">' + esc(hangLines().join('\n')) + '</textarea>' +
+      '<div class="cx-btns"><button class="cx-btn pri" data-a="savehang">儲存這些話</button><button class="cx-btn" data-a="resethang">恢復預設</button></div></div>';
   }
 
   /* ================= 角標 + 定時 ================= */
@@ -1010,6 +1024,35 @@
     } catch (e) { console.warn('[cx extras]', e); }
     ticking = false;
   }
+
+  /* ================= 通話：他自己掛電話 ================= */
+  var HANG_LINES = ['我先去忙了，晚點再打給你', '要睡了，晚安', '有人找我，先掛囉', '手機快沒電了', '今天先聊到這裡，愛你', '我去洗澡了，等等再說'];
+  function hangLines() { var l = X && X.hang && X.hang.lines; return (l && l.length) ? l : HANG_LINES; }
+  var hangAt = 0, hangFired = false, wasConn = false;
+  function callConnected() {
+    var w = document.getElementById('call-window'), p = document.getElementById('call-mini-pill'), c = document.getElementById('call-connecting-state');
+    var active = !!((w && w.classList.contains('visible')) || (p && p.classList.contains('visible')));
+    return active && !(c && c.classList.contains('visible'));
+  }
+  function hangWatch() {
+    if (!X || !X.hang) return;
+    var conn = callConnected();
+    if (conn && !wasConn) { var mn = Math.max(1, +X.hang.min || 5), mx = Math.max(mn, +X.hang.max || 30); hangAt = Date.now() + rnd(mn, mx) * 60000; hangFired = false; }
+    if (!conn) hangAt = 0;
+    wasConn = conn;
+    if (conn && X.hang.on && hangAt && !hangFired && Date.now() >= hangAt) {
+      hangFired = true;
+      var say = X.hang.say ? pick(hangLines()) : '';
+      if (say) partnerSays(say);
+      setTimeout(function () {
+        if (!callConnected()) return;
+        if (window.callFeature && window.callFeature.endCall) window.callFeature.endCall();
+        toast(pname() + ' 掛斷了電話');
+        sysNotify(pname() + ' 掛斷了電話', say || '通話結束', 'cx-hang');
+      }, say ? 1800 : 0);
+    }
+  }
+  setInterval(hangWatch, 3000);
 
   /* 修正：電腦用滑鼠點通話視窗右上角按鈕沒反應（拖動功能把滑鼠抓走了） */
   document.addEventListener('pointerdown', function (e) {
