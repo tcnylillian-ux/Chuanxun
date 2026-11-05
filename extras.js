@@ -32,6 +32,7 @@
     hang: { on: true, min: 5, max: 30, say: true, lines: null },
     phone: { chance: 0.04, items: [], seen: null, unread: 0, notes: null, seeded: false },
     toss: { back: 0.35 },
+    gchar: {},
     comp: { books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
@@ -65,11 +66,13 @@
   function line(list) { var c = cards(); return (c.length && Math.random() < 0.3) ? pick(c) : (pick(list) || pick(c)); }
   function sysNotify(title, body, tag) { if (window.__cxNotify) window.__cxNotify(title, body, tag); }
   function sound() { if (typeof playSound === 'function') { try { playSound('message'); } catch (e) {} } }
-  function partnerSays(text) {
+  function partnerSays(text, from) {
     if (!text || typeof addMessage !== 'function') return;
-    addMessage({ id: Date.now() + Math.floor(Math.random() * 1000), sender: pname(), text: text, timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
+    var m = { id: Date.now() + Math.floor(Math.random() * 1000), sender: pname(), text: text, timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' };
+    if (from) m.cxFrom = from;
+    addMessage(m);
     sound();
-    if (typeof window._sendPartnerNotification === 'function') window._sendPartnerNotification(pname(), text);
+    if (typeof window._sendPartnerNotification === 'function') window._sendPartnerNotification(from || pname(), text);
   }
   function iSay(text) { if (typeof addMessage === 'function') addMessage({ id: Date.now(), sender: 'user', text: text, timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' }); }
   function sysSay(text) { if (typeof addMessage === 'function') addMessage({ id: Date.now() + 7, text: text, timestamp: new Date(), type: 'system' }); }
@@ -146,6 +149,11 @@
     '.cx-env-star{position:absolute;bottom:6px;right:36px;z-index:2;background:transparent;border:none;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--text-secondary)}#env-fav-list .cx-env-star{right:8px}' +
     '.cx-env-star.on{color:#e0a52e}.cx-env-vstar{display:inline-flex;align-items:center;gap:4px}.cx-fav-count{background:#f2b544!important}' +
     '.env-tab-bar{flex-wrap:nowrap}.env-tab-bar .env-tab-btn{white-space:nowrap}' +
+    '.cx-who-t{font-size:12px;color:var(--text-secondary);margin:2px 2px 6px}.cx-who{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}' +
+    '.cx-who button{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border:1px solid var(--border-color);border-radius:99px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:13px;cursor:pointer}' +
+    '.cx-who button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}.cx-who .av{width:26px;height:26px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--secondary-bg);color:var(--accent-color);font-size:12px;flex:none}.cx-who .av img{width:100%;height:100%;object-fit:cover}' +
+    '.cx-gchar{margin-top:14px}.cx-gc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border-color)}' +
+    '.cx-env-who{opacity:.9}#poke-modal .modal-btn{white-space:nowrap;min-width:72px}' +
     '.cx-dim{opacity:.4}.cx-call{cursor:pointer}.cx-call>i:first-child{color:var(--accent-color);width:22px;text-align:center}.cx-call.miss>i:first-child{color:#e46a7a}' +
     '.cx-flash{animation:cxFlash 1.8s ease}@keyframes cxFlash{0%,100%{background:transparent}20%,60%{background:rgba(var(--accent-color-rgb),.18)}}' +
     '.cx-toss{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cx-toss button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-toss svg{width:40px;height:40px}.cx-toss button:active{transform:scale(.94)}' +
@@ -291,9 +299,11 @@
     setTimeout(async function () {
       await load();
       var amt = Math.random() < 0.6 ? pick(RP_AMOUNTS) : Math.round(rnd(1, 200) * 100) / 100;
+      var ppl = groupPeople(), who = ppl.length > 1 ? pick(ppl).name : null;
       var p = { id: 'rp' + Date.now().toString(36), from: 'him', amount: amt, note: pick(RP_NOTES), at: Date.now(), opened: false };
+      if (who) p.who = who;
       X.rp.list.push(p); await save();
-      partnerSays('🧧 紅包｜' + p.note + '（點這則訊息領取）');
+      partnerSays('🧧 紅包｜' + p.note + '（點這則訊息領取）', who);
       refreshBadge();
     }, 6000 + Math.random() * 6000);
   }
@@ -302,37 +312,42 @@
     X.rp.list.forEach(function (p) {
       if (p.from === 'me' && !p.opened && p.openAt && now >= p.openAt) {
         p.opened = true; p.openedAt = now; changed = true;
-        sysSay(pname() + ' 領取了你的紅包');
-        if (p.reply) setTimeout(function () { partnerSays(p.reply); }, 1200);
+        sysSay((p.who || pname()) + ' 領取了你的紅包');
+        if (p.reply) setTimeout(function () { sayAs(p.who, p.reply); }, 1200);
       }
     });
     return changed;
   }
-  var rpM = null;
+  var rpM = null, rpTo = null;
+  function rpWho(p) { return p.who || pname(); }
   function rpOpen() {
     if (!rpM) {
       rpM = makeModal('cx-rp-modal', 'fa-gift', '紅包');
+      bindChips(rpM.body, function (n) { rpTo = n; var h = rpM.body.querySelector('#cx-rp-h'); if (h) h.textContent = '發紅包給 ' + n; });
       rpM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.amt) { rpM.body.querySelector('#cx-rp-amt').value = b.dataset.amt; return; }
         if (b.id === 'cx-rp-send') {
           var amt = parseFloat(rpM.body.querySelector('#cx-rp-amt').value), note = rpM.body.querySelector('#cx-rp-note').value.trim() || '恭喜發財，大吉大利';
           if (!(amt > 0) || amt > 99999) { toast('請輸入金額', 'warning'); return; }
-          var p = { id: 'rp' + Date.now().toString(36), from: 'me', amount: amt, note: note, at: Date.now(), opened: false, openAt: Date.now() + rnd(8e3, 90e3), reply: pick(cards()) || '謝謝寶貝' };
+          var to = groupOn() && rpTo && rpTo !== pname() ? rpTo : null;
+          var p = { id: 'rp' + Date.now().toString(36), from: 'me', amount: amt, note: note, at: Date.now(), opened: false, openAt: Date.now() + rnd(8e3, 90e3), reply: pickFor(to) || '謝謝寶貝' };
+          if (to) p.who = to;
           X.rp.list.push(p); await save();
-          iSay('🧧 紅包｜' + note);
+          iSay('🧧 紅包｜' + note + (to ? '（給 ' + to + '）' : ''));
           toast('紅包已送出', 'success'); rpRender(); return;
         }
         if (b.dataset.open) { openPacket(b.dataset.open); return; }
       });
     }
-    rpM.onBack = null; rpRender(); rpM.open();
+    rpM.onBack = null; rpTo = pname(); rpRender(); rpM.open();
   }
   function rpRender() {
     var list = X.rp.list.slice().sort(function (a, b) { return b.at - a.at; });
     var got = X.rp.list.filter(function (p) { return p.from === 'him' && p.opened; }).reduce(function (s, p) { return s + p.amount; }, 0);
     var sent = X.rp.list.filter(function (p) { return p.from === 'me'; }).reduce(function (s, p) { return s + p.amount; }, 0);
-    var h = '<div class="cx-sec"><h4>發紅包給 ' + esc(pname()) + '</h4><input class="cx-in" id="cx-rp-amt" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="金額">' +
+    var chips = whoChips('cx-rp-who', rpTo || pname());
+    var h = '<div class="cx-sec"><h4 id="cx-rp-h">發紅包給 ' + esc(rpTo || pname()) + '</h4>' + chips + '<input class="cx-in" id="cx-rp-amt" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="金額">' +
       '<div class="cx-chips">' + [5.2, 13.14, 52, 520, 1314].map(function (a) { return '<button data-amt="' + a + '">' + a + '</button>'; }).join('') + '</div>' +
       '<input class="cx-in" id="cx-rp-note" maxlength="30" placeholder="恭喜發財，大吉大利"><button class="cx-btn pri" id="cx-rp-send">🧧 塞進紅包</button></div>' +
       '<div class="cx-stat"><div><b>' + unopened() + '</b><span>待領取</span></div><div><b>' + money(got) + '</b><span>收到</span></div><div><b>' + money(sent) + '</b><span>送出</span></div></div>' +
@@ -341,14 +356,14 @@
     list.forEach(function (p) {
       var mine = p.from === 'me';
       h += '<button class="cx-rp' + (p.opened ? ' done' : '') + '"' + (!mine && !p.opened ? ' data-open="' + p.id + '"' : '') + '><span class="i">🧧</span><div><b>' + esc(p.note) + '</b><span>' +
-        (mine ? '送給 ' + esc(pname()) + ' · ¥' + money(p.amount) + (p.opened ? ' · 已被領取' : ' · 等待領取') : esc(pname()) + ' 送的 · ' + (p.opened ? '已領取 ¥' + money(p.amount) : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
+        (mine ? '送給 ' + esc(rpWho(p)) + ' · ¥' + money(p.amount) + (p.opened ? ' · 已被領取' : ' · 等待領取') : esc(rpWho(p)) + ' 送的 · ' + (p.opened ? '已領取 ¥' + money(p.amount) : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
     });
     rpM.body.innerHTML = h + '</div></div>';
   }
   function openPacket(id) {
     var p = X.rp.list.find(function (x) { return x.id === id; }); if (!p) return;
     var o = document.createElement('div'); o.className = 'cx-open';
-    o.innerHTML = '<div class="p"><div class="who">' + esc(pname()) + ' 的紅包</div><div class="note">' + esc(p.note) + '</div>' +
+    o.innerHTML = '<div class="p"><div class="who">' + esc(rpWho(p)) + ' 的紅包</div><div class="note">' + esc(p.note) + '</div>' +
       (p.opened ? '<div class="amt">¥' + money(p.amount) + '</div>' : '<button class="coin">開</button>') + '<div><button class="close">關閉</button></div></div>';
     document.body.appendChild(o);
     o.querySelector('.close').onclick = function () { o.remove(); };
@@ -359,7 +374,7 @@
       setTimeout(async function () {
         p.opened = true; p.openedAt = Date.now(); await save();
         coin.outerHTML = '<div class="amt">¥' + money(p.amount) + '</div>';
-        sysSay('你領取了 ' + pname() + ' 的紅包 ¥' + money(p.amount));
+        sysSay('你領取了 ' + rpWho(p) + ' 的紅包 ¥' + money(p.amount));
         refreshBadge(); if (rpM && rpM.isOpen()) rpRender();
       }, 900);
     };
@@ -1070,6 +1085,7 @@
       if (diaryTick()) ch = true;
       if (phoneTick()) ch = true;
       if (inviteTick()) ch = true;
+      try { envFixFrom(); } catch (e) {}
       if (ch) await save();
       refreshBadge(); linkRender();
     } catch (e) { console.warn('[cx extras]', e); }
@@ -1174,20 +1190,22 @@
   };
   var TOSS_BACK = ['換你了！', '接招！', '吃我這招', '看我的'];
   var HEART_BACK = ['也給你一顆', '還你一顆，加倍的', '接好喔'];
-  var tM = null, tBusy = false;
+  var tM = null, tBusy = false, tTo = null;
   function tossOpen() {
     if (!tM) {
       tM = makeModal('cx-toss-modal', 'fa-face-grin-squint-tears', '搞怪');
       tM.body.addEventListener('click', function (e) {
         var b = e.target.closest('[data-toss]'); if (!b) return;
-        var k = b.dataset.toss; tM.close(); setTimeout(function () { tossAt(k); }, 280);
+        var k = b.dataset.toss; tM.close(); setTimeout(function () { tossAt(k, groupOn() ? tTo : null); }, 280);
       });
+      bindChips(tM.body, function (n) { tTo = n; var t = tM.body.querySelector('.cx-toss-hint'); if (t) t.textContent = '選一個，朝 ' + n + ' 丟過去'; });
       tM.body.addEventListener('change', async function (e) { if (e.target.id === 'cx-toss-back') { X.toss.back = parseFloat(e.target.value) || 0; await save(); } });
     }
-    var p = esc(pname());
-    tM.body.innerHTML = '<div class="cx-muted" style="text-align:center">選一個，朝 ' + p + ' 的頭像丟過去</div><div class="cx-toss">' +
+    var p = esc(pname()); if (!tTo || !groupPeople().some(function (x) { return x.name === tTo; })) tTo = pname();
+    var chips = whoChips('cx-toss-who', tTo);
+    tM.body.innerHTML = (chips ? '<div class="cx-who-t">丟誰</div>' + chips : '') + '<div class="cx-muted cx-toss-hint" style="text-align:center">選一個，朝 ' + esc(chips ? tTo : pname()) + ' 丟過去</div><div class="cx-toss">' +
       Object.keys(TOSS).map(function (k) { return '<button data-toss="' + k + '">' + svgWrap(TOSS[k].icon) + '<span>' + TOSS[k].n + '</span></button>'; }).join('') + '</div>' +
-      '<label class="cx-row"><span>' + p + ' 會不會丟回來</span><select class="cx-sel" id="cx-toss-back" style="width:auto">' +
+      '<label class="cx-row"><span>' + (chips ? '他們' : p) + ' 會不會丟回來</span><select class="cx-sel" id="cx-toss-back" style="width:auto">' +
       [[0, '不會'], [0.2, '偶爾'], [0.35, '有時'], [0.6, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs((X.toss.back || 0) - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>';
     tM.open();
   }
@@ -1217,21 +1235,22 @@
     setTimeout(function () { s.classList.add('out'); }, 2600);
     setTimeout(function () { s.remove(); }, 3300);
   }
-  function tossAt(k) {
+  function tossAt(k, who) {
     if (tBusy) return; tBusy = true;
+    var tn = who || pname();
     var me = { x: window.innerWidth / 2, y: window.innerHeight - 90 };
     var him = centerOf('#partner-avatar', { x: 60, y: 90 });
     fly(k, me, him, function () {
-      sysSay(myname() + ' 向 ' + pname() + ' ' + TOSS[k].v);
+      sysSay(myname() + ' 向 ' + tn + ' ' + TOSS[k].v);
       setTimeout(function () {
-        partnerSays(pick(TOSS[k].say));
+        sayAs(who, pick(TOSS[k].say));
         if (Math.random() < (X.toss.back || 0)) {
           var k2 = (k === 'heart' && Math.random() < 0.7) ? 'heart' : pick(Object.keys(TOSS));
           setTimeout(function () {
-            partnerSays(pick(k2 === 'heart' ? HEART_BACK : TOSS_BACK));
+            sayAs(who, pick(k2 === 'heart' ? HEART_BACK : TOSS_BACK));
             setTimeout(function () {
               var from = centerOf('#partner-avatar', him), to = centerOf('#my-avatar', { x: window.innerWidth - 60, y: 90 });
-              fly(k2, from, to, function () { sysSay(pname() + ' 向 ' + myname() + ' ' + TOSS[k2].v); tBusy = false; });
+              fly(k2, from, to, function () { sysSay(tn + ' 向 ' + myname() + ' ' + TOSS[k2].v); tBusy = false; });
             }, 900);
           }, 1600 + Math.random() * 1600);
         } else tBusy = false;
@@ -1241,14 +1260,17 @@
 
   /* ================= TA 的手機 ================= */
   var PHONE_NOTES = ['好可愛', '存起來', '這句要記住', '截圖了', '偷偷存一下', '想你的時候拿出來看', '又在撒嬌', '笑死', '嘴硬', '這句我要記一輩子', '今天也好乖', '❤'];
-  var phM = null, phSort = 'got';
+  var phM = null, phSort = 'got', phWho = null;
+  function phOwner(x) { return x.who || pname(); }
   function phoneNotes() { var l = X.phone.notes; return l && l.length ? l : PHONE_NOTES; }
   function userMsgs() {
     return allMsgs().filter(function (m) { return m && m.sender === 'user' && (!m.type || m.type === 'normal') && typeof m.text === 'string' && m.text.trim().length >= 2 && m.text.length <= 200; });
   }
   function phoneAdd(m) {
     if (X.phone.items.some(function (x) { return String(x.mid) === String(m.id); })) return false;
-    X.phone.items.unshift({ mid: m.id, text: m.text.trim(), at: +new Date(m.timestamp) || Date.now(), got: Date.now(), note: pick(phoneNotes()) });
+    var ppl = groupPeople(), it = { mid: m.id, text: m.text.trim(), at: +new Date(m.timestamp) || Date.now(), got: Date.now(), note: pick(phoneNotes()) };
+    if (ppl.length > 1) it.who = pick(ppl).name;
+    X.phone.items.unshift(it);
     X.phone.items = X.phone.items.slice(0, 300); X.phone.unread = (X.phone.unread || 0) + 1; return true;
   }
   function phoneTick() {
@@ -1268,6 +1290,7 @@
   function phoneOpen() {
     if (!phM) {
       phM = makeModal('cx-phone-modal', 'fa-mobile-screen', 'TA 的手機');
+      bindChips(phM.body, function (n) { phWho = n; phM.el.querySelector('.modal-title span').textContent = n + ' 的手機'; phoneRender(); });
       phM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.sort) { phSort = b.dataset.sort; phoneRender(); return; }
@@ -1281,22 +1304,25 @@
       });
       phM.body.addEventListener('change', async function (e) { if (e.target.id === 'cx-ph-ch') { X.phone.chance = parseFloat(e.target.value) || 0; await save(); } });
     }
-    phM.el.querySelector('.modal-title span').textContent = pname() + ' 的手機';
+    if (!phWho || !groupPeople().some(function (x) { return x.name === phWho; })) phWho = pname();
+    if (!groupOn()) phWho = pname();
+    phM.el.querySelector('.modal-title span').textContent = phWho + ' 的手機';
     X.phone.unread = 0; save(); refreshBadge();
     phoneRender(); phM.open();
   }
   function phoneRender() {
-    var p = esc(pname()), items = X.phone.items.slice();
+    var who = phWho || pname(), p = esc(who), items = X.phone.items.filter(function (x) { return !groupOn() || phOwner(x) === who; });
     if (phSort === 'at') items.sort(function (a, b) { return b.at - a.at; });
     var now = new Date();
-    phM.body.innerHTML = '<div class="cx-phone"><div class="cx-phone-top"><span>' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + '</span><span class="notch"></span><span><i class="fas fa-signal"></i> <i class="fas fa-battery-three-quarters"></i></span></div>' +
+    var pc = whoChips('cx-ph-who', who);
+    phM.body.innerHTML = (pc ? '<div class="cx-who-t">看誰的手機</div>' + pc : '') + '<div class="cx-phone"><div class="cx-phone-top"><span>' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + '</span><span class="notch"></span><span><i class="fas fa-signal"></i> <i class="fas fa-battery-three-quarters"></i></span></div>' +
       '<div class="cx-phone-h"><i class="fas fa-star"></i> 收藏 <small>' + items.length + '</small><span class="cx-phone-sort"><button data-sort="got" class="' + (phSort === 'got' ? 'on' : '') + '">收藏時間</button><button data-sort="at" class="' + (phSort === 'at' ? 'on' : '') + '">說話時間</button></span></div>' +
       '<div class="cx-phone-list">' + (items.length ? items.map(function (x) {
         return '<div class="cx-pi"><div class="q">' + esc(x.text) + '</div><div class="m"><span class="note">✎ ' + esc(x.note) + '</span><span>' + fmtTime(phSort === 'at' ? x.at : x.got) + (phSort === 'at' ? ' 說的' : ' 收藏') + '</span></div>' +
           '<div class="act"><button data-jump="' + esc(x.mid) + '">看原文</button><button data-del="' + esc(x.mid) + '" aria-label="刪除"><i class="fas fa-trash"></i></button></div></div>';
       }).join('') : '<div class="cx-muted" style="text-align:center;padding:30px 10px">還沒有收藏<br>多跟 ' + p + ' 聊天，他會偷偷存下你說的話</div>') + '</div></div>' +
       '<div class="cx-sec"><h4>偷偷收藏的頻率</h4><select class="cx-sel" id="cx-ph-ch">' + [[0, '不要收藏'], [0.02, '偶爾'], [0.04, '有時'], [0.08, '常常']].map(function (o) { return '<option value="' + o[0] + '"' + (Math.abs(X.phone.chance - o[0]) < 1e-6 ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
-      '<div class="cx-muted">你在聊天裡說的話，' + p + ' 有時會偷偷存進手機，還會寫一句小備註。</div>' +
+      '<div class="cx-muted">你在聊天裡說的話，' + (pc ? '他們' : p) + ' 有時會偷偷存進手機，還會寫一句小備註。</div>' +
       '<details><summary class="cx-muted" style="cursor:pointer">他寫的小備註（一行一句）</summary><textarea class="cx-ta" id="cx-ph-notes">' + esc(phoneNotes().join('\n')) + '</textarea>' +
       '<div class="cx-btns"><button class="cx-btn pri" data-a="phsave">儲存備註</button><button class="cx-btn" data-a="phreset">恢復預設</button></div></details></div>';
   }
@@ -1404,6 +1430,216 @@
 
 
 
+  /* ================= 群聊：選對象（寫信、丟東西、拍一拍） ================= */
+  function gcs() { try { return (typeof groupChatSettings !== 'undefined') ? groupChatSettings : null; } catch (e) { return null; } }
+  function groupOn() { var g = gcs(); return !!(g && g.enabled && g.members && g.members.length); }
+  function groupPeople() {
+    var g = gcs(), list = [];
+    if (!groupOn()) return list;
+    var main = pname(), seen = {};
+    g.members.forEach(function (m) { if (m && m.name && !seen[m.name]) { seen[m.name] = 1; list.push({ name: m.name, avatar: m.avatar || '' }); } });
+    if (!seen[main]) list.unshift({ name: main, avatar: (document.querySelector('#partner-avatar img') || {}).src || '' });
+    return list;
+  }
+  function replyGroup(gname) { var gs = window.customReplyGroups || []; for (var i = 0; i < gs.length; i++) { if (gs[i] && gs[i].name === gname && Array.isArray(gs[i].items) && gs[i].items.length) return gs[i].items; } return null; }
+  function gcharOf(name) { var c = X && X.gchar && X.gchar[name]; return { on: c ? c.on !== false : true, group: (c && c.group) || name }; }
+  /* 角色專屬字卡：限定時只由本人說；不限定就當一般字卡隨機分配 */
+  function charGroup(name) { var c = gcharOf(name); return c.on ? replyGroup(c.group) : null; }
+  function pickFor(name) {
+    var own = name && groupOn() ? charGroup(name) : null, gen = name && groupOn() ? poolFor(name) : cards();
+    if (own && own.length && (Math.random() < 0.6 || !gen.length)) return pick(own);
+    return gen.length ? pick(gen) : '';
+  }
+  function charOfText(t) {
+    if (!groupOn() || !t) return null;
+    var ppl = groupPeople();
+    for (var i = 0; i < ppl.length; i++) { var it = charGroup(ppl[i].name); if (it && it.indexOf(t) >= 0) return ppl[i].name; }
+    return null;
+  }
+  /* 一般字卡：扣掉別的角色專屬的句子 */
+  function poolFor(name) {
+    var all = (typeof customReplies !== 'undefined' && customReplies) || [], other = {};
+    groupPeople().forEach(function (p) { if (p.name !== name) (charGroup(p.name) || []).forEach(function (x) { other[x] = 1; }); });
+    return all.filter(function (x) { return x && !other[x]; });
+  }
+  var pendingWho = null;
+  function speakAs(name, ms) { pendingWho = { name: name, since: Date.now() - 5, until: Date.now() + (ms || 6 * 60e3), hit: false }; }
+  function memberBy(name) { var g = gcs(); return g && g.members ? g.members.find(function (m) { return m.name === name; }) : null; }
+  (function wrapSpeaker() {
+    var orig = window.getGroupMemberForMessage;
+    if (typeof orig !== 'function' || orig.__cx) return;
+    var w = function (id) {
+      if (!groupOn()) return orig(id);
+      var key = String(id), msg = allMsgs().find(function (x) { return String(x.id) === key; });
+      if (msg && msg.cxFrom) { var m0 = memberBy(msg.cxFrom); if (m0) return m0; }
+      if (pendingWho && msg && msg.sender !== 'user' && (!msg.type || msg.type === 'normal') && Date.now() < pendingWho.until && Number(id) >= pendingWho.since) {
+        var m1 = memberBy(pendingWho.name);
+        if (m1) { msg.cxFrom = m1.name; if (!pendingWho.hit) { pendingWho.hit = true; pendingWho.until = Date.now() + 5000; } gfromSave(); return m1; }
+      }
+      var who = msg && charOfText(String(msg.text || '').trim());
+      if (who) { var m2 = memberBy(who); if (m2) return m2; }
+      return orig(id);
+    };
+    w.__cx = true; window.getGroupMemberForMessage = w;
+  })();
+  var gfT = null;
+  function gfromSave() { clearTimeout(gfT); gfT = setTimeout(function () { try { if (typeof throttledSaveData === 'function') throttledSaveData(); else if (typeof saveData === 'function') saveData(); } catch (e) {} }, 800); }
+  function sayAs(name, text) { partnerSays(text, name && groupOn() ? name : null); }
+  function whoChips(id, sel) {
+    var ppl = groupPeople(); if (ppl.length < 2) return '';
+    return '<div class="cx-who" id="' + id + '">' + ppl.map(function (p) {
+      return '<button type="button" data-who="' + esc(p.name) + '" class="' + (p.name === sel ? 'on' : '') + '"><span class="av">' + (p.avatar ? '<img src="' + esc(p.avatar) + '" alt="">' : esc(p.name.slice(0, 1))) + '</span>' + esc(p.name) + '</button>';
+    }).join('') + '</div>';
+  }
+  function bindChips(root, onPick) {
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('.cx-who [data-who]'); if (!b) return;
+      b.parentNode.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      onPick(b.dataset.who);
+    });
+  }
+
+  /* 群聊設定裡：角色專屬字卡要不要限定 */
+  function gcharInit() {
+    var sec = document.getElementById('group-members-section'); if (!sec || document.getElementById('cx-gchar')) return;
+    var box = document.createElement('div'); box.id = 'cx-gchar'; box.className = 'cx-gchar';
+    sec.appendChild(box);
+    box.addEventListener('change', async function (e) {
+      var t = e.target, n = t.dataset.gc || t.dataset.gg; if (!n) return;
+      await load(); var c = X.gchar[n] || (X.gchar[n] = {});
+      if (t.dataset.gc) c.on = t.checked; else c.group = t.value;
+      await save(); gcharRender();
+      try { renderMessages(); } catch (er) {}
+    });
+    var orig = window.renderGroupMembersList;
+    if (typeof orig === 'function') window.renderGroupMembersList = function () { var r = orig.apply(this, arguments); try { gcharRender(); } catch (er) {} return r; };
+    var gm = document.getElementById('group-chat-modal');
+    if (gm) new MutationObserver(function () { if (gm.style.display && gm.style.display !== 'none') gcharRender(); }).observe(gm, { attributes: true, attributeFilter: ['style', 'class'] });
+    gcharRender();
+  }
+  function gcharRender() {
+    var box = document.getElementById('cx-gchar'), g = gcs(); if (!box || !X) return;
+    var mem = (g && g.members || []).filter(function (m) { return m && m.name; });
+    if (!mem.length) { box.innerHTML = ''; return; }
+    var groups = (window.customReplyGroups || []).filter(function (x) { return x && x.name; });
+    box.innerHTML = '<div class="settings-section-title"><span><i class="fas fa-user-tag"></i>角色專屬字卡</span></div>' +
+      '<div class="cx-muted" style="margin:-4px 0 8px">勾起來：那組字卡只會由他本人說。不勾：那組字卡在群聊裡隨機分給大家說。</div>' +
+      mem.map(function (m) {
+        var c = gcharOf(m.name), has = !!replyGroup(c.group);
+        return '<div class="cx-gc-row"><label class="qa-chk" style="flex:1;margin:0"><input type="checkbox" data-gc="' + esc(m.name) + '"' + (c.on && has ? ' checked' : '') + (has ? '' : ' disabled') + '>只由 ' + esc(m.name) + ' 說</label>' +
+          '<select class="cx-sel" data-gg="' + esc(m.name) + '" style="width:auto;max-width:46%">' + (has ? '' : '<option value="">選字卡組</option>') +
+          groups.map(function (x) { return '<option value="' + esc(x.name) + '"' + (x.name === c.group ? ' selected' : '') + '>' + esc(x.name) + '（' + (x.items || []).length + '）</option>'; }).join('') + '</select></div>';
+      }).join('');
+  }
+
+  /* 寫信：寄給誰 */
+  var envTo = null;
+  function envWhoInit() {
+    var form = document.getElementById('env-compose-form'), paper = form && form.querySelector('.env-compose-paper');
+    if (!form || !paper || document.getElementById('cx-env-who-wrap')) return;
+    var wrap = document.createElement('div'); wrap.id = 'cx-env-who-wrap'; form.insertBefore(wrap, paper);
+    bindChips(wrap, function (n) { envTo = n; });
+    var oo = window.openNewEnvelopeForm;
+    if (typeof oo === 'function') window.openNewEnvelopeForm = function () {
+      var r = oo.apply(this, arguments);
+      envTo = pname();
+      var h = whoChips('cx-env-who', envTo); wrap.innerHTML = h ? '<div class="cx-who-t">寄給</div>' + h : '';
+      return r;
+    };
+    var sb = document.getElementById('send-envelope');
+    if (sb) sb.addEventListener('click', function () {
+      var to = groupOn() ? envTo : null, t0 = Date.now();
+      setTimeout(function () {
+        var d = envData(); if (!d || !to || to === pname()) return;
+        var l = d.outbox[d.outbox.length - 1];
+        if (l && !l.to && Number(String(l.id).split('_')[1]) >= t0 - 50) { l.to = to; try { saveEnvelopeData(); renderEnvelopeLists(); } catch (e) {} toast('信已寄給 ' + to + ' ✉️', 'success'); }
+      }, 0);
+    }, true);
+    /* 回信：寄給誰就由誰回，用他自己的字卡 */
+    if (typeof window.checkEnvelopeStatus === 'function') window.checkEnvelopeStatus = async function () {
+      await loadEnvelopeData();
+      var now = Date.now(), changed = false, last = null;
+      envelopeData.outbox.forEach(function (letter) {
+        if (letter.status === 'pending' && now >= letter.replyTime) {
+          letter.status = 'replied';
+          var from = letter.to || '';
+          var il = { id: 'reply_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), refId: letter.id, originalContent: letter.content, content: from ? memberLetter(from) : generateEnvelopeReplyText(), receivedTime: Date.now(), isNew: true };
+          if (from) il.from = from;
+          envelopeData.inbox.push(il); last = il; changed = true;
+          try { playSound('message'); } catch (e) {}
+        }
+      });
+      if (changed) {
+        saveEnvelopeData();
+        if (last) {
+          showEnvelopeReplyPopup(last);
+          var pp = document.getElementById('envelope-reply-popup');
+          if (pp && last.from) pp.innerHTML = pp.innerHTML.replace('Ta 給你寫了回信', esc(last.from) + ' 給你寫了回信');
+          sysNotify((last.from || pname()) + ' 給你寫了回信', '💌 快去信箱看看', 'cx-env');
+        }
+      }
+    };
+    var ov = window.viewEnvLetter;
+    window.viewEnvLetter = function (sec, id) {
+      var r = ov.apply(this, arguments), l = envFind(sec, id);
+      if (l && sec === 'outbox' && l.to) { var tl = document.getElementById('env-view-to-line'); if (tl) tl.textContent = '致 ' + l.to + '：'; }
+      if (l && sec === 'inbox' && l.from) { var sn = document.getElementById('env-view-sign-name'); if (sn) sn.textContent = l.from; }
+      return r;
+    };
+  }
+  function memberLetter(name) {
+    var own = charGroup(name) || [], gen = poolFor(name), n = 8 + Math.floor(Math.random() * 5), out = '';
+    for (var i = 0; i < n; i++) {
+      var src = own.length && (Math.random() < 0.55 || !gen.length) ? own : gen; if (!src.length) break;
+      var ln = String(src[Math.floor(Math.random() * src.length)]).trim();
+      out += ln + (/[。！？!?…~～」』）)♡❤]$/.test(ln) || /[\u2000-\u2BFF\uD83C-\uDBFF]$/.test(ln) ? '' : (Math.random() < 0.2 ? '！' : (Math.random() < 0.2 ? '......' : '。')));
+    }
+    return out || '……想你了。';
+  }
+  /* 開網站時原版先回了信的話，補上是誰回的 */
+  function envFixFrom() {
+    var d = envData(); if (!d) return false; var ch = false;
+    d.inbox.forEach(function (il) {
+      if (il.from || !il.refId) return;
+      var o = d.outbox.find(function (x) { return x.id === il.refId; });
+      if (o && o.to) { il.from = o.to; if (il.isNew) il.content = memberLetter(o.to); ch = true; }
+    });
+    if (ch) { try { saveEnvelopeData(); renderEnvelopeLists(); } catch (e) {} }
+    return ch;
+  }
+  /* 信件列表上標出寄給誰／誰回的 */
+  function envWhoLabels() {
+    ['outbox', 'inbox'].forEach(function (sec) {
+      var list = document.getElementById('env-' + sec + '-list'); if (!list) return;
+      list.querySelectorAll('.env-letter-item').forEach(function (it) {
+        var m = /viewEnvLetter\('(\w+)','([^']+)'\)/.exec(it.getAttribute('onclick') || ''); if (!m) return;
+        var l = envFind(m[1], m[2]), who = l && (sec === 'outbox' ? l.to : l.from), h = it.querySelector('.env-letter-header-from');
+        if (!who || !h || h.querySelector('.cx-env-who')) return;
+        var s = document.createElement('span'); s.className = 'cx-env-who'; s.textContent = sec === 'outbox' ? ' · 給 ' + who : ' · ' + who; h.appendChild(s);
+      });
+    });
+  }
+
+  /* 拍一拍：拍誰 */
+  var pokeTo = null;
+  function pokeWhoInit() {
+    var pm = document.getElementById('poke-modal'), inp = document.getElementById('poke-input'), sb = document.getElementById('send-poke');
+    if (!pm || !inp || !sb || document.getElementById('cx-poke-who-wrap')) return;
+    var wrap = document.createElement('div'); wrap.id = 'cx-poke-who-wrap'; inp.parentNode.insertBefore(wrap, inp);
+    bindChips(wrap, function (n) { pokeTo = n; inp.placeholder = '例如：拍了拍「' + n + '」的肩膀'; });
+    new MutationObserver(function () {
+      var open = pm.style.display && pm.style.display !== 'none';
+      if (open && !wrap.dataset.open) { wrap.dataset.open = '1'; pokeTo = pname(); var h = whoChips('cx-poke-who', pokeTo); wrap.innerHTML = h ? '<div class="cx-who-t">拍誰</div>' + h : ''; }
+      if (!open) delete wrap.dataset.open;
+    }).observe(pm, { attributes: true, attributeFilter: ['style', 'class'] });
+    sb.addEventListener('click', function () {
+      if (!groupOn() || !pokeTo) return;
+      if (pokeTo !== pname() && !inp.value.trim()) inp.value = myname() + ' 拍了拍 ' + pokeTo;
+      speakAs(pokeTo);
+    }, true);
+  }
+
+
   /* ================= 信件收藏 ================= */
   function starSvg(on) { return '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (on ? '#f2b544' : 'none') + '" stroke="' + (on ? '#e0a52e' : 'currentColor') + '" stroke-width="2" stroke-linejoin="round"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z"/></svg>'; }
   function envData() { try { return envelopeData; } catch (e) { return null; } }
@@ -1439,7 +1675,7 @@
     if (cnt) { cnt.textContent = all.length || ''; cnt.style.display = all.length ? 'inline-block' : 'none'; }
     el.innerHTML = all.length ? all.map(function (p) {
       var sec = p[0], l = p[1], t = sec === 'outbox' ? l.sentTime : l.receivedTime, c = String(l.content || '');
-      return '<div class="env-letter-item' + (sec === 'inbox' ? ' reply' : '') + '" onclick="viewEnvLetter(\'' + sec + '\',\'' + esc(l.id) + '\')"><div class="env-letter-header"><div class="env-letter-header-from">' + (sec === 'outbox' ? '我寄出的' : esc(pname()) + ' 的回信') + ' · ' + fmtTime(t) + '</div></div>' +
+      return '<div class="env-letter-item' + (sec === 'inbox' ? ' reply' : '') + '" onclick="viewEnvLetter(\'' + sec + '\',\'' + esc(l.id) + '\')"><div class="env-letter-header"><div class="env-letter-header-from">' + (sec === 'outbox' ? '我寄出的' + (l.to ? '（給 ' + esc(l.to) + '）' : '') : esc(l.from || pname()) + ' 的回信') + ' · ' + fmtTime(t) + '</div></div>' +
         '<div class="env-letter-body"><div class="env-letter-preview">' + esc(c.length > 60 ? c.slice(0, 60) + '…' : c) + '</div></div>' +
         '<button type="button" class="cx-env-star on" data-fs="' + sec + '" data-fid="' + esc(l.id) + '" aria-label="取消收藏">' + starSvg(true) + '</button></div>';
     }).join('') : '<div class="env-empty"><div style="font-size:30px">☆</div><div style="font-size:14px;font-weight:500;margin-top:4px;">還沒有收藏的信</div><div style="font-size:12px;margin-top:6px;opacity:.6;">在信上按右上角的星星就能收藏</div></div>';
@@ -1471,7 +1707,7 @@
     };
     ['renderOutboxList', 'renderInboxList'].forEach(function (fn) {
       var o = window[fn]; if (typeof o !== 'function') return;
-      window[fn] = function () { var r = o.apply(this, arguments); try { envStars(); envFavRender(); } catch (e) {} return r; };
+      window[fn] = function () { var r = o.apply(this, arguments); try { envStars(); envWhoLabels(); envFavRender(); } catch (e) {} return r; };
     });
     var body = inboxSec.parentNode;
     body.addEventListener('click', function (e) {
@@ -1547,6 +1783,8 @@
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
   advTabs();
   try { envInit(); } catch (e) { console.warn('[cx] env fav', e); }
+  try { envWhoInit(); pokeWhoInit(); } catch (e) { console.warn('[cx] group who', e); }
+  load().then(function () { try { gcharInit(); } catch (e) { console.warn('[cx] gchar', e); } });
   setTimeout(tick, 3000);
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
