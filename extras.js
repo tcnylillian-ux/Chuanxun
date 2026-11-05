@@ -150,8 +150,9 @@
     '.cx-env-star.on{color:#e0a52e}.cx-env-vstar{display:inline-flex;align-items:center;gap:4px}.cx-fav-count{background:#f2b544!important}' +
     '.env-tab-bar{flex-wrap:nowrap}.env-tab-bar .env-tab-btn{white-space:nowrap}' +
     '.cx-who-t{font-size:12px;color:var(--text-secondary);margin:2px 2px 6px}.cx-who{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}' +
-    '.cx-who button{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border:1px solid var(--border-color);border-radius:99px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:13px;cursor:pointer}' +
-    '.cx-who button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}.cx-who .av{width:26px;height:26px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--secondary-bg);color:var(--accent-color);font-size:12px;flex:none}.cx-who .av img{width:100%;height:100%;object-fit:cover}' +
+    '.cx-who button{display:flex;align-items:center;gap:8px;padding:3px 14px 3px 3px;border:1px solid var(--border-color);border-radius:99px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:13px;cursor:pointer}' +
+    '.cx-who button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}.cx-who .av{width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--secondary-bg);color:var(--accent-color);font-size:12px;flex:none;box-shadow:0 0 0 1px var(--border-color)}.cx-who .av img{width:100%;height:100%;object-fit:cover;object-position:center 35%}' +
+    '#stats-panel,#search-panel,#favorites-panel,#wordcloud-panel{flex:1 1 auto;min-height:0;overflow-y:auto}#stats-modal .modal-content{max-height:calc(100dvh - 40px)}' +
     '.cx-gchar{margin-top:14px}.cx-gc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border-color)}' +
     '.cx-env-who{opacity:.9}#poke-modal .modal-btn{white-space:nowrap;min-width:72px}' +
     '.cx-dim{opacity:.4}.cx-call{cursor:pointer}.cx-call>i:first-child{color:var(--accent-color);width:22px;text-align:center}.cx-call.miss>i:first-child{color:#e46a7a}' +
@@ -1639,6 +1640,57 @@
     }, true);
   }
 
+
+
+  /* ================= 群聊設定改成每個聊天室各自一份 ================= */
+  (function perSessionGroup() {
+    var GKEY = 'groupChatSettings', FLAG = 'cxGcPerSession';
+    function lsg(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+    function lss(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function sid() { try { return SESSION_ID || null; } catch (e) { return null; } }
+    function plain(g) {
+      return { enabled: !!g.enabled, showAvatar: g.showAvatar !== false, showName: g.showName !== false,
+        members: (g.members || []).map(function (m) { return { name: m.name, id: m.id, avatarRef: m.avatarRef || (m.id ? 'gca_' + m.id : undefined) }; }) };
+    }
+    function apply(id) {
+      var g = gcs(); if (!g) return;
+      var raw = lsg(GKEY + '_' + id);
+      if (!raw) {
+        /* 第一次更新：現有的每個聊天室都先拿一份目前的設定，之後就各自獨立；新開的聊天室從關閉開始 */
+        var base = lsg(GKEY);
+        var data = lsg(FLAG) ? { enabled: false, showAvatar: true, showName: true, members: [] } : (base ? JSON.parse(base) : plain(g));
+        if (!lsg(FLAG)) {
+          var list = []; try { list = (typeof sessionList !== 'undefined' && sessionList) || []; } catch (e) {}
+          list.forEach(function (x) { if (x && x.id && !lsg(GKEY + '_' + x.id)) lss(GKEY + '_' + x.id, JSON.stringify(data)); });
+          lss(FLAG, '1');
+        }
+        raw = JSON.stringify(data); lss(GKEY + '_' + id, raw);
+      }
+      var d; try { d = JSON.parse(raw) || {}; } catch (e) { d = {}; }
+      g.enabled = !!d.enabled; g.showAvatar = d.showAvatar !== false; g.showName = d.showName !== false;
+      g.members = (d.members || []).map(function (m) { return { name: m.name, id: m.id, avatarRef: m.avatarRef, avatar: null }; });
+      Promise.all(g.members.map(function (m) {
+        var ref = m.avatarRef || (m.id ? 'gca_' + m.id : null); if (!ref || !window.localforage) return null;
+        return localforage.getItem(ref).then(function (a) { m.avatar = a || null; }).catch(function () {});
+      })).then(function () {
+        try { if (typeof updateGroupModeUI === 'function') updateGroupModeUI(); } catch (e) {}
+        try { if (typeof renderGroupMembersList === 'function') renderGroupMembersList(); } catch (e) {}
+        try { if (typeof renderMessages === 'function') renderMessages(); } catch (e) {}
+        syncToggles();
+      });
+      var os = window.saveGroupChatSettings;
+      if (typeof os === 'function' && !os.__cx) {
+        var w = function () { var r = os.apply(this, arguments); var cur = sid(); if (cur) lss(GKEY + '_' + cur, JSON.stringify(plain(gcs()))); return r; };
+        w.__cx = true; window.saveGroupChatSettings = w;
+      }
+    }
+    function syncToggles() {
+      var g = gcs(); if (!g) return;
+      [['group-chat-enabled-toggle', 'enabled'], ['group-show-avatar-toggle', 'showAvatar'], ['group-show-name-toggle', 'showName']].forEach(function (p) { var el = document.getElementById(p[0]); if (el && el.type === 'checkbox') el.checked = !!g[p[1]]; });
+    }
+    var tries = 0;
+    (function wait() { var id = sid(); if (id) { try { apply(id); } catch (e) { console.warn('[cx] group per session', e); } return; } if (++tries < 150) setTimeout(wait, 200); })();
+  })();
 
   /* ================= 信件收藏 ================= */
   function starSvg(on) { return '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (on ? '#f2b544' : 'none') + '" stroke="' + (on ? '#e0a52e' : 'currentColor') + '" stroke-width="2" stroke-linejoin="round"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z"/></svg>'; }
