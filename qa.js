@@ -10,8 +10,9 @@
   var LETTERS = 'ABCDEF';
   var SPEEDS = {
     fast: { label: '馬上（幾秒～半分鐘）', min: 5e3, max: 30e3 },
-    soon: { label: '稍後（5～30 分鐘）', min: 5 * 60e3, max: 30 * 60e3 },
-    slow: { label: '慢慢來（1～6 小時）', min: 60 * 60e3, max: 6 * 60 * 60e3 }
+    soon: { label: '等一下（1～30 分鐘）', min: 60e3, max: 30 * 60e3 },
+    later: { label: '晚一點（半小時～2 小時）', min: 30 * 60e3, max: 2 * 60 * 60e3 },
+    slow: { label: '慢慢來（2～6 小時）', min: 2 * 60 * 60e3, max: 6 * 60 * 60e3 }
   };
   var FREQ = {
     often: { label: '常常（1～3 小時一題）', min: 1, max: 3 },

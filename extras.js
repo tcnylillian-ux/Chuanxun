@@ -143,6 +143,9 @@
     '.cx-adv-tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;position:relative;white-space:nowrap}' +
     '.cx-adv-tabs button span{font-size:18px;line-height:1.2}.cx-adv-tabs button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}' +
     '.cx-adv-tabs .dot{position:absolute;top:5px;right:8px;width:8px;height:8px;border-radius:50%;background:#ff7b93;display:none}.cx-adv-tabs button.has .dot{display:block}.cx-tab-hide{display:none!important}' +
+    '.cx-env-star{position:absolute;bottom:6px;right:36px;z-index:2;background:transparent;border:none;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--text-secondary)}#env-fav-list .cx-env-star{right:8px}' +
+    '.cx-env-star.on{color:#e0a52e}.cx-env-vstar{display:inline-flex;align-items:center;gap:4px}.cx-fav-count{background:#f2b544!important}' +
+    '.env-tab-bar{flex-wrap:nowrap}.env-tab-bar .env-tab-btn{white-space:nowrap}' +
     '.cx-dim{opacity:.4}.cx-call{cursor:pointer}.cx-call>i:first-child{color:var(--accent-color);width:22px;text-align:center}.cx-call.miss>i:first-child{color:#e46a7a}' +
     '.cx-flash{animation:cxFlash 1.8s ease}@keyframes cxFlash{0%,100%{background:transparent}20%,60%{background:rgba(var(--accent-color-rgb),.18)}}' +
     '.cx-toss{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cx-toss button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-toss svg{width:40px;height:40px}.cx-toss button:active{transform:scale(.94)}' +
@@ -1400,6 +1403,92 @@
   }
 
 
+
+  /* ================= 信件收藏 ================= */
+  function starSvg(on) { return '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (on ? '#f2b544' : 'none') + '" stroke="' + (on ? '#e0a52e' : 'currentColor') + '" stroke-width="2" stroke-linejoin="round"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z"/></svg>'; }
+  function envData() { try { return envelopeData; } catch (e) { return null; } }
+  function envFind(sec, id) { var d = envData(); if (!d) return null; return (sec === 'outbox' ? d.outbox : d.inbox).find(function (l) { return String(l.id) === String(id); }); }
+  function envFavList() {
+    var d = envData(); if (!d) return [];
+    return d.outbox.filter(function (l) { return l.fav; }).map(function (l) { return ['outbox', l]; })
+      .concat(d.inbox.filter(function (l) { return l.fav; }).map(function (l) { return ['inbox', l]; }))
+      .sort(function (a, b) { return (b[1].favAt || 0) - (a[1].favAt || 0); });
+  }
+  function envToggle(sec, id) {
+    var l = envFind(sec, id); if (!l) return false;
+    l.fav = !l.fav; if (l.fav) l.favAt = Date.now(); else delete l.favAt;
+    try { saveEnvelopeData(); } catch (e) {}
+    toast(l.fav ? '已收藏這封信 ⭐' : '已取消收藏', 'success');
+    envRefresh(); return l.fav;
+  }
+  function envStars() {
+    ['outbox', 'inbox'].forEach(function (sec) {
+      var list = document.getElementById('env-' + sec + '-list'); if (!list) return;
+      list.querySelectorAll('.env-letter-item').forEach(function (it) {
+        var m = /viewEnvLetter\('(\w+)','([^']+)'\)/.exec(it.getAttribute('onclick') || ''); if (!m || it.querySelector('.cx-env-star')) return;
+        var l = envFind(m[1], m[2]); if (!l) return;
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'cx-env-star' + (l.fav ? ' on' : '');
+        b.dataset.fs = m[1]; b.dataset.fid = m[2]; b.setAttribute('aria-label', l.fav ? '取消收藏' : '收藏'); b.innerHTML = starSvg(l.fav);
+        it.appendChild(b);
+      });
+    });
+  }
+  function envFavRender() {
+    var el = document.getElementById('env-fav-list'); if (!el) return;
+    var all = envFavList(), cnt = document.getElementById('env-fav-count');
+    if (cnt) { cnt.textContent = all.length || ''; cnt.style.display = all.length ? 'inline-block' : 'none'; }
+    el.innerHTML = all.length ? all.map(function (p) {
+      var sec = p[0], l = p[1], t = sec === 'outbox' ? l.sentTime : l.receivedTime, c = String(l.content || '');
+      return '<div class="env-letter-item' + (sec === 'inbox' ? ' reply' : '') + '" onclick="viewEnvLetter(\'' + sec + '\',\'' + esc(l.id) + '\')"><div class="env-letter-header"><div class="env-letter-header-from">' + (sec === 'outbox' ? '我寄出的' : esc(pname()) + ' 的回信') + ' · ' + fmtTime(t) + '</div></div>' +
+        '<div class="env-letter-body"><div class="env-letter-preview">' + esc(c.length > 60 ? c.slice(0, 60) + '…' : c) + '</div></div>' +
+        '<button type="button" class="cx-env-star on" data-fs="' + sec + '" data-fid="' + esc(l.id) + '" aria-label="取消收藏">' + starSvg(true) + '</button></div>';
+    }).join('') : '<div class="env-empty"><div style="font-size:30px">☆</div><div style="font-size:14px;font-weight:500;margin-top:4px;">還沒有收藏的信</div><div style="font-size:12px;margin-top:6px;opacity:.6;">在信上按右上角的星星就能收藏</div></div>';
+  }
+  function envViewStar() {
+    var b = document.getElementById('cx-env-view-star'); if (!b) return;
+    var l = null; try { l = envFind(editingEnvSection, editingEnvId); } catch (e) {}
+    b.innerHTML = starSvg(l && l.fav) + '<span>' + (l && l.fav ? '已收藏' : '收藏') + '</span>';
+  }
+  function envRefresh() {
+    try { if (typeof renderEnvelopeLists === 'function') renderEnvelopeLists(); } catch (e) {}
+    envFavRender(); envViewStar();
+  }
+  function envInit() {
+    var inboxBtn = document.getElementById('env-tab-inbox'), inboxSec = document.getElementById('env-inbox-section');
+    if (!inboxBtn || !inboxSec || document.getElementById('env-tab-fav')) return;
+    var tb = document.createElement('button'); tb.className = 'env-tab-btn'; tb.id = 'env-tab-fav'; tb.type = 'button';
+    tb.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:4px;"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z"/></svg>收藏<span id="env-fav-count" class="env-badge cx-fav-count" style="display:none;"></span>';
+    tb.addEventListener('click', function () { window.switchEnvTab('fav'); });
+    inboxBtn.parentNode.appendChild(tb);
+    var sec = document.createElement('div'); sec.id = 'env-fav-section'; sec.style.display = 'none'; sec.innerHTML = '<div id="env-fav-list"></div>';
+    inboxSec.parentNode.insertBefore(sec, inboxSec.nextSibling);
+    var orig = window.switchEnvTab;
+    window.switchEnvTab = function (tab) {
+      if (tab !== 'fav') { orig(tab); tb.classList.remove('active'); sec.style.display = 'none'; return; }
+      orig('inbox');
+      inboxBtn.classList.remove('active'); inboxSec.style.display = 'none';
+      tb.classList.add('active'); sec.style.display = 'block'; envFavRender();
+    };
+    ['renderOutboxList', 'renderInboxList'].forEach(function (fn) {
+      var o = window[fn]; if (typeof o !== 'function') return;
+      window[fn] = function () { var r = o.apply(this, arguments); try { envStars(); envFavRender(); } catch (e) {} return r; };
+    });
+    var body = inboxSec.parentNode;
+    body.addEventListener('click', function (e) {
+      var b = e.target.closest('.cx-env-star'); if (!b) return;
+      e.stopPropagation(); e.preventDefault(); envToggle(b.dataset.fs, b.dataset.fid);
+    }, true);
+    var eb = document.getElementById('env-view-edit-btn');
+    if (eb && !document.getElementById('cx-env-view-star')) {
+      var vb = document.createElement('button'); vb.className = 'modal-btn modal-btn-secondary cx-env-vstar'; vb.id = 'cx-env-view-star'; vb.type = 'button';
+      vb.addEventListener('click', function () { try { envToggle(editingEnvSection, editingEnvId); } catch (e) {} });
+      eb.parentNode.insertBefore(vb, eb);
+    }
+    var ov = window.viewEnvLetter;
+    if (typeof ov === 'function') window.viewEnvLetter = function () { var r = ov.apply(this, arguments); envViewStar(); return r; };
+    envFavRender();
+  }
+
   /* ================= 高階功能分頁 ================= */
   var ADV_TABS = [
     ['chat', '💬', '聊天', ['custom-replies-function', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
@@ -1457,6 +1546,7 @@
   addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
   advTabs();
+  try { envInit(); } catch (e) { console.warn('[cx] env fav', e); }
   setTimeout(tick, 3000);
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
