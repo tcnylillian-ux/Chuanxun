@@ -154,6 +154,9 @@
     '.cx-who button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}.cx-who .av{width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--secondary-bg);color:var(--accent-color);font-size:12px;flex:none;box-shadow:0 0 0 1px var(--border-color)}.cx-who .av img{width:100%;height:100%;object-fit:cover;object-position:center 35%}' +
     '.session-item:active{transform:translateX(5px)!important}.session-info:active{transform:scale(.97);transition:transform .1s}.session-action-btn:active{transform:scale(.9)!important}' +
     '.cx-cl-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border-color);font-size:13px;color:var(--text-primary)}.cx-cl-row span:last-child{text-align:right;color:var(--text-secondary)}.cx-sec h4 small{font-weight:400;color:var(--text-secondary);margin-left:6px}' +
+    '.cx-hp-sec{border:1px solid var(--border-color);border-radius:14px;padding:4px 12px;margin-top:10px;background:var(--primary-bg)}.cx-hp-sec summary{cursor:pointer;font-weight:600;padding:8px 0;color:var(--text-primary)}' +
+    '.cx-hp-it{padding:8px 0;border-top:1px dashed var(--border-color)}.cx-hp-it .t{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--text-primary)}.cx-hp-it .d{font-size:13px;line-height:1.7;color:var(--text-secondary);margin-top:2px}' +
+    '.cx-hp-go{flex:none;font:inherit;font-size:12px;font-weight:400;border:1px solid var(--accent-color);color:var(--accent-color);background:transparent;border-radius:99px;padding:2px 10px;cursor:pointer}' +
     '#stats-panel,#search-panel,#favorites-panel,#wordcloud-panel{flex:1 1 auto;min-height:0;overflow-y:auto}#stats-modal .modal-content{max-height:calc(100dvh - 40px)}' +
     '.cx-gchar{margin-top:14px}.cx-gc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border-color)}' +
     '.cx-env-who{opacity:.9}#poke-modal .modal-btn{white-space:nowrap;min-width:72px}' +
@@ -1629,7 +1632,7 @@
     var pm = document.getElementById('poke-modal'), inp = document.getElementById('poke-input'), sb = document.getElementById('send-poke');
     if (!pm || !inp || !sb || document.getElementById('cx-poke-who-wrap')) return;
     var wrap = document.createElement('div'); wrap.id = 'cx-poke-who-wrap'; inp.parentNode.insertBefore(wrap, inp);
-    bindChips(wrap, function (n) { pokeTo = n; inp.placeholder = '例如：拍了拍「' + n + '」的肩膀'; });
+    bindChips(wrap, function (n) { pokeTo = n; inp.placeholder = '例如：親了親' + n + '的臉頰'; });
     new MutationObserver(function () {
       var open = pm.style.display && pm.style.display !== 'none';
       if (open && !wrap.dataset.open) { wrap.dataset.open = '1'; pokeTo = pname(); var h = whoChips('cx-poke-who', pokeTo); wrap.innerHTML = h ? '<div class="cx-who-t">拍誰</div>' + h : ''; }
@@ -1638,6 +1641,7 @@
     sb.addEventListener('click', function () {
       if (!groupOn() || !pokeTo) return;
       if (pokeTo !== pname() && !inp.value.trim()) inp.value = myname() + ' 拍了拍 ' + pokeTo;
+      if (inp.value) inp.value = inp.value.replace(/"\s*"|“\s*”|「\s*」|『\s*』|''/g, function (q) { return q.charAt(0) + pokeTo + q.charAt(q.length - 1); });
       speakAs(pokeTo);
     }, true);
   }
@@ -1825,6 +1829,119 @@
     inject();
   })();
 
+  /* ================= 使用手冊 ================= */
+  function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(function (m) { if (getComputedStyle(m).display !== 'none') { try { hideModal(m); } catch (e) { m.style.display = 'none'; } } });
+  }
+  function goEntry(id) {
+    closeAllModals();
+    setTimeout(function () {
+      var adv = document.getElementById('advanced-modal'); if (adv) showModal(adv);
+      var el = document.getElementById(id); if (!el) return;
+      if (el.dataset.cxTab) advShow(el.dataset.cxTab);
+      setTimeout(function () { el.click(); }, 250);
+    }, 200);
+  }
+  function goBtn(id) { closeAllModals(); setTimeout(function () { var b = document.getElementById(id); if (b) b.click(); }, 250); }
+  function goCard(id) { closeAllModals(); setTimeout(function () { var s = document.getElementById('settings-modal'); if (s) showModal(s); setTimeout(function () { var c = document.getElementById(id); if (c) c.click(); }, 250); }, 200); }
+  var HELP = [
+    { s: '畫面上的按鈕', items: [
+      ['左上角的頭像', '主角的頭像。點一下可以換頭像、改名字。', null],
+      ['💬 會話管理', '開好幾個聊天室，每個聊天室的聊天紀錄、字卡、信件、群聊設定都是分開的。可以一個角色開一個，當私訊用。', ['btn', 'session-manager-btn']],
+      ['👥 群聊設定', '打開群聊、加成員、設定角色專屬字卡。每個聊天室各自設定。', ['btn', 'group-chat-btn']],
+      ['📰 今日公告', '每天的問候卡片。', ['btn', 'daily-greeting-btn']],
+      ['🌙 切換主題', '白天／夜間模式。', null],
+      ['📦 問題箱', '問他問題（給 A、B、C 選項），也可以回答他問你的問題。', ['btn', 'qa-top-btn']],
+      ['⚙️ 設定', '外觀、聊天、高階功能、資料管理。', ['btn', 'settings-btn']],
+      ['輸入框左邊的按鈕', '📹 視訊通話、🖼 傳圖片、😊 表情和拍一拍。', null],
+      ['輸入框右邊的按鈕', '⋯ 展開更多、📚 批次傳送（一次打好幾句再送出）、➤ 傳送。', null]
+    ] },
+    { s: '聊天', items: [
+      ['自定義回覆（字卡）', '他回話用的句子都在這裡，可以分組、停用整組。', ['entry', 'custom-replies-function']],
+      ['回覆與來信', '他主動來信、發紅包、連結狀態、自己掛電話的設定，都在這一頁。', ['entry', 'cx-set-entry']],
+      ['訊息統計', '總共聊了幾則、高頻詞、搜尋訊息、收藏、詞雲。', ['entry', 'stats-function']],
+      ['通話紀錄', '每通電話打了多久、哪些沒接。點一通會跳回聊天裡那一則。', ['entry', 'cx-calllog-entry']],
+      ['懸浮音樂播放器', '在聊天畫面放歌。', ['entry', 'music-player-toggle']],
+      ['拍一拍', '點 😊 › 拍一拍。清單裡的動作點了直接送出；「自定義動作」可以自己打字，群聊裡還能選拍誰。名字直接打進去，例如「親了親仁彌的臉頰」；引號留空的話會自動填上你選的人。', null],
+      ['視訊通話', '點輸入框左邊的 📹。電腦上右上角的按鈕可以縮小或隱藏通話視窗。通話功能的開關在 設定 › 聊天設定 › 通話功能。', ['card', 'chat-settings']]
+    ] },
+    { s: '我們倆', items: [
+      ['他的日記', '每天固定時間收到一篇他寫的日記，可以在下面留言，他寫下一篇時會回你。', ['entry', 'cx-diary-entry']],
+      ['TA 的手機', '他會偷偷收藏你說過的話，還寫一句小備註。群聊裡每個人有自己的手機，上面可以選要看誰的。', ['entry', 'cx-phone-entry']],
+      ['信封投遞（寫信）', '寫信給他，10～24 小時內回信。群聊裡可以選寄給誰，回信用他自己的字卡。每封信右下角的星星可以收藏。', ['entry', 'envelope-function']],
+      ['問題箱', '問他問題、設定他多久回答（幾秒到 6 小時）；他也會用字卡問你問題。常用的問題可以收藏。', ['entry', 'qa-function']],
+      ['紅包', '發紅包給他，或收他發的紅包。群聊裡可以選發給誰。', ['entry', 'cx-rp-entry']],
+      ['狀態檢測', '看看他現在的狀態。', ['entry', 'cx-status-entry']],
+      ['重要日', '紀念日倒數。', ['entry', 'anniversary-function']]
+    ] },
+    { s: '生活', items: [
+      ['陪伴中心', '一起聽歌、看影片、看小說，還有一起讀書、工作、運動、睡覺四種陪伴模式（有計時和白噪音）。結束後可以寫進陪伴日記。他也會在適合的時間主動約你，頻率在陪伴中心最下面調。', ['entry', 'cx-comp-entry']],
+      ['番茄鐘', '專心工作、休息的計時器，他會陪你。', ['entry', 'cx-pomo-entry']],
+      ['潮汐', '經期紀錄和預測。', ['entry', 'cx-period-entry']],
+      ['心晴手帳', '記錄每天的心情。', ['entry', 'mood-function']]
+    ] },
+    { s: '好玩', items: [
+      ['搞怪', '朝他丟番茄、雞蛋、蛋糕、一桶水、枕頭或愛心，他會回話，有時還會丟回來。群聊裡可以選丟誰。', ['entry', 'cx-toss-entry']],
+      ['抉擇', '幫你做決定、轉盤。', ['entry', 'decision-function']],
+      ['運勢 · 占卜', '每週運勢和占卜。', ['entry', 'fortune-lenormand-function']]
+    ] },
+    { s: '群聊', items: [
+      ['怎麼開群聊', '群聊設定 › 打開群聊 › 新增成員（名字、頭像）。每個聊天室各自設定，關掉這裡不會影響別的聊天室。', ['btn', 'group-chat-btn']],
+      ['角色專屬字卡', '群聊設定最下面。勾「只由 ○○ 說」，那組字卡就只會由他本人說；不勾就隨機分給大家。字卡組和成員同名會自動配對。', ['btn', 'group-chat-btn']],
+      ['對誰做', '寫信、拍一拍、搞怪、紅包、TA 的手機，上面都有一排頭像可以選人。', null],
+      ['頭像看起來怪怪的', '小圓圈只顯示圖片正中間。用手機相簿裁成正方形、臉放中間再上傳，最好看。', null]
+    ] },
+    { s: '同步、備份、空間', items: [
+      ['同步', '電腦和手機用同一組連線碼，資料就會自動同步。上面跳出「其他裝置有新內容」時，點一下就會更新。想重新設定，在網址後面加 #sync。連線碼等於資料的鑰匙，不要給別人。', null],
+      ['備份', '設定 › 資料管理 › 全量備份。更新網站或清空間之前，可以先匯出一份。', ['card', 'data-settings']],
+      ['整理空間', '設定 › 資料管理 › 整理空間：清聊天圖片、網站暫存、已刪除聊天室的殘留、沒在用的頭像、書架。', ['fn', 'clean']]
+    ] },
+    { s: '常見問題', items: [
+      ['更新網站後看起來沒變', '等 1～2 分鐘再重新整理；手機上把網站關掉再打開。', null],
+      ['收不到通知', '手機設定裡要允許通知。iPhone 要先「加入主畫面」，從主畫面打開才收得到。', null],
+      ['手機很燙', '用省電版主題（奶霧紫 v10 之後的版本），把其他分頁關掉。', null],
+      ['電腦上刪不掉會話', '已修好。刪除會連聊天紀錄一起刪，刪之前先確認。', ['btn', 'session-manager-btn']],
+      ['視窗太長、按鈕不見', '大部分視窗都可以在裡面往下捲；關閉按鈕在最下面。', null]
+    ] }
+  ];
+  var hpM = null;
+  function helpOpen() {
+    if (!hpM) {
+      hpM = makeModal('cx-help-modal', 'fa-book-open', '使用手冊');
+      hpM.body.addEventListener('input', function (e) { if (e.target.id === 'cx-hp-q') helpFilter(e.target.value); });
+      hpM.body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-go]'); if (!b) return;
+        var t = b.dataset.go, id = b.dataset.id;
+        if (t === 'entry') goEntry(id); else if (t === 'btn') goBtn(id); else if (t === 'card') goCard(id);
+        else if (t === 'fn' && id === 'clean') { closeAllModals(); setTimeout(clnOpen, 250); }
+      });
+    }
+    hpM.body.innerHTML = '<input class="cx-in" id="cx-hp-q" type="search" placeholder="搜尋，例如：寫信、群聊、通話" autocomplete="off">' +
+      HELP.map(function (sec, si) {
+        return '<details class="cx-hp-sec"' + (si === 0 ? ' open' : '') + '><summary>' + esc(sec.s) + '</summary>' + sec.items.map(function (it) {
+          return '<div class="cx-hp-it" data-q="' + esc((sec.s + it[0] + it[1]).toLowerCase()) + '"><div class="t">' + esc(it[0]) + (it[2] ? '<button type="button" class="cx-hp-go" data-go="' + it[2][0] + '" data-id="' + it[2][1] + '">帶我去 ›</button>' : '') + '</div><div class="d">' + esc(it[1]) + '</div></div>';
+        }).join('') + '</details>';
+      }).join('') + '<div class="cx-muted" id="cx-hp-none" style="display:none;text-align:center;padding:16px 0">找不到，換個關鍵字試試</div>';
+    hpM.open();
+  }
+  function helpFilter(q) {
+    q = String(q || '').trim().toLowerCase(); var any = false;
+    hpM.body.querySelectorAll('.cx-hp-sec').forEach(function (sec) {
+      var hit = 0;
+      sec.querySelectorAll('.cx-hp-it').forEach(function (it) { var ok = !q || it.dataset.q.indexOf(q) >= 0; it.style.display = ok ? '' : 'none'; if (ok) hit++; });
+      sec.style.display = hit ? '' : 'none'; if (q && hit) sec.open = true; if (hit) any = true;
+    });
+    hpM.body.querySelector('#cx-hp-none').style.display = any ? 'none' : '';
+  }
+  (function settingsHelpBtn() {
+    var sm = document.getElementById('settings-modal'); if (!sm || document.getElementById('cx-help-btn')) return;
+    var btns = sm.querySelector('.modal-buttons');
+    var b = document.createElement('button'); b.id = 'cx-help-btn'; b.type = 'button'; b.className = 'cx-btn'; b.style.cssText = 'width:100%;margin-top:10px';
+    b.innerHTML = '<i class="fas fa-book-open"></i> 使用手冊（找不到功能點這裡）';
+    b.addEventListener('click', function () { closeAllModals(); setTimeout(helpOpen, 200); });
+    if (btns) btns.parentNode.insertBefore(b, btns); else sm.querySelector('.modal-content').appendChild(b);
+  })();
+
   /* ================= 信件收藏 ================= */
   function starSvg(on) { return '<svg width="15" height="15" viewBox="0 0 24 24" fill="' + (on ? '#f2b544' : 'none') + '" stroke="' + (on ? '#e0a52e' : 'currentColor') + '" stroke-width="2" stroke-linejoin="round"><path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z"/></svg>'; }
   function envData() { try { return envelopeData; } catch (e) { return null; } }
@@ -1912,7 +2029,7 @@
 
   /* ================= 高階功能分頁 ================= */
   var ADV_TABS = [
-    ['chat', '💬', '聊天', ['custom-replies-function', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
+    ['chat', '💬', '聊天', ['cx-help-entry', 'custom-replies-function', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
     ['us', '💞', '我們倆', ['cx-diary-entry', 'cx-phone-entry', 'envelope-function', 'qa-function', 'cx-rp-entry', 'cx-status-entry', 'anniversary-function']],
     ['life', '🌿', '生活', ['cx-comp-entry', 'cx-pomo-entry', 'cx-period-entry', 'mood-function']],
     ['fun', '🎲', '好玩', ['cx-toss-entry', 'decision-function', 'fortune-lenormand-function']]
@@ -1965,6 +2082,7 @@
   addEntry('cx-phone-entry', 'fa-mobile-screen', 'TA 的手機', phoneOpen);
   addEntry('cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪', tossOpen);
   addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);
+  addEntry('cx-help-entry', 'fa-book-open', '使用手冊', helpOpen);
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
   advTabs();
   try { envInit(); } catch (e) { console.warn('[cx] env fav', e); }
