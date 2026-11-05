@@ -1705,20 +1705,23 @@
   function sessions() { try { return (typeof sessionList !== 'undefined' && sessionList) || []; } catch (e) { return []; } }
   function curSid() { try { return SESSION_ID; } catch (e) { return null; } }
   function pfx() { return window.APP_PREFIX || 'CHAT_APP_V3_'; }
-  function imgBytes(arr) { var n = 0, b = 0; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && m.image) { n++; b += m.image.length * 2; } }); return { n: n, b: b }; }
+  function stkSet(lists) { var set = {}; (lists || []).forEach(function (l) { (l || []).forEach(function (x) { var v = typeof x === 'string' ? x : (x && (x.src || x.url || x.data)); if (v) set[v] = 1; }); }); return set; }
+  function curStickers() { var a = [], b = []; try { a = stickerLibrary || []; } catch (e) {} try { b = myStickerLibrary || []; } catch (e) {} return stkSet([a, b]); }
+  async function sessStickers(sid) { var P = pfx(), a = null, b = null; try { a = await localforage.getItem(P + sid + '_stickerLibrary'); } catch (e) {} try { b = await localforage.getItem(P + sid + '_myStickerLibrary'); } catch (e) {} return stkSet([a, b]); }
+  function imgBytes(arr, stk) { var n = 0, b = 0, sn = 0, sb = 0; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && m.image) { if (stk && stk[m.image]) { sn++; sb += m.image.length * 2; } else { n++; b += m.image.length * 2; } } }); return { n: n, b: b, sn: sn, sb: sb }; }
   async function clnScan() {
     var keys = []; try { keys = await localforage.keys(); } catch (e) {}
     var P = pfx(), ids = {}; sessions().forEach(function (s) { if (s && s.id) ids[s.id] = s.name || s.id; });
     var used = {}; [localStorage.getItem('groupChatSettings')].concat(Object.keys(localStorage).filter(function (k) { return k.indexOf('groupChatSettings_') === 0; }).map(function (k) { return localStorage.getItem(k); })).forEach(function (raw) {
       try { (JSON.parse(raw || 'null') || { members: [] }).members.forEach(function (m) { if (m && m.id) used['gca_' + m.id] = 1; if (m && m.avatarRef) used[m.avatarRef] = 1; }); } catch (e) {}
     });
-    var info = { total: 0, chats: [], img: { n: 0, b: 0 }, books: [], orphan: { keys: [], b: 0 }, avatars: { keys: [], b: 0 }, stickers: 0, cache: 0 };
+    var info = { total: 0, chats: [], img: { n: 0, b: 0, sn: 0, sb: 0 }, books: [], orphan: { keys: [], b: 0 }, avatars: { keys: [], b: 0 }, stickers: 0, cache: 0 };
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i], v = null; try { v = await localforage.getItem(k); } catch (e) {}
       var b = (k.length * 2) + szOf(v); info.total += b;
       var m = k.indexOf(P) === 0 ? /^([a-z0-9]{10,30})_(.+)$/.exec(k.slice(P.length)) : null;
       if (m && !ids[m[1]] && !/^[A-Z]/.test(m[1])) { info.orphan.keys.push(k); info.orphan.b += b; continue; }
-      if (m && m[2] === 'chatMessages' && Array.isArray(v)) { var ib = imgBytes(v); info.chats.push({ sid: m[1], name: ids[m[1]], b: b, n: v.length, img: ib }); info.img.n += ib.n; info.img.b += ib.b; continue; }
+      if (m && m[2] === 'chatMessages' && Array.isArray(v)) { var ib = imgBytes(v, m[1] === curSid() ? curStickers() : await sessStickers(m[1])); info.chats.push({ sid: m[1], name: ids[m[1]], b: b, n: v.length, img: ib }); info.img.n += ib.n; info.img.b += ib.b; info.img.sn += ib.sn; info.img.sb += ib.sb; continue; }
       if (m && /^cxBook_/.test(m[2])) { info.books.push({ key: k, sid: m[1], title: (v && v.title) || '未命名', b: b }); continue; }
       if (m && (m[2] === 'stickerLibrary' || m[2] === 'myStickerLibrary')) { info.stickers += b; continue; }
       if (/^gca_/.test(k) && !used[k]) { info.avatars.keys.push(k); info.avatars.b += b; }
@@ -1758,16 +1761,18 @@
     var I = await clnScan(); if (!clnM || !clnM.isOpen()) return;
     var est = I.est && I.est.quota ? '<div class="cx-muted">這台裝置實際用了 ' + mb(I.est.usage || 0) + '，瀏覽器最多可以給這個網站大約 ' + mb(I.est.quota) + '。資料管理那條紅色進度條是用 5MB 算的，那是舊的上限，不用擔心。</div>' : '';
     var chatRows = I.chats.sort(function (a, b) { return b.b - a.b; }).map(function (c) {
-      return '<div class="cx-cl-row"><span>' + esc(c.name || '聊天室') + (c.sid === curSid() ? '（目前）' : '') + '</span><span>' + c.n + ' 則 · ' + mb(c.b) + (c.img.n ? '<br><small>其中圖片 ' + c.img.n + ' 張 · ' + mb(c.img.b) + '</small>' : '') + '</span></div>';
+      return '<div class="cx-cl-row"><span>' + esc(c.name || '聊天室') + (c.sid === curSid() ? '（目前）' : '') + '</span><span>' + c.n + ' 則 · ' + mb(c.b) + (c.img.n || c.img.sn ? '<br><small>照片 ' + c.img.n + ' 張 · ' + mb(c.img.b) + '　表情包 ' + c.img.sn + ' 張 · ' + mb(c.img.sb) + '</small>' : '') + '</span></div>';
     }).join('');
     var h = '<div class="cx-card">' + est + '</div>' +
       '<div class="cx-sec"><h4>各個聊天室</h4>' + (chatRows || '<div class="cx-muted">沒有聊天紀錄</div>') + '</div>' +
-      '<div class="cx-sec"><h4>🖼 聊天裡的圖片 <small>' + I.img.n + ' 張 · ' + mb(I.img.b) + '</small></h4>' +
+      '<div class="cx-sec"><h4>🖼 聊天裡的圖片 <small>照片 ' + I.img.n + ' 張 · ' + mb(I.img.b) + '　表情包 ' + I.img.sn + ' 張 · ' + mb(I.img.sb) + '</small></h4>' +
       '<div class="cx-muted">清掉圖片只會刪圖，文字訊息都會留著；只有圖片的訊息會變成「［圖片已清除］」。清了就救不回來，重要的可以先存到手機相簿。</div>' +
       '<label class="cx-row"><span>範圍</span><select class="cx-sel" id="cx-cl-scope" style="width:auto"><option value="cur">這個聊天室</option><option value="all">所有聊天室</option></select></label>' +
       '<label class="cx-row"><span>清哪些</span><select class="cx-sel" id="cx-cl-age" style="width:auto"><option value="30">30 天以前的</option><option value="7">7 天以前的</option><option value="0">全部</option></select></label>' +
+      '<label class="qa-chk"><input type="checkbox" id="cx-cl-stk" checked>保留表情包（只清照片）</label>' +
       '<label class="qa-chk"><input type="checkbox" id="cx-cl-fav" checked>保留收藏的訊息裡的圖片</label>' +
-      '<button class="cx-btn pri" data-k="img"' + (I.img.n ? '' : ' disabled') + '>清除圖片</button></div>' +
+      '<div class="cx-muted">表情包是用「表情庫裡有沒有這張」來認的；已經從表情庫刪掉的表情包，會被當成照片。</div>' +
+      '<button class="cx-btn pri" data-k="img"' + (I.img.n || I.img.sn ? '' : ' disabled') + '>清除圖片</button></div>' +
       '<div class="cx-sec"><h4>📦 網站暫存 <small>' + mb(I.cache) + '</small></h4><div class="cx-muted">讓網站離線也能打開的檔案。清掉不影響任何聊天資料，下次打開會重新下載。</div><button class="cx-btn" data-k="cache"' + (I.cache ? '' : ' disabled') + '>清除暫存</button></div>' +
       '<div class="cx-sec"><h4>🗑 已刪除聊天室的殘留 <small>' + mb(I.orphan.b) + '</small></h4><div class="cx-muted">刪掉聊天室後沒清乾淨的資料。</div><button class="cx-btn" data-k="orphan"' + (I.orphan.keys.length ? '' : ' disabled') + '>清除殘留</button></div>' +
       '<div class="cx-sec"><h4>👤 沒在用的成員頭像 <small>' + I.avatars.keys.length + ' 張 · ' + mb(I.avatars.b) + '</small></h4><div class="cx-muted">已經刪掉的群組成員留下的頭像。</div><button class="cx-btn" data-k="avatars"' + (I.avatars.keys.length ? '' : ' disabled') + '>清除</button></div>' +
@@ -1777,22 +1782,22 @@
     clnM.body.innerHTML = h;
   }
   async function clnImages() {
-    var scope = clnM.body.querySelector('#cx-cl-scope').value, days = +clnM.body.querySelector('#cx-cl-age').value, keepFav = clnM.body.querySelector('#cx-cl-fav').checked;
+    var scope = clnM.body.querySelector('#cx-cl-scope').value, days = +clnM.body.querySelector('#cx-cl-age').value, keepFav = clnM.body.querySelector('#cx-cl-fav').checked, keepStk = clnM.body.querySelector('#cx-cl-stk').checked;
     var cut = days ? Date.now() - days * 86400e3 : Infinity;
-    if (!(await confirmAsync('確定清除' + (scope === 'all' ? '所有聊天室' : '這個聊天室') + (days ? ' ' + days + ' 天以前' : '全部') + '的聊天圖片？清了就救不回來。'))) return;
-    function strip(arr) {
+    if (!(await confirmAsync('確定清除' + (scope === 'all' ? '所有聊天室' : '這個聊天室') + (days ? ' ' + days + ' 天以前' : '全部') + '的聊天' + (keepStk ? '照片（表情包會保留）' : '圖片（包括表情包）') + '？清了就救不回來。'))) return;
+    function strip(arr, stk) {
       var n = 0;
       (arr || []).forEach(function (m) {
         if (!m) return;
         var t = +new Date(m.timestamp) || 0;
         if (t >= cut || (keepFav && m.favorited)) return;
-        if (typeof m.image === 'string' && m.image) { m.image = null; if (!m.text) m.text = '［圖片已清除］'; n++; }
-        if (m.replyTo && m.replyTo.image) m.replyTo.image = null;
+        if (typeof m.image === 'string' && m.image && !(keepStk && stk[m.image])) { m.image = null; if (!m.text) m.text = '［圖片已清除］'; n++; }
+        if (m.replyTo && m.replyTo.image && !(keepStk && stk[m.replyTo.image])) m.replyTo.image = null;
       });
       return n;
     }
     var total = 0, P = pfx(), cur = curSid();
-    total += strip(allMsgs());
+    total += strip(allMsgs(), curStickers());
     try { if (typeof saveData === 'function') await saveData(); else if (typeof throttledSaveData === 'function') throttledSaveData(); } catch (e) {}
     try { renderMessages(); } catch (e) {}
     if (scope === 'all') {
@@ -1800,10 +1805,10 @@
       for (var i = 0; i < ss.length; i++) {
         if (!ss[i] || ss[i].id === cur) continue;
         var k = P + ss[i].id + '_chatMessages', arr = null; try { arr = await localforage.getItem(k); } catch (e) {}
-        if (Array.isArray(arr)) { var n = strip(arr); if (n) { total += n; try { await localforage.setItem(k, arr); } catch (e) {} } }
+        if (Array.isArray(arr)) { var n = strip(arr, await sessStickers(ss[i].id)); if (n) { total += n; try { await localforage.setItem(k, arr); } catch (e) {} } }
       }
     }
-    toast(total ? '清掉了 ' + total + ' 張圖片' : '沒有符合條件的圖片', total ? 'success' : 'info');
+    toast(total ? '清掉了 ' + total + ' 張' + (keepStk ? '照片' : '圖片') : '沒有符合條件的圖片', total ? 'success' : 'info');
     clnRefresh();
   }
   /* 資料管理：加「整理空間」按鈕，並把「/ ~5 MB」換成實際可用空間 */

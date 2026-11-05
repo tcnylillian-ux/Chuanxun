@@ -4,7 +4,7 @@
  * 聊天資料本來就存在本機（IndexedDB），同步資料（Firebase）不經過這裡。
  * 更新網站後，把下面的 VERSION 改一下（例如 v8），所有裝置會自動換成新版本。
  */
-const VERSION = 'v27-tw';
+const VERSION = 'v28-tw';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
