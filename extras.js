@@ -1708,7 +1708,7 @@
   function stkSet(lists) { var set = {}; (lists || []).forEach(function (l) { (l || []).forEach(function (x) { var v = typeof x === 'string' ? x : (x && (x.src || x.url || x.data)); if (v) set[v] = 1; }); }); return set; }
   function curStickers() { var a = [], b = []; try { a = stickerLibrary || []; } catch (e) {} try { b = myStickerLibrary || []; } catch (e) {} return stkSet([a, b]); }
   async function sessStickers(sid) { var P = pfx(), a = null, b = null; try { a = await localforage.getItem(P + sid + '_stickerLibrary'); } catch (e) {} try { b = await localforage.getItem(P + sid + '_myStickerLibrary'); } catch (e) {} return stkSet([a, b]); }
-  function imgBytes(arr, stk) { var n = 0, b = 0, sn = 0, sb = 0; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && m.image) { if (stk && stk[m.image]) { sn++; sb += m.image.length * 2; } else { n++; b += m.image.length * 2; } } }); return { n: n, b: b, sn: sn, sb: sb }; }
+  function imgBytes(arr, stk) { var n = 0, b = 0, sn = 0, sb = 0, u = {}, ub = 0; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && m.image) { if (stk && stk[m.image]) { sn++; sb += m.image.length * 2; if (!u[m.image]) { u[m.image] = 1; ub += m.image.length * 2; } } else { n++; b += m.image.length * 2; } } }); return { n: n, b: b, sn: sn, sb: sb, su: Object.keys(u).length, sub: ub }; }
   async function clnScan() {
     var keys = []; try { keys = await localforage.keys(); } catch (e) {}
     var P = pfx(), ids = {}; sessions().forEach(function (s) { if (s && s.id) ids[s.id] = s.name || s.id; });
@@ -1769,7 +1769,7 @@
     var SL = null; try { if (window.__cxImg) SL = await window.__cxImg.stats(); } catch (e) {}
     var est = I.est && I.est.quota ? '<div class="cx-muted">這台裝置實際用了 ' + mb(I.est.usage || 0) + '，瀏覽器最多可以給這個網站大約 ' + mb(I.est.quota) + '，空間很夠用。</div>' : '';
     var chatRows = I.chats.sort(function (a, b) { return b.b - a.b; }).map(function (c) {
-      return '<div class="cx-cl-row"><span>' + esc(c.name || '聊天室') + (c.sid === curSid() ? '（目前）' : '') + '</span><span>' + c.n + ' 則 · ' + mb(c.b) + (c.img.n || c.img.sn ? '<br><small>照片 ' + c.img.n + ' 張 · ' + mb(c.img.b) + '　表情包 ' + c.img.sn + ' 張 · ' + mb(c.img.sb) + '</small>' : '') + '</span></div>';
+      return '<div class="cx-cl-row"><span>' + esc(c.name || '聊天室') + (c.sid === curSid() ? '（目前）' : '') + '</span><span>' + c.n + ' 則 · ' + mb(c.b) + (c.img.n || c.img.sn ? '<br><small>照片 ' + c.img.n + ' 張 · ' + mb(c.img.b) + '　' + (window.__cxImg && window.__cxImg.on() ? '表情包 ' + c.img.sn + ' 則，其實只有 ' + c.img.su + ' 張不同的 · ' + mb(c.img.sub) : '表情包 ' + c.img.sn + ' 張 · ' + mb(c.img.sb)) + '</small>' : '') + '</span></div>';
     }).join('');
     var h = '<div class="cx-card">' + est + '</div>' +
       '<div class="cx-sec"><h4>各個聊天室</h4>' + (chatRows || '<div class="cx-muted">沒有聊天紀錄</div>') + '</div>' +
