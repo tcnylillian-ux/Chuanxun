@@ -356,13 +356,13 @@
     var h = '<div class="cx-sec"><h4 id="cx-rp-h">發紅包給 ' + esc(rpTo || pname()) + '</h4>' + chips + '<input class="cx-in" id="cx-rp-amt" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="金額">' +
       '<div class="cx-chips">' + [5.2, 13.14, 52, 520, 1314].map(function (a) { return '<button data-amt="' + a + '">' + a + '</button>'; }).join('') + '</div>' +
       '<input class="cx-in" id="cx-rp-note" maxlength="30" placeholder="恭喜發財，大吉大利"><button class="cx-btn pri" id="cx-rp-send">🧧 塞進紅包</button></div>' +
-      '<div class="cx-stat"><div><b>' + unopened() + '</b><span>待領取</span></div><div><b>' + money(got) + '</b><span>收到</span></div><div><b>' + money(sent) + '</b><span>送出</span></div></div>' +
+      '<div class="cx-stat"><div><b>' + unopened() + '</b><span>待領取</span></div><div><b>$' + money(got) + '</b><span>收到</span></div><div><b>$' + money(sent) + '</b><span>送出</span></div></div>' +
       '<div class="cx-sec"><h4>紅包記錄</h4><div class="cx-list">';
     if (!list.length) h += '<div class="cx-muted">還沒有紅包。' + esc(pname()) + ' 聊天時偶爾也會發紅包給你。</div>';
     list.forEach(function (p) {
       var mine = p.from === 'me';
       h += '<button class="cx-rp' + (p.opened ? ' done' : '') + '"' + (!mine && !p.opened ? ' data-open="' + p.id + '"' : '') + '><span class="i">🧧</span><div><b>' + esc(p.note) + '</b><span>' +
-        (mine ? '送給 ' + esc(rpWho(p)) + ' · ¥' + money(p.amount) + (p.opened ? ' · 已被領取' : ' · 等待領取') : esc(rpWho(p)) + ' 送的 · ' + (p.opened ? '已領取 ¥' + money(p.amount) : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
+        (mine ? '送給 ' + esc(rpWho(p)) + ' · $' + money(p.amount) + (p.opened ? ' · 已被領取' : ' · 等待領取') : esc(rpWho(p)) + ' 送的 · ' + (p.opened ? '已領取 $' + money(p.amount) : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
     });
     rpM.body.innerHTML = h + '</div></div>';
   }
@@ -370,7 +370,7 @@
     var p = X.rp.list.find(function (x) { return x.id === id; }); if (!p) return;
     var o = document.createElement('div'); o.className = 'cx-open';
     o.innerHTML = '<div class="p"><div class="who">' + esc(rpWho(p)) + ' 的紅包</div><div class="note">' + esc(p.note) + '</div>' +
-      (p.opened ? '<div class="amt">¥' + money(p.amount) + '</div>' : '<button class="coin">開</button>') + '<div><button class="close">關閉</button></div></div>';
+      (p.opened ? '<div class="amt">$' + money(p.amount) + '</div>' : '<button class="coin">開</button>') + '<div><button class="close">關閉</button></div></div>';
     document.body.appendChild(o);
     o.querySelector('.close').onclick = function () { o.remove(); };
     o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
@@ -379,8 +379,8 @@
       coin.classList.add('spin');
       setTimeout(async function () {
         p.opened = true; p.openedAt = Date.now(); await save();
-        coin.outerHTML = '<div class="amt">¥' + money(p.amount) + '</div>';
-        sysSay('你領取了 ' + rpWho(p) + ' 的紅包 ¥' + money(p.amount));
+        coin.outerHTML = '<div class="amt">$' + money(p.amount) + '</div>';
+        sysSay('你領取了 ' + rpWho(p) + ' 的紅包 $' + money(p.amount));
         refreshBadge(); if (rpM && rpM.isOpen()) rpRender();
       }, 900);
     };
@@ -1905,6 +1905,7 @@
       ['更新網站後看起來沒變', '等 1～2 分鐘再重新整理；手機上把網站關掉再打開。', null],
       ['收不到通知', '手機設定裡要允許通知。iPhone 要先「加入主畫面」，從主畫面打開才收得到。', null],
       ['手機很燙', '用省電版主題（奶霧紫 v10 之後的版本），把其他分頁關掉。', null],
+      ['通話中不小心重新整理', '重新整理後會跳出「通話被重新整理打斷了」，可以選繼續通話或掛斷。超過 10 分鐘才回來的話，會直接留下一筆通話紀錄。', null],
       ['電腦上刪不掉會話', '已修好。刪除會連聊天紀錄一起刪，刪之前先確認。', ['btn', 'session-manager-btn']],
       ['視窗太長、按鈕不見', '大部分視窗都可以在裡面往下捲；關閉按鈕在最下面。', null]
     ] }
