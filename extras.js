@@ -1721,7 +1721,7 @@
       var b = (k.length * 2) + szOf(v); info.total += b;
       var m = k.indexOf(P) === 0 ? /^([a-z0-9]{10,30})_(.+)$/.exec(k.slice(P.length)) : null;
       if (m && !ids[m[1]] && !/^[A-Z]/.test(m[1])) { info.orphan.keys.push(k); info.orphan.b += b; continue; }
-      if (m && m[2] === 'chatMessages' && Array.isArray(v)) { var ib = imgBytes(v, m[1] === curSid() ? curStickers() : await sessStickers(m[1])); info.chats.push({ sid: m[1], name: ids[m[1]], b: b, n: v.length, img: ib }); info.img.n += ib.n; info.img.b += ib.b; info.img.sn += ib.sn; info.img.sb += ib.sb; continue; }
+      if (m && m[2] === 'chatMessages' && Array.isArray(v)) { if (localforage.getRawItem) { try { var rv = await localforage.getRawItem(k); info.total += szOf(rv) - szOf(v); b = (k.length * 2) + szOf(rv); } catch (e) {} } var ib = imgBytes(v, m[1] === curSid() ? curStickers() : await sessStickers(m[1])); info.chats.push({ sid: m[1], name: ids[m[1]], b: b, n: v.length, img: ib }); info.img.n += ib.n; info.img.b += ib.b; info.img.sn += ib.sn; info.img.sb += ib.sb; continue; }
       if (m && /^cxBook_/.test(m[2])) { info.books.push({ key: k, sid: m[1], title: (v && v.title) || '未命名', b: b }); continue; }
       if (m && (m[2] === 'stickerLibrary' || m[2] === 'myStickerLibrary')) { info.stickers += b; continue; }
       if (/^gca_/.test(k) && !used[k]) { info.avatars.keys.push(k); info.avatars.b += b; }
@@ -1741,6 +1741,13 @@
         if (k === 'img') { await clnImages(); return; }
         if (k === 'orphan') { if (!(await confirmAsync('清掉已刪除聊天室留下的資料？'))) return; for (var i = 0; i < clnInfo.orphan.keys.length; i++) { try { await localforage.removeItem(clnInfo.orphan.keys[i]); } catch (er) {} } toast('已清除', 'success'); clnRefresh(); return; }
         if (k === 'avatars') { for (var j = 0; j < clnInfo.avatars.keys.length; j++) { try { await localforage.removeItem(clnInfo.avatars.keys[j]); } catch (er) {} } toast('已清除', 'success'); clnRefresh(); return; }
+        if (k === 'slimOn' || k === 'slimOff') {
+          var on = k === 'slimOn';
+          if (!on && !(await confirmAsync('關掉表情包瘦身？每張圖會重新完整存回每一則訊息，空間會變大。'))) return;
+          b.disabled = true; b.textContent = on ? '瘦身中……' : '還原中……';
+          try { if (typeof saveData === 'function') await saveData(); await (on ? window.__cxImg.enable() : window.__cxImg.disable()); if (typeof saveData === 'function') await saveData(); } catch (er) { console.warn(er); }
+          toast(on ? '瘦身完成 🪶' : '已關閉瘦身', 'success'); clnRefresh(); return;
+        }
         if (k === 'cache') {
           if (!(await confirmAsync('清除網站暫存？下次打開會重新下載網站檔案（要連網），聊天資料不會受影響。'))) return;
           try { var cn = await caches.keys(); for (var c = 0; c < cn.length; c++) await caches.delete(cn[c]); } catch (er) {}
@@ -1759,7 +1766,8 @@
   }
   async function clnRefresh() {
     var I = await clnScan(); if (!clnM || !clnM.isOpen()) return;
-    var est = I.est && I.est.quota ? '<div class="cx-muted">這台裝置實際用了 ' + mb(I.est.usage || 0) + '，瀏覽器最多可以給這個網站大約 ' + mb(I.est.quota) + '。資料管理那條紅色進度條是用 5MB 算的，那是舊的上限，不用擔心。</div>' : '';
+    var SL = null; try { if (window.__cxImg) SL = await window.__cxImg.stats(); } catch (e) {}
+    var est = I.est && I.est.quota ? '<div class="cx-muted">這台裝置實際用了 ' + mb(I.est.usage || 0) + '，瀏覽器最多可以給這個網站大約 ' + mb(I.est.quota) + '，空間很夠用。</div>' : '';
     var chatRows = I.chats.sort(function (a, b) { return b.b - a.b; }).map(function (c) {
       return '<div class="cx-cl-row"><span>' + esc(c.name || '聊天室') + (c.sid === curSid() ? '（目前）' : '') + '</span><span>' + c.n + ' 則 · ' + mb(c.b) + (c.img.n || c.img.sn ? '<br><small>照片 ' + c.img.n + ' 張 · ' + mb(c.img.b) + '　表情包 ' + c.img.sn + ' 張 · ' + mb(c.img.sb) + '</small>' : '') + '</span></div>';
     }).join('');
@@ -1773,6 +1781,10 @@
       '<label class="qa-chk"><input type="checkbox" id="cx-cl-fav" checked>保留收藏的訊息裡的圖片</label>' +
       '<div class="cx-muted">表情包是用「表情庫裡有沒有這張」來認的；已經從表情庫刪掉的表情包，會被當成照片。</div>' +
       '<button class="cx-btn pri" data-k="img"' + (I.img.n || I.img.sn ? '' : ' disabled') + '>清除圖片</button></div>' +
+      (SL ? '<div class="cx-sec"><h4>🪶 表情包瘦身 <small>' + (SL.on ? '已開啟' : '未開啟') + '</small></h4>' +
+        '<div class="cx-muted">同一張表情包傳了很多次，原本每次都會完整存一份。開啟後同一張圖只存一份，聊天紀錄看起來完全一樣。之後新傳的也會自動這樣存。</div>' +
+        (SL.on ? '<div class="cx-muted">現在實際只存了：聊天紀錄 ' + mb(SL.chat) + ' ＋ 不重複的圖片 ' + SL.images + ' 張 ' + mb(SL.store) + '</div><button class="cx-btn" data-k="slimOff">關閉瘦身</button>'
+          : '<button class="cx-btn pri" data-k="slimOn">開啟表情包瘦身</button>') + '</div>' : '') +
       '<div class="cx-sec"><h4>📦 網站暫存 <small>' + mb(I.cache) + '</small></h4><div class="cx-muted">讓網站離線也能打開的檔案。清掉不影響任何聊天資料，下次打開會重新下載。</div><button class="cx-btn" data-k="cache"' + (I.cache ? '' : ' disabled') + '>清除暫存</button></div>' +
       '<div class="cx-sec"><h4>🗑 已刪除聊天室的殘留 <small>' + mb(I.orphan.b) + '</small></h4><div class="cx-muted">刪掉聊天室後沒清乾淨的資料。</div><button class="cx-btn" data-k="orphan"' + (I.orphan.keys.length ? '' : ' disabled') + '>清除殘留</button></div>' +
       '<div class="cx-sec"><h4>👤 沒在用的成員頭像 <small>' + I.avatars.keys.length + ' 張 · ' + mb(I.avatars.b) + '</small></h4><div class="cx-muted">已經刪掉的群組成員留下的頭像。</div><button class="cx-btn" data-k="avatars"' + (I.avatars.keys.length ? '' : ' disabled') + '>清除</button></div>' +
@@ -1808,6 +1820,7 @@
         if (Array.isArray(arr)) { var n = strip(arr, await sessStickers(ss[i].id)); if (n) { total += n; try { await localforage.setItem(k, arr); } catch (e) {} } }
       }
     }
+    try { if (window.__cxImg) await window.__cxImg.gc(); } catch (e) {}
     toast(total ? '清掉了 ' + total + ' 張' + (keepStk ? '照片' : '圖片') : '沒有符合條件的圖片', total ? 'success' : 'info');
     clnRefresh();
   }
@@ -1899,7 +1912,7 @@
     { s: '同步、備份、空間', items: [
       ['同步', '電腦和手機用同一組連線碼，資料就會自動同步。上面跳出「其他裝置有新內容」時，點一下就會更新。想重新設定，在網址後面加 #sync。連線碼等於資料的鑰匙，不要給別人。', null],
       ['備份', '設定 › 資料管理 › 全量備份。更新網站或清空間之前，可以先匯出一份。', ['card', 'data-settings']],
-      ['整理空間', '設定 › 資料管理 › 整理空間：清聊天圖片、網站暫存、已刪除聊天室的殘留、沒在用的頭像、書架。', ['fn', 'clean']]
+      ['整理空間', '設定 › 資料管理 › 整理空間：表情包瘦身（同一張圖只存一份）、清聊天圖片、網站暫存、已刪除聊天室的殘留、沒在用的頭像、書架。', ['fn', 'clean']]
     ] },
     { s: '常見問題', items: [
       ['更新網站後看起來沒變', '等 1～2 分鐘再重新整理；手機上把網站關掉再打開。', null],

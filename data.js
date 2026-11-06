@@ -218,7 +218,7 @@
             if (window.localforage) {
                 localforage.keys().then(function (keys) {
                     var promises = keys.map(function (k) {
-                        return localforage.getItem(k).then(function (raw) {
+                        return (localforage.getRawItem || localforage.getItem).call(localforage, k).then(function (raw) {
                             if (raw == null) return { k: k, b: 0 };
                             var str = typeof raw === 'string' ? raw : JSON.stringify(raw);
                             return { k: k, b: (k.length + str.length) * 2 };
@@ -228,7 +228,7 @@
                         results.forEach(function (r) {
                             total += r.b;
                             if (/messages|msgs|session/i.test(r.k)) msgs += r.b;
-                            else if (/avatar|image|photo|bg|background|wallpaper/i.test(r.k)) media += r.b;
+                            else if (/avatar|image|photo|bg|background|wallpaper|cxImg_|sticker/i.test(r.k)) media += r.b;
                             else cfg += r.b;
                         });
                         applyStats(total, msgs, cfg, media);

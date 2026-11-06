@@ -203,6 +203,95 @@
       p.then(function () { Object.keys(META).forEach(function (id) { if (META[id].st === 'lf') markDirty('lf', META[id].k); }); }, function () {});
       return p;
     };
+    imgLayer();
+  }
+
+  /* ---------- 表情包瘦身：聊天裡同一張圖只存一份 ----------
+     存檔時把訊息裡的圖片換成「cximg:編號」，圖片本身另外存一份 cxImg_編號；
+     讀檔時再換回原本的圖片，所以網站其他地方看到的都跟原本一樣。 */
+  var IMGP = 'cxImg_';
+  function imgOn() { return lsg('cxImgDedupe') === '1'; }
+  function imgHash(s) { var a = 2166136261, b = 5381; for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); a ^= c; a = Math.imul(a, 16777619); b = Math.imul(b, 33) ^ c; } return (a >>> 0).toString(36) + (b >>> 0).toString(36) + s.length.toString(36); }
+  function isMsgKey(k) { return typeof k === 'string' && /_chatMessages$/.test(k); }
+  function imgLayer() {
+    var imgMap = new Map(), imgCache = {}, known = {}, chain = {};
+    var setW = localforage.setItem, rmW = localforage.removeItem;
+    async function pack(src) {
+      if (typeof src !== 'string' || src.length < 2000 || src.indexOf('data:') !== 0) return src;
+      var h = imgMap.get(src); if (!h) { h = imgHash(src); imgMap.set(src, h); }
+      if (!imgCache[h]) imgCache[h] = src;
+      if (!known[h]) { var ex = await lfGet(IMGP + h); if (ex == null) await setW(IMGP + h, src); known[h] = 1; }
+      return 'cximg:' + h;
+    }
+    async function packMsgs(arr) {
+      var out = new Array(arr.length);
+      for (var i = 0; i < arr.length; i++) {
+        var m = arr[i], c = m;
+        if (m && typeof m === 'object') {
+          var im = m.image ? await pack(m.image) : m.image;
+          var ri = m.replyTo && m.replyTo.image ? await pack(m.replyTo.image) : null;
+          if (im !== m.image || (ri && ri !== m.replyTo.image)) {
+            c = Object.assign({}, m); c.image = im;
+            if (ri && ri !== m.replyTo.image) c.replyTo = Object.assign({}, m.replyTo, { image: ri });
+          }
+        }
+        out[i] = c;
+      }
+      return out;
+    }
+    async function unpack(ref) {
+      if (typeof ref !== 'string' || ref.indexOf('cximg:') !== 0) return ref;
+      var h = ref.slice(6);
+      if (!imgCache[h]) { var v = await lfGet(IMGP + h); if (typeof v === 'string') { imgCache[h] = v; imgMap.set(v, h); known[h] = 1; } }
+      return imgCache[h] || null;
+    }
+    async function unpackMsgs(arr) {
+      if (!Array.isArray(arr)) return arr;
+      for (var i = 0; i < arr.length; i++) {
+        var m = arr[i]; if (!m || typeof m !== 'object') continue;
+        if (typeof m.image === 'string' && m.image.indexOf('cximg:') === 0) { m.image = await unpack(m.image); if (!m.image && !m.text) m.text = '［圖片遺失］'; }
+        if (m.replyTo && typeof m.replyTo.image === 'string' && m.replyTo.image.indexOf('cximg:') === 0) m.replyTo.image = await unpack(m.replyTo.image);
+      }
+      return arr;
+    }
+    function hasRefs(arr) { return Array.isArray(arr) && arr.some(function (m) { return m && typeof m.image === 'string' && m.image.indexOf('cximg:') === 0; }); }
+    localforage.setItem = function (k, v, cb) {
+      if (!isMsgKey(k) || !Array.isArray(v) || !imgOn()) return setW(k, v, cb);
+      var job = (chain[k] || Promise.resolve()).then(function () { return packMsgs(v); }).then(function (pv) { return setW(k, pv); }).then(function () { if (cb) cb(null, v); return v; });
+      chain[k] = job.catch(function () {});
+      return job;
+    };
+    localforage.getItem = function (k, cb) {
+      var p = lfGet(k);
+      if (isMsgKey(k)) p = p.then(unpackMsgs);
+      if (cb) p.then(function (v) { cb(null, v); }, function (e) { cb(e); });
+      return p;
+    };
+    async function msgKeys() { var ks = []; try { ks = await lfKeys(); } catch (e) {} return ks.filter(isMsgKey); }
+    async function resaveAll() {
+      var ks = await msgKeys();
+      for (var i = 0; i < ks.length; i++) { var v = await localforage.getItem(ks[i]); if (Array.isArray(v)) await localforage.setItem(ks[i], v); }
+    }
+    async function gc() {
+      var used = {}, ks = await msgKeys(), all = [];
+      for (var i = 0; i < ks.length; i++) { var raw = await lfGet(ks[i]); (raw || []).forEach(function (m) { [m && m.image, m && m.replyTo && m.replyTo.image].forEach(function (x) { if (typeof x === 'string' && x.indexOf('cximg:') === 0) used[x.slice(6)] = 1; }); }); }
+      try { all = (await lfKeys()).filter(function (k) { return k.indexOf(IMGP) === 0; }); } catch (e) {}
+      var n = 0; for (var j = 0; j < all.length; j++) { var h = all[j].slice(IMGP.length); if (!used[h]) { await rmW(all[j]); delete known[h]; delete imgCache[h]; n++; } }
+      return n;
+    }
+    async function stats() {
+      var ks = await msgKeys(), raw = 0, refs = 0, store = 0, n = 0;
+      for (var i = 0; i < ks.length; i++) { var v = await lfGet(ks[i]); try { raw += JSON.stringify(v || []).length * 2; } catch (e) {} if (hasRefs(v)) refs++; }
+      var all = []; try { all = (await lfKeys()).filter(function (k) { return k.indexOf(IMGP) === 0; }); } catch (e) {}
+      for (var j = 0; j < all.length; j++) { var x = await lfGet(all[j]); if (typeof x === 'string') { store += x.length * 2; n++; } }
+      return { on: imgOn(), chat: raw, store: store, images: n };
+    }
+    localforage.getRawItem = function (k) { return lfGet(k); };
+    window.__cxImg = {
+      on: imgOn, stats: stats, gc: gc,
+      enable: async function () { localStorage.setItem('cxImgDedupe', '1'); await resaveAll(); await gc(); },
+      disable: async function () { localStorage.setItem('cxImgDedupe', '0'); await resaveAll(); await gc(); }
+    };
   }
   localforage.config = function () { return true; };
   Storage.prototype.setItem = function (k, v) { lsSet.call(this, k, v); if (this === LS) markDirty('ls', String(k)); };
