@@ -524,7 +524,59 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         const b = document.getElementById('call-mini-timer');
         if (a) a.textContent = t;
         if (b) b.textContent = t;
+        liveBeat();
         S.timerRAF = requestAnimationFrame(tick);
+    }
+
+    /* 通話中重新整理：每幾秒記一下通話狀態，重新整理後可以接著打，或至少留下通話紀錄 */
+    const LIVE_KEY = '__cx_call_live'; // 只存在這台裝置，不跟著同步
+    let lastBeat = 0;
+    function curSid() { try { return SESSION_ID || ''; } catch (e) { return ''; } }
+    function liveBeat(force) {
+        const now = Date.now();
+        if (!force && now - lastBeat < 3000) return;
+        lastBeat = now;
+        try { localStorage.setItem(LIVE_KEY, JSON.stringify({ start: S.startTime, beat: now, sid: curSid(), partner: S.isPartnerCall })); } catch (e) {}
+    }
+    function liveClear() { try { localStorage.removeItem(LIVE_KEY); } catch (e) {} }
+    function resumeCall(start, partner) {
+        if (!S.enabled) return;
+        S.active = true; S.startTime = start; S.elapsed = Date.now() - start;
+        S.minimized = false; S.isPartnerCall = !!partner; S.immersive = false;
+        ['call-inc-avatar','call-conn-avatar','call-win-avatar','call-mini-av'].forEach(fillAv);
+        ['call-conn-name','call-win-name','call-mini-name'].forEach(fillNm);
+        applyBg(); positionWindow();
+        const win = document.getElementById('call-window');
+        const body = document.getElementById('call-window-body');
+        const conn = document.getElementById('call-connecting-state');
+        if (win) { win.classList.remove('immersive'); win.classList.add('visible'); }
+        if (conn) conn.classList.remove('visible');
+        if (body) body.style.display = '';
+        tick();
+    }
+    function checkInterrupted() {
+        let d = null;
+        try { d = JSON.parse(localStorage.getItem(LIVE_KEY) || 'null'); } catch (e) {}
+        if (!d || !d.start || !d.beat) return;
+        if (d.sid && curSid() && d.sid !== curSid()) return;
+        if (S.active) return;
+        const talked = Math.max(0, d.beat - d.start);
+        const gap = Date.now() - d.beat;
+        if (gap > 10 * 60e3) { liveClear(); if (talked > 2000) sendCallEvent('fa-video', '視訊通話已結束', fmt(talked)); return; }
+        const o = document.createElement('div');
+        o.style.cssText = 'position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:20px';
+        o.innerHTML = '<div style="width:100%;max-width:320px;background:var(--secondary-bg,#fff);color:var(--text-primary,#333);border-radius:22px;padding:22px 20px 16px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.25)">' +
+            '<div style="font-size:30px;margin-bottom:6px">📞</div><div style="font-weight:600;font-size:16px">通話被重新整理打斷了</div>' +
+            '<div style="font-size:14px;opacity:.75;margin:8px 0 16px;line-height:1.6">剛剛和 ' + getName() + ' 已經通話 ' + fmt(talked) + '</div>' +
+            '<div style="display:flex;gap:10px;justify-content:center"><button data-a="end" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--border-color,#ddd);background:transparent;color:inherit;font:inherit;cursor:pointer">掛斷</button>' +
+            '<button data-a="go" style="flex:1;padding:10px;border-radius:12px;border:none;background:var(--accent-color,#9c86c6);color:#fff;font:inherit;cursor:pointer">繼續通話</button></div></div>';
+        document.body.appendChild(o);
+        o.addEventListener('click', e => {
+            const b = e.target.closest('[data-a]'); if (!b) return;
+            o.remove();
+            if (b.dataset.a === 'go') resumeCall(Date.now() - talked, d.partner);
+            else { liveClear(); if (talked > 2000) sendCallEvent('fa-video', '視訊通話已結束', fmt(talked)); }
+        });
     }
 
     function applyBg() {
@@ -633,6 +685,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
 
     function endCall() {
         if (!S.active) return;
+        liveClear();
         const dur = S.elapsed;
         S.active = false; S.startTime = null;
         cancelAnimationFrame(S.timerRAF);
@@ -898,6 +951,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         injectCSS();
         injectHTML();
         bindEvents();
+        setTimeout(checkInterrupted, 3500);
         loadBg();
 
         const late = () => {
