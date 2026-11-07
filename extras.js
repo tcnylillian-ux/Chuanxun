@@ -1876,6 +1876,7 @@
     ] },
     { s: '聊天', items: [
       ['自定義回覆（字卡）', '他回話用的句子都在這裡，可以分組、停用整組。', ['entry', 'custom-replies-function']],
+      ['他的評分', '他幫每張字卡打 1～10 分，附一句短評（隨機的）。可以篩出他不滿意的，自己決定要改還是刪。「讓他挑一挑」會列出他最不想說和最喜歡的幾張。群聊裡每個人各打各的。', ['entry', 'cx-rate-entry']],
       ['回覆與來信', '他主動來信、發紅包、連結狀態、自己掛電話的設定，都在這一頁。', ['entry', 'cx-set-entry']],
       ['訊息統計', '總共聊了幾則、高頻詞、搜尋訊息、收藏、詞雲。', ['entry', 'stats-function']],
       ['通話紀錄', '每通電話打了多久、哪些沒接。點一通會跳回聊天裡那一則。', ['entry', 'cx-calllog-entry']],
@@ -2046,9 +2047,191 @@
     envFavRender();
   }
 
+  /* ================= 他的評分（字卡滿意度） ================= */
+  var RT_BANDS = [
+    { k: 'bad', n: '不滿意', lo: 1, hi: 3, w: 0.12, col: '#d9534f' },
+    { k: 'meh', n: '湊合', lo: 4, hi: 6, w: 0.24, col: '#d39a2c' },
+    { k: 'good', n: '滿意', lo: 7, hi: 9, w: 0.50, col: '#3f9e6a' },
+    { k: 'great', n: '非常滿意', lo: 10, hi: 10, w: 0.14, col: '#8a63d2' }
+  ];
+  var RT_LINES = {
+    bad: ['有點做作', '太不像我了', '太肉麻了', '語氣不對', '我才不會這樣說', '好尷尬', '這句誰寫的', '說不出口', '太正經了', '怪怪的'],
+    meh: ['還行吧', '勉強可以', '普普通通', '偶爾說說', '有點平淡', '看心情', '不算差', '可以再改改', '湊合用'],
+    good: ['挺像我的', '這句可以', '喜歡', '說得出口', '很自然', '是我會說的', '不錯', '順口', '對你就會這樣說'],
+    great: ['就是這句', '完全是我', '最喜歡這張', '想天天說', '說到心裡了', '滿分', '這句留著', '好懂我']
+  };
+  var RT_PAGE = 60;
+  var rt = { who: null, f: 'all', g: 'all', q: '', page: 0, view: 'list' }, rtM = null;
+  function rtBand(s) { for (var i = 0; i < RT_BANDS.length; i++) if (s >= RT_BANDS[i].lo && s <= RT_BANDS[i].hi) return RT_BANDS[i]; return RT_BANDS[0]; }
+  function rtLines(k) { var L = X.rate && X.rate.lines && X.rate.lines[k]; return (L && L.length) ? L : RT_LINES[k]; }
+  function rtRoll() {
+    var r = Math.random(), acc = 0, b = RT_BANDS[RT_BANDS.length - 1];
+    for (var i = 0; i < RT_BANDS.length; i++) { acc += RT_BANDS[i].w; if (r < acc) { b = RT_BANDS[i]; break; } }
+    var s = b.lo + Math.floor(Math.random() * (b.hi - b.lo + 1)), L = rtLines(b.k);
+    return { s: s, c: L[Math.floor(Math.random() * L.length)] };
+  }
+  function rtStore() { if (!X.rate || typeof X.rate !== 'object') X.rate = { by: {}, lines: null }; if (!X.rate.by) X.rate.by = {}; return X.rate; }
+  function rtMap(who) { var by = rtStore().by; who = who || rt.who || pname(); return by[who] || (by[who] = {}); }
+  function rtCards() { var a = (typeof customReplies !== 'undefined' && Array.isArray(customReplies)) ? customReplies : [], seen = {}, out = []; a.forEach(function (t) { if (typeof t === 'string' && t.trim() && !seen[t]) { seen[t] = 1; out.push(t); } }); return out; }
+  function rtGroups() { return (window.customReplyGroups || []).filter(function (g) { return g && g.name && Array.isArray(g.items) && g.items.length; }); }
+  function rtScope() {
+    var all = rtCards();
+    if (rt.g === 'all') return all;
+    var g = rtGroups().find(function (x) { return String(x.id) === rt.g; });
+    if (g) { var set = {}; g.items.forEach(function (t) { set[t] = 1; }); return all.filter(function (t) { return set[t]; }); }
+    var inAny = {}; rtGroups().forEach(function (x) { x.items.forEach(function (t) { inAny[t] = 1; }); });
+    return all.filter(function (t) { return !inAny[t]; });
+  }
+  function rtPrune() { var live = {}; rtCards().forEach(function (t) { live[t] = 1; }); var by = rtStore().by; Object.keys(by).forEach(function (w) { Object.keys(by[w]).forEach(function (t) { if (!live[t]) delete by[w][t]; }); }); }
+  function rtSaveCards() {
+    try { if (typeof throttledSaveData === 'function') throttledSaveData(); else if (typeof saveData === 'function') saveData(); } catch (e) {}
+    try { var lib = document.getElementById('reply-library-modal'); if (typeof renderReplyLibrary === 'function' && (!lib || lib.style.display !== 'none')) renderReplyLibrary(); } catch (e) {}
+  }
+  function rtStars(s, col) { var h = ''; for (var i = 1; i <= 10; i++) h += '<i style="color:' + (i <= s ? col : 'var(--border-color)') + '">★</i>'; return h; }
+
+  function rtOpen() {
+    if (!rtM) {
+      rtM = makeModal('cx-rate-modal', 'fa-star-half-stroke', '他的評分');
+      rtM.onBack = function () { if (rt.view !== 'list') { rt.view = 'list'; rtRender(); return true; } };
+      rtM.body.addEventListener('input', function (e) {
+        if (e.target.id === 'cx-rt-q') { rt.q = e.target.value; rt.page = 0; clearTimeout(rtM.qT); rtM.qT = setTimeout(function () { rtList(); }, 200); }
+      });
+      rtM.body.addEventListener('change', function (e) { if (e.target.id === 'cx-rt-g') { rt.g = e.target.value; rt.page = 0; rtRender(); } });
+      rtM.body.addEventListener('click', rtClick);
+      bindChips(rtM.body, function (n) { rt.who = n; rt.page = 0; rtRender(); });
+    }
+    rt.view = 'list'; rt.page = 0;
+    var ppl = groupPeople();
+    if (!rt.who || (ppl.length && !ppl.some(function (p) { return p.name === rt.who; })) || (!ppl.length && rt.who !== pname())) rt.who = pname();
+    rtPrune(); rtRender(); rtM.open();
+  }
+  function rtCounts(list, map) {
+    var c = { all: list.length, none: 0 }; RT_BANDS.forEach(function (b) { c[b.k] = 0; });
+    list.forEach(function (t) { var r = map[t]; if (!r) c.none++; else c[rtBand(r.s).k]++; });
+    return c;
+  }
+  function rtRender() {
+    if (rt.view === 'pick') return rtPickView();
+    if (rt.view === 'lines') return rtLinesView();
+    var map = rtMap(), scope = rtScope(), c = rtCounts(scope, map), gs = rtGroups();
+    var h = whoChips('cx-rt-who', rt.who);
+    if (h) h = '<div class="cx-who-t">誰來評分</div>' + h;
+    h += '<div class="cx-rt-top"><input class="cx-in" id="cx-rt-q" type="search" placeholder="搜尋字卡…" autocomplete="off" value="' + esc(rt.q) + '">' +
+      (gs.length ? '<select class="cx-in" id="cx-rt-g"><option value="all">全部字卡</option>' + gs.map(function (g) { return '<option value="' + esc(String(g.id)) + '"' + (rt.g === String(g.id) ? ' selected' : '') + '>' + esc(g.name) + '（' + g.items.length + '）</option>'; }).join('') + '<option value="none"' + (rt.g === 'none' ? ' selected' : '') + '>未分組</option></select>' : '') + '</div>';
+    h += '<div class="cx-rt-acts"><button type="button" class="cx-btn pri" data-rt="fill"' + (c.none ? '' : ' disabled') + '>給未評分的打分' + (c.none ? '（' + c.none + '）' : '') + '</button>' +
+      '<button type="button" class="cx-btn" data-rt="redo">全部重打</button><button type="button" class="cx-btn" data-rt="pick">讓他挑一挑</button></div>';
+    h += '<div class="cx-muted">分數是隨機給的，不經過 AI，也不影響聊天裡抽字卡。只是讓你看看他喜不喜歡這張、要不要改。' +
+      RT_BANDS.map(function (b) { return '<b style="color:' + b.col + '">' + (b.lo === b.hi ? b.lo : b.lo + '-' + b.hi) + ' ' + b.n + '</b>'; }).join(' / ') +
+      '。要改要刪都是你決定。 <a href="#" data-rt="lines">改他的短評 ›</a></div>';
+    var F = [['all', '全部'], ['none', '未評分']].concat(RT_BANDS.map(function (b) { return [b.k, b.n]; }));
+    h += '<div class="cx-chips cx-rt-f">' + F.map(function (f) { return '<button type="button" data-rf="' + f[0] + '" class="' + (rt.f === f[0] ? 'on' : '') + '">' + f[1] + ' ' + c[f[0]] + '</button>'; }).join('') + '</div>';
+    h += '<div id="cx-rt-list"></div>';
+    rtM.body.innerHTML = h;
+    rtList();
+  }
+  function rtFiltered() {
+    var map = rtMap(), q = rt.q.trim().toLowerCase();
+    var list = rtScope().filter(function (t) {
+      var r = map[t];
+      if (rt.f === 'none' ? r : (rt.f !== 'all' && (!r || rtBand(r.s).k !== rt.f))) return false;
+      return !q || t.toLowerCase().indexOf(q) >= 0 || (r && r.c.toLowerCase().indexOf(q) >= 0);
+    });
+    if (rt.f !== 'all' && rt.f !== 'none') list.sort(function (a, b) { return map[a].s - map[b].s; });
+    return list;
+  }
+  function rtList() {
+    var box = rtM.body.querySelector('#cx-rt-list'); if (!box) return;
+    var map = rtMap(), list = rtFiltered(), pages = Math.max(1, Math.ceil(list.length / RT_PAGE));
+    if (rt.page >= pages) rt.page = pages - 1;
+    var part = list.slice(rt.page * RT_PAGE, (rt.page + 1) * RT_PAGE);
+    var off = new Set(); try { off = new Set(JSON.parse(localStorage.getItem('disabledReplyItems') || '[]')); } catch (e) {}
+    var h = part.length ? part.map(function (t) {
+      var r = map[t], b = r && rtBand(r.s);
+      return '<div class="cx-rt-it" data-t="' + esc(t) + '"><div class="tx">' + esc(t) + (off.has(t) ? ' <span class="cx-rt-off">已遮蔽</span>' : '') + (b ? '<span class="tag" style="color:' + b.col + ';border-color:' + b.col + '">' + b.n + '</span>' : '<span class="tag">未評分</span>') + '</div>' +
+        '<div class="row">' + (r ? '<span class="st">' + rtStars(r.s, b.col) + '</span><span class="sc">' + r.s + '/10</span><span class="cm">' + esc(r.c) + '</span>' : '<span class="cm">還沒打分</span>') +
+        '<span class="op"><button type="button" data-ro="edit">改</button><button type="button" data-ro="re">' + (r ? '重打' : '打分') + '</button><button type="button" data-ro="del" class="del">刪</button></span></div></div>';
+    }).join('') : '<div class="cx-muted" style="text-align:center;padding:24px 0">' + (rtCards().length ? '這裡沒有字卡' : '還沒有字卡，先到「自定義回覆」新增') + '</div>';
+    if (pages > 1) h += '<div class="cx-rt-pg"><button type="button" class="cx-btn" data-rp="-1"' + (rt.page ? '' : ' disabled') + '>上一頁</button><span>' + (rt.page + 1) + ' / ' + pages + '</span><button type="button" class="cx-btn" data-rp="1"' + (rt.page < pages - 1 ? '' : ' disabled') + '>下一頁</button></div>';
+    box.innerHTML = h;
+  }
+  function rtCardFind(t) { var a = customReplies, out = []; for (var i = 0; i < a.length; i++) if (a[i] === t) out.push(i); return out; }
+  function rtEdit(t) {
+    var nt = prompt('修改字卡：', t); if (nt === null) return; nt = nt.trim(); if (!nt || nt === t) return;
+    rtCardFind(t).forEach(function (i) { customReplies[i] = nt; });
+    (window.customReplyGroups || []).forEach(function (g) { if (Array.isArray(g.items)) g.items = g.items.map(function (x) { return x === t ? nt : x; }); });
+    try { var off = JSON.parse(localStorage.getItem('disabledReplyItems') || '[]'); if (off.indexOf(t) >= 0) localStorage.setItem('disabledReplyItems', JSON.stringify(off.map(function (x) { return x === t ? nt : x; }))); } catch (e) {}
+    var by = rtStore().by; Object.keys(by).forEach(function (w) { delete by[w][t]; });
+    var r = rtRoll(); rtMap()[nt] = r; save(); rtSaveCards();
+    toast(rt.who + '：「' + r.c + '」' + r.s + '/10', 'success'); rtRender();
+  }
+  function rtDel(t) {
+    if (!confirm('刪除這張字卡？\n\n' + t)) return;
+    rtCardFind(t).reverse().forEach(function (i) { customReplies.splice(i, 1); });
+    (window.customReplyGroups || []).forEach(function (g) { if (Array.isArray(g.items)) g.items = g.items.filter(function (x) { return x !== t; }); });
+    var by = rtStore().by; Object.keys(by).forEach(function (w) { delete by[w][t]; });
+    save(); rtSaveCards(); toast('已刪除', 'success');
+    if (rt.view === 'pick') rtPickView(); else rtRender();
+  }
+  function rtClick(e) {
+    var a = e.target.closest('[data-rt]');
+    if (a) {
+      e.preventDefault(); var k = a.dataset.rt, map = rtMap(), scope = rtScope();
+      if (k === 'fill') { var n = 0; scope.forEach(function (t) { if (!map[t]) { map[t] = rtRoll(); n++; } }); save(); toast(rt.who + ' 看完了 ' + n + ' 張', 'success'); rtRender(); }
+      else if (k === 'redo') { if (!confirm('讓 ' + rt.who + ' 把' + (rt.g === 'all' ? '全部' : '這一組') + '字卡重新打分？')) return; scope.forEach(function (t) { map[t] = rtRoll(); }); save(); toast('重新打好了', 'success'); rtRender(); }
+      else if (k === 'pick') { rt.view = 'pick'; rtPickView(); }
+      else if (k === 'lines') { rt.view = 'lines'; rtLinesView(); }
+      else if (k === 'lsave') {
+        var L = {}; RT_BANDS.forEach(function (b) { var v = (rtM.body.querySelector('#cx-rtl-' + b.k).value || '').split('\n').map(function (x) { return x.trim(); }).filter(Boolean); if (v.length) L[b.k] = v; });
+        rtStore().lines = Object.keys(L).length ? L : null; save(); toast('短評已儲存，下次打分會用', 'success'); rt.view = 'list'; rtRender();
+      }
+      else if (k === 'lreset') { rtStore().lines = null; save(); rtLinesView(); toast('已恢復預設', 'success'); }
+      return;
+    }
+    var f = e.target.closest('[data-rf]'); if (f) { rt.f = f.dataset.rf; rt.page = 0; rtM.body.querySelectorAll('.cx-rt-f button').forEach(function (b) { b.classList.toggle('on', b === f); }); rtList(); return; }
+    var p = e.target.closest('[data-rp]'); if (p) { rt.page += +p.dataset.rp; rtList(); var l = rtM.body.querySelector('#cx-rt-list'); if (l) l.scrollIntoView({ block: 'start' }); return; }
+    var o = e.target.closest('[data-ro]'); if (!o) return;
+    var t = o.closest('[data-t]').dataset.t, op = o.dataset.ro;
+    if (op === 'edit') rtEdit(t);
+    else if (op === 'del') rtDel(t);
+    else if (op === 're') { var r = rtRoll(); rtMap()[t] = r; save(); if (rt.view === 'pick') rtPickView(); else { rtRender(); } toast(r.s + '/10 · ' + r.c, 'info'); }
+    else if (op === 'keep') { var m = rtMap(); if (m[t]) { m[t].k = 1; save(); } rtPickView(); }
+  }
+  function rtPickView() {
+    var map = rtMap(), scope = rtScope(), n = 0;
+    scope.forEach(function (t) { if (!map[t]) { map[t] = rtRoll(); n++; } }); if (n) save();
+    var sh = function (a) { return a.map(function (t) { return [t, Math.random()]; }).sort(function (x, y) { return map[x[0]].s - map[y[0]].s || x[1] - y[1]; }).map(function (x) { return x[0]; }); };
+    var worst = sh(scope.filter(function (t) { return map[t].s <= 6 && !map[t].k; })).slice(0, 6);
+    var best = sh(scope.filter(function (t) { return map[t].s >= 9; })).reverse().slice(0, 6);
+    var row = function (t, bad) { var r = map[t], b = rtBand(r.s); return '<div class="cx-rt-it" data-t="' + esc(t) + '"><div class="tx">' + esc(t) + '</div><div class="row"><span class="sc" style="color:' + b.col + '">' + r.s + '/10</span><span class="cm">「' + esc(r.c) + '」</span><span class="op">' + (bad ? '<button type="button" data-ro="edit">改</button><button type="button" data-ro="keep">留著</button><button type="button" data-ro="del" class="del">刪</button>' : '') + '</span></div></div>'; };
+    var h = sayHtml(worst.length ? '我翻了一下……這幾張不太像我會說的，你看看要不要改。' : '我都看過了，沒什麼不想說的。') +
+      (worst.length ? '<div class="cx-rt-sec">他不太想說的</div>' + worst.map(function (t) { return row(t, true); }).join('') : '') +
+      (best.length ? '<div class="cx-rt-sec">他最喜歡的</div>' + best.map(function (t) { return row(t, false); }).join('') : '') +
+      '<div class="cx-muted" style="margin-top:10px">按「留著」他就不會再挑這張。按左下「返回」回到列表。</div>';
+    rtM.body.innerHTML = h;
+  }
+  function rtLinesView() {
+    var h = '<div class="cx-muted">每行一句。打分時會從這裡隨機挑一句當短評。</div>' + RT_BANDS.map(function (b) {
+      return '<div class="cx-rt-sec" style="color:' + b.col + '">' + b.n + '（' + (b.lo === b.hi ? b.lo : b.lo + '–' + b.hi) + ' 分）</div><textarea class="cx-in" rows="4" id="cx-rtl-' + b.k + '">' + esc(rtLines(b.k).join('\n')) + '</textarea>';
+    }).join('') + '<div class="cx-rt-acts"><button type="button" class="cx-btn pri" data-rt="lsave">儲存</button><button type="button" class="cx-btn" data-rt="lreset">恢復預設</button></div>';
+    rtM.body.innerHTML = h;
+  }
+  (function rtCss() {
+    var s = document.createElement('style'); s.id = 'cx-rate-css';
+    s.textContent = '#cx-rate-modal .cx-who{margin-bottom:8px}.cx-rt-top,.cx-rt-acts,#cx-rt-list{flex-shrink:0}.cx-rt-top{display:flex;gap:8px;margin-bottom:8px}.cx-rt-top input{flex:1;min-width:0}.cx-rt-top select{flex:0 1 42%;min-width:0}' +
+      '.cx-rt-acts{display:flex;gap:6px;margin:8px 0}.cx-rt-acts .cx-btn{flex:1 1 0;padding:9px 6px;font-size:13px;white-space:nowrap}.cx-rt-acts .cx-btn.pri{flex:1.4 1 0}' +
+      '#cx-rate-modal .cx-muted a{color:var(--accent-color)}.cx-rt-f{margin:10px 0 4px;flex:0 0 auto;min-height:36px;padding-bottom:2px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.cx-rt-f::-webkit-scrollbar{display:none}.cx-rt-f button{flex:0 0 auto;font-size:13px;padding:5px 11px}' +
+      '.cx-rt-it{padding:10px 2px;border-bottom:1px solid var(--border-color)}.cx-rt-it .tx{font-size:15px;line-height:1.5;color:var(--text-primary);word-break:break-word}' +
+      '.cx-rt-it .tag{float:right;margin-left:8px;font-size:11px;border:1px solid var(--border-color);border-radius:99px;padding:1px 8px;color:var(--text-secondary)}.cx-rt-off{font-size:11px;color:var(--text-secondary)}' +
+      '.cx-rt-it .row{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;color:var(--text-secondary);flex-wrap:wrap}.cx-rt-it .st{letter-spacing:-1px;font-size:11px}.cx-rt-it .st i{font-style:normal}' +
+      '.cx-rt-it .cm{flex:1;min-width:60px}.cx-rt-it .op{display:flex;gap:2px;margin-left:auto}.cx-rt-it .op button{border:0;background:none;color:var(--accent-color);font:inherit;font-size:13px;padding:4px 8px;cursor:pointer}.cx-rt-it .op .del{color:#d9534f}' +
+      '.cx-rt-pg{display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0}.cx-rt-pg .cx-btn{padding:7px 14px}.cx-rt-sec{font-weight:600;font-size:13px;margin:14px 0 4px;color:var(--text-primary)}' +
+      '#cx-rate-modal textarea{width:100%;box-sizing:border-box;resize:vertical;font-size:14px}';
+    document.head.appendChild(s);
+  })();
+
   /* ================= 高階功能分頁 ================= */
   var ADV_TABS = [
-    ['chat', '💬', '聊天', ['cx-help-entry', 'custom-replies-function', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
+    ['chat', '💬', '聊天', ['cx-help-entry', 'custom-replies-function', 'cx-rate-entry', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
     ['us', '💞', '我們倆', ['cx-diary-entry', 'cx-phone-entry', 'envelope-function', 'qa-function', 'cx-rp-entry', 'cx-status-entry', 'anniversary-function']],
     ['life', '🌿', '生活', ['cx-comp-entry', 'cx-pomo-entry', 'cx-period-entry', 'mood-function']],
     ['fun', '🎲', '好玩', ['cx-toss-entry', 'decision-function', 'fortune-lenormand-function']]
@@ -2101,6 +2284,7 @@
   addEntry('cx-phone-entry', 'fa-mobile-screen', 'TA 的手機', phoneOpen);
   addEntry('cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪', tossOpen);
   addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);
+  addEntry('cx-rate-entry', 'fa-star-half-stroke', '他的評分', rtOpen);
   addEntry('cx-help-entry', 'fa-book-open', '使用手冊', helpOpen);
   addEntry('cx-set-entry', 'fa-wand-magic-sparkles', '回覆與來信', setOpen);
   advTabs();
