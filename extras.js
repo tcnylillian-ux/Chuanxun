@@ -2266,6 +2266,38 @@
     });
   }
 
+  /* 電腦版：橫向一排的按鈕（字卡分組等）可以用滑鼠滾輪或按住拖曳左右移動 */
+  (function hScroll() {
+    function rowOf(el) {
+      for (var n = el; n && n !== document.body && n.nodeType === 1; n = n.parentElement) {
+        if (n.scrollWidth > n.clientWidth + 2) { var ox = getComputedStyle(n).overflowX; if (ox === 'auto' || ox === 'scroll') return n; }
+      }
+      return null;
+    }
+    document.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      var r = rowOf(e.target); if (!r) return; var oy = getComputedStyle(r).overflowY; if ((oy === 'auto' || oy === 'scroll') && r.scrollHeight > r.clientHeight + 2) return;
+      var max = r.scrollWidth - r.clientWidth;
+      if ((e.deltaY < 0 && r.scrollLeft <= 0) || (e.deltaY > 0 && r.scrollLeft >= max - 1)) return;
+      r.scrollLeft += e.deltaY; e.preventDefault();
+    }, { passive: false });
+    var drag = null;
+    document.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      var r = rowOf(e.target); if (!r || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      drag = { r: r, x: e.clientX, l: r.scrollLeft, moved: false };
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!drag) return; var dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 6) return;
+      drag.moved = true; drag.r.scrollLeft = drag.l - dx; drag.r.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    document.addEventListener('pointerup', function () {
+      if (!drag) return; var d = drag; drag = null; d.r.style.cursor = '';
+      if (d.moved) { var stop = function (ev) { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', stop, true); setTimeout(function () { document.removeEventListener('click', stop, true); }, 0); }
+    });
+  })();
+
   /* 修正：電腦用滑鼠點通話視窗右上角按鈕沒反應（拖動功能把滑鼠抓走了） */
   document.addEventListener('pointerdown', function (e) {
     if (e.target && e.target.closest && e.target.closest('#call-window-header button')) e.stopPropagation();
