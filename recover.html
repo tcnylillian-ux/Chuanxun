@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>找回聊天紀錄</title>
+<style>
+  :root { --bg:#f6f2fb; --card:#fff; --tx:#3d3550; --mut:#8a819c; --ac:#8a6fc2; --line:#e4dcef; --ok:#3f9e6a; --bad:#d9534f; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1d1a24; --card:#28242f; --tx:#ece6f5; --mut:#a49cb3; --line:#3a3446; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.6 -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:21px; margin:6px 0 4px; }
+  p.mut, .mut { color:var(--mut); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin:14px 0; }
+  .card h2 { font-size:16px; margin:0 0 8px; }
+  .row { display:flex; gap:10px; margin:6px 0; font-size:14px; }
+  .row b { flex:0 0 5.5em; color:var(--mut); font-weight:500; }
+  .last { color:var(--mut); font-size:13px; word-break:break-all; }
+  .plus { color:var(--ok); font-weight:600; }
+  button { font:inherit; border-radius:12px; padding:10px 14px; border:1px solid var(--ac); background:var(--ac); color:#fff; cursor:pointer; }
+  button.sec { background:none; color:var(--ac); }
+  button:disabled { opacity:.45; cursor:default; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  #log { white-space:pre-wrap; font-size:13px; color:var(--mut); }
+  .done { color:var(--ok); font-weight:600; }
+  .err { color:var(--bad); }
+  a { color:var(--ac); }
+</style>
+</head>
+<body>
+<main>
+  <h1>找回聊天紀錄</h1>
+  <p class="mut">有一台裝置用了舊資料，把聊天紀錄蓋回舊的時候用。這一頁會在雲端找被蓋掉的版本，把少掉的訊息合併回來；現在有的訊息不會被刪掉。</p>
+  <div class="card"><b>開始前：</b>先把<b>其他裝置</b>上的傳訊網頁都關掉（尤其是電腦），找回之後再打開。</div>
+  <div id="out"><p id="log">正在連線…</p></div>
+  <p class="mut"><a href="./">← 回到傳訊</a></p>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  'use strict';
+  var SLICE = 150000, INLINE_MAX = 60000;
+  var out = document.getElementById('out'), logEl = document.getElementById('log');
+  function log(t, cls) { logEl.textContent = t; logEl.className = cls || ''; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function hash(str) {
+    var h1 = 0x811c9dc5 | 0, h2 = 0x9747b28c | 0;
+    for (var i = 0; i < str.length; i++) { var c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = Math.imul(h2 ^ c, 2246822519); }
+    return ((h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0') + str.length.toString(36));
+  }
+  function b64d(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return decodeURIComponent(escape(atob(str))); }
+  function readLink(str) {
+    if (!str) return null; str = String(str).trim().replace(/\s+/g, '');
+    if (str.indexOf('CX1.') !== 0) return null;
+    try { var o = JSON.parse(b64d(str.slice(4))); if (o && o.c && o.c.apiKey && o.c.projectId && o.k) return o; } catch (e) {}
+    return null;
+  }
+  function tkey(x) { var t = x && x.timestamp, v = (t && typeof t === 'object' && t.__cxD) || Date.parse(t); return isFinite(v) && v ? v : (Number(x && x.id) || 0); }
+  function fmt(ms) { if (!ms) return '—'; var d = new Date(ms); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function preview(m) { if (!m) return ''; var t = m.text || (m.image ? '［圖片］' : m.sticker ? '［表情］' : ''); t = String(t).replace(/\s+/g, ' '); return t.length > 40 ? t.slice(0, 40) + '…' : t; }
+  function lastOf(arr) { var best = null; arr.forEach(function (m) { if (m && (!best || tkey(m) >= tkey(best))) best = m; }); return best; }
+
+  var link = readLink(localStorage.getItem('__cx_link'));
+  if (!link) { log('這台裝置還沒設定同步，請在已經設定好同步的裝置上打開這一頁。', 'err'); return; }
+  var db, P = { kv: 'sync/' + link.k + '/kv', kp: 'sync/' + link.k + '/kp' };
+  try { var app = firebase.apps.length ? firebase.app() : firebase.initializeApp(link.c); db = app.firestore(); }
+  catch (e) { log('連不上 Firebase：' + e.message, 'err'); return; }
+
+  async function fetchValue(meta) {
+    if (typeof meta.v === 'string') return meta.v;
+    var ps = await Promise.all((meta.p || []).map(function (x) { return db.doc(P.kp + '/' + x).get(); }));
+    var s = ''; for (var i = 0; i < ps.length; i++) { if (!ps[i].exists) throw new Error('缺少片段'); s += ps[i].data().s; }
+    return s;
+  }
+  /* 兩個片段能不能接起來：接縫處那一則訊息要是完整的 JSON */
+  function adj(A, B) {
+    if (A.length !== SLICE) return false;
+    var i = A.lastIndexOf('},{"id":'), j = B.indexOf('},{"id":');
+    if (i < 0 || j < 0) return null;
+    try { var o = JSON.parse(A.slice(i + 2) + B.slice(0, j + 1)); return !!(o && typeof o === 'object' && 'id' in o); } catch (e) { return false; }
+  }
+  function versions(parts) {
+    var ids = Object.keys(parts), starts = ids.filter(function (k) { return parts[k].indexOf('{"v":[') === 0; });
+    var nb = {}; ids.forEach(function (a) { nb[a] = ids.filter(function (b) { return b !== a && parts[a].length === SLICE && adj(parts[a], parts[b]) !== false; }); });
+    var found = [], seen = {}, steps = 0;
+    function dfs(path, used) {
+      if (++steps > 40000 || found.length > 300) return;
+      var last = path[path.length - 1], s = parts[last];
+      if (s.length < SLICE || /\]\}$/.test(s)) {
+        var str = path.map(function (k) { return parts[k]; }).join('');
+        try { var o = JSON.parse(str); if (o && Array.isArray(o.v)) { var h = hash(str); if (!seen[h]) { seen[h] = 1; found.push({ arr: o.v, h: h }); } } } catch (e) {}
+        if (s.length < SLICE) return;
+      }
+      if (path.length > 80) return;
+      nb[last].forEach(function (n) { if (!used[n]) { used[n] = 1; path.push(n); dfs(path, used); path.pop(); delete used[n]; } });
+    }
+    starts.forEach(function (s0) { var u = {}; u[s0] = 1; dfs([s0], u); });
+    return found;
+  }
+  function idset(arr) { var s = new Set(); arr.forEach(function (m) { if (m && m.id != null) s.add(String(m.id)); }); return s; }
+  function mergeArr(cur, extra) {
+    var have = idset(cur), add = extra.filter(function (m) { return m && m.id != null && !have.has(String(m.id)); });
+    return cur.concat(add).map(function (x, i) { return [x, i]; }).sort(function (a, b) { return (tkey(a[0]) - tkey(b[0])) || (a[1] - b[1]); }).map(function (a) { return a[0]; });
+  }
+  async function writeKey(id, k, value) {
+    var s = JSON.stringify({ v: value }), h = hash(s), body = { st: 'lf', k: k, h: h, t: Date.now(), dev: 'recover' };
+    if (s.length <= INLINE_MAX) body.v = s;
+    else {
+      var p = [];
+      for (var i = 0; i < s.length; i += SLICE) { var part = s.slice(i, i + SLICE), pid = id + '_' + hash(part).slice(0, 16); p.push(pid); await db.doc(P.kp + '/' + pid).set({ s: part }); }
+      body.p = p;
+    }
+    await db.doc(P.kv + '/' + id).set(body);
+    try { var META = JSON.parse(localStorage.getItem('__cx_meta') || '{}'); if (META[id]) { delete META[id].dirty; META[id].h = '#recovered'; localStorage.setItem('__cx_meta', JSON.stringify(META)); } } catch (e) {}
+  }
+  function download(name, obj) {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj)], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  async function run() {
+    log('正在讀取雲端資料…');
+    var kvSnap = await db.collection(P.kv).get(), docs = [];
+    kvSnap.docs.forEach(function (d) { docs.push({ id: d.id, d: d.data() }); });
+    var names = {};
+    var sl = docs.find(function (x) { return /sessionList$/.test(x.d.k || ''); });
+    if (sl && !sl.d.del) { try { (JSON.parse(await fetchValue(sl.d)).v || []).forEach(function (s) { if (s && s.id) names[s.id] = s.name; }); } catch (e) {} }
+    var msgDocs = docs.filter(function (x) { return /_chatMessages$/.test(x.d.k || '') && !x.d.del; });
+    if (!msgDocs.length) { log('雲端沒有聊天紀錄。', 'err'); return; }
+    var FP = firebase.firestore.FieldPath.documentId(), results = [];
+    for (var n = 0; n < msgDocs.length; n++) {
+      var md = msgDocs[n], sid = (/^CHAT_APP_V3_(.+)_chatMessages$/.exec(md.d.k) || [])[1] || md.d.k;
+      log('正在找第 ' + (n + 1) + ' / ' + msgDocs.length + ' 個聊天室的舊版本…');
+      var cur = []; try { cur = JSON.parse(await fetchValue(md.d)).v || []; } catch (e) {}
+      var pSnap = await db.collection(P.kp).where(FP, '>=', md.id + '_').where(FP, '<', md.id + '_').get(), parts = {};
+      pSnap.docs.forEach(function (d) { var x = d.data(); if (x && typeof x.s === 'string') parts[d.id] = x.s; });
+      var curIds = idset(cur), best = null;
+      versions(parts).forEach(function (v) {
+        var extra = v.arr.filter(function (m) { return m && m.id != null && !curIds.has(String(m.id)); });
+        if (!extra.length) return;
+        var sc = extra.length * 1e13 + tkey(lastOf(extra));
+        if (!best || sc > best.sc) best = { sc: sc, arr: v.arr, extra: extra };
+      });
+      results.push({ id: md.id, k: md.d.k, name: names[sid] || '聊天室', cur: cur, best: best });
+    }
+    render(results);
+  }
+  function render(results) {
+    var any = results.some(function (r) { return r.best; });
+    log(any ? '找到了，請確認後按「合併回來」。' : '沒有找到被蓋掉的訊息。', any ? 'done' : '');
+    results.forEach(function (r) {
+      var c = document.createElement('div'); c.className = 'card';
+      var lc = lastOf(r.cur), h = '<h2>' + esc(r.name) + '</h2>' +
+        '<div class="row"><b>現在</b><span>' + r.cur.length + ' 則<div class="last">最後一則 ' + fmt(tkey(lc)) + '　' + esc(preview(lc)) + '</div></span></div>';
+      if (r.best) {
+        var lb = lastOf(r.best.extra), first = r.best.extra.slice().sort(function (a, b) { return tkey(a) - tkey(b); })[0];
+        h += '<div class="row"><b>找回來的</b><span><span class="plus">多 ' + r.best.extra.length + ' 則</span>（' + fmt(tkey(first)) + ' ～ ' + fmt(tkey(lb)) + '）<div class="last">最後一則　' + esc(preview(lb)) + '</div></span></div>' +
+          '<div class="btns"><button type="button" data-go>合併回來</button><button type="button" class="sec" data-dl>先下載備份</button></div><div class="mut st"></div>';
+      } else h += '<div class="mut">這個聊天室沒有少東西。</div>';
+      c.innerHTML = h; out.appendChild(c);
+      if (!r.best) return;
+      var st = c.querySelector('.st');
+      c.querySelector('[data-dl]').onclick = function () { download('找回的聊天紀錄-' + r.name + '.json', { key: r.k, now: r.cur, found: r.best.arr }); };
+      c.querySelector('[data-go]').onclick = async function () {
+        var b = this; b.disabled = true; st.textContent = '正在合併…'; st.className = 'mut st';
+        try {
+          var fresh = r.cur; try { var d = await db.doc(P.kv + '/' + r.id).get(); if (d.exists) fresh = JSON.parse(await fetchValue(d.data())).v || r.cur; } catch (e) {}
+          var merged = mergeArr(fresh, r.best.extra);
+          await writeKey(r.id, r.k, merged);
+          st.textContent = '完成！現在一共 ' + merged.length + ' 則。回到傳訊就會看到（其他裝置打開時也會自動更新）。'; st.className = 'done st';
+          b.textContent = '已合併';
+        } catch (e) { st.textContent = '失敗：' + (e && e.message || e); st.className = 'err st'; b.disabled = false; }
+      };
+    });
+  }
+  run().catch(function (e) { log('出錯了：' + (e && e.message || e) + '　可以重新整理再試一次。', 'err'); });
+})();
+</script>
+</body>
+</html>

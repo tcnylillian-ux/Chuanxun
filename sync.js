@@ -102,6 +102,10 @@
   function markDirty(st, k) {
     if (skip(k)) return;
     var id = keyId(st, k);
+    if (blockedUntilReload[id] && !(st === 'lf' && isMsgKey(k))) {
+      // 這個頁面拿的是舊資料：不要把舊資料當成新的傳上去，重新整理時從雲端拿回最新的
+      var mb = META[id] || (META[id] = { st: st, k: k }); mb.h = '#stale'; delete mb.dirty; saveMeta(); return;
+    }
     dirty[id] = { st: st, k: k, t: Date.now() };
     var m = META[id] || (META[id] = { st: st, k: k });
     m.dirty = Date.now(); lss('__cx_meta', JSON.stringify(META));
@@ -110,7 +114,8 @@
   }
   async function readLocal(st, k) { return st === 'lf' ? await lfGet(k) : lsg(k); }
   async function upload(id) {
-    if (!db || blockedUntilReload[id]) return;
+    var bk = META[id] && META[id].st === 'lf' && isMsgKey(META[id].k);
+    if (!db || (blockedUntilReload[id] && !bk)) return;
     if (running[id]) { again[id] = true; return; }
     var d = dirty[id] || (META[id] && { st: META[id].st, k: META[id].k }); if (!d) return;
     running[id] = true; delete dirty[id];
@@ -121,7 +126,27 @@
       if (!exists) {
         if (m.h !== '') { await db.doc(P.kv + '/' + id).set({ st: d.st, k: d.k, h: '', del: true, t: t, dev: DEV }); gcLater(id, m.p || [], []); m.h = ''; m.p = []; }
       } else {
-        var s = await serialize(d.st, raw), h = hash(s);
+        var s = await serialize(d.st, raw), h = hash(s), isMsg = d.st === 'lf' && isMsgKey(d.k), mine = raw;
+        if (h !== m.h || isMsg) {
+          /* 先看雲端：如果別的裝置在這之後改過，不能直接蓋掉 */
+          var rs = null; try { rs = await db.doc(P.kv + '/' + id).get(); } catch (e0) {}
+          var rd = rs && rs.exists ? rs.data() : null;
+          if (rd && rd.h !== h) {
+            if (isMsg) {
+              var c = RCACHE[id], R = (c && c.h === rd.h) ? c.v : (rd.del ? [] : await deserialize('lf', await fetchValue(rd)));
+              var merged = mergeMsgs(BASE[id], raw, R);
+              if (merged !== raw) {
+                raw = merged; await lfSet(d.k, raw); s = await serialize(d.st, raw); h = hash(s);
+                if (pending() || started) { needReload = true; if (document.visibilityState === 'visible') showPill('已合併其他裝置的訊息 · 點此重新整理', 0, reloadNow); }
+              }
+              if (h === rd.h) { m.h = h; m.p = rd.p || []; RCACHE[id] = { h: h, v: raw }; setBase(id, mine); }
+            } else if (rd.h !== m.h && rd.dev !== DEV) {
+              // 別的裝置比較新：以雲端為準，這台的舊資料不上傳
+              blockedUntilReload[id] = true; m.h = '#stale'; delete m.dirty; saveMeta();
+              running[id] = false; onRemoteChanged([id]); return;
+            }
+          }
+        }
         if (h !== m.h) {
           var body = { st: d.st, k: d.k, h: h, t: t, dev: DEV };
           var parts = [];
@@ -136,6 +161,7 @@
           await db.doc(P.kv + '/' + id).set(body);
           gcLater(id, m.p || [], body.p || []);
           m.h = h; m.p = body.p || [];
+          if (isMsg) { RCACHE[id] = { h: h, v: raw }; setBase(id, mine); }
         }
       }
       if (!dirty[id]) delete m.dirty;
@@ -168,6 +194,38 @@
     while (pending() && Date.now() < end) await sleep(150);
   }
 
+  /* ---------- 聊天紀錄合併：兩台裝置的訊息都留下，不會被舊資料整個蓋掉 ---------- */
+  var BASE = {}, RCACHE = {};
+  function msgIdList(arr) { var a = []; (Array.isArray(arr) ? arr : []).forEach(function (x) { if (x && x.id != null) a.push(String(x.id)); }); return a; }
+  function setBase(id, arr) { var l = msgIdList(arr); BASE[id] = new Set(l); try { lfSet('__cx_base_' + id, l); } catch (e) {} }
+  function tkey(x) { var t = x && x.timestamp, v = t instanceof Date ? t.getTime() : (t && typeof t === 'object' && t.__cxD) || Date.parse(t); return isFinite(v) && v ? v : (Number(x && x.id) || 0); }
+  function mergeMsgs(B, L, R) {
+    if (!Array.isArray(L)) return L; if (!Array.isArray(R)) return L;
+    B = B || new Set();
+    var inL = new Map(), inR = new Map(), add = [], changed = false;
+    L.forEach(function (x) { if (x && x.id != null) inL.set(String(x.id), x); });
+    R.forEach(function (x) { if (x && x.id != null) inR.set(String(x.id), x); });
+    // 別的裝置刪掉的（以前同步過、雲端已沒有）
+    var out = L.filter(function (x) { if (!x || x.id == null) return true; var k = String(x.id); if (B.has(k) && !inR.has(k)) { changed = true; return false; } return true; });
+    // 別的裝置新增的（這台沒刪過的）
+    R.forEach(function (x) { if (!x || x.id == null) return; var k = String(x.id); if (!inL.has(k) && !B.has(k)) add.push(x); });
+    if (!add.length) return changed ? out : L;
+    out = out.concat(add).map(function (x, i) { return [x, i]; });
+    out.sort(function (a, b) { return (tkey(a[0]) - tkey(b[0])) || (a[1] - b[1]); });
+    return out.map(function (a) { return a[0]; });
+  }
+  async function seedBase() {
+    var ks = []; try { ks = await lfKeys(); } catch (e) {}
+    for (var i = 0; i < ks.length; i++) {
+      var k = ks[i]; if (!isMsgKey(k)) continue;
+      var id = keyId('lf', k), m = META[id];
+      try {
+        if (m && m.dirty) { var b = await lfGet('__cx_base_' + id); if (Array.isArray(b)) BASE[id] = new Set(b); }
+        else { var v = await lfGet(k); BASE[id] = new Set(msgIdList(v)); if (m && m.h) RCACHE[id] = { h: m.h, v: v }; }
+      } catch (e) {}
+    }
+  }
+
   /* ---------- download / apply ---------- */
   async function fetchValue(meta) {
     if (typeof meta.v === 'string') return meta.v;
@@ -186,6 +244,7 @@
     } else {
       var str = await fetchValue(meta), val = await deserialize(meta.st, str);
       if (meta.st === 'lf') await lfSet(meta.k, val); else lss(meta.k, val);
+      if (meta.st === 'lf' && isMsgKey(meta.k)) { RCACHE[id] = { h: meta.h, v: val }; if (!started) setBase(id, val); }
     }
     m.h = meta.del ? '' : meta.h; m.p = meta.p || []; delete m.dirty; delete dirty[id];
     saveMeta(); return true;
@@ -329,7 +388,7 @@
   var needReload = false;
   async function reloadNow() { showPill('正在載入其他裝置的更新…'); await flushAll(3000); location.reload(); }
   function onRemoteChanged(ids) {
-    ids.forEach(function (id) { blockedUntilReload[id] = true; });
+    ids.forEach(function (id) { if (!(META[id] && META[id].st === 'lf' && isMsgKey(META[id].k))) blockedUntilReload[id] = true; });
     needReload = true;
     if (document.visibilityState === 'visible' && Date.now() - visibleSince < 5000) { reloadNow(); return; }
     if (document.visibilityState === 'visible') showPill('其他裝置有新內容 · 點此重新整理', 0, reloadNow);
@@ -429,6 +488,7 @@
 
   async function boot() {
     await wrapLF();
+    try { await seedBase(); } catch (e) { console.warn('[cx] base', e); }
     var link = readLink(lsg('__cx_link'));
     if (location.hash === '#sync' || (!link && !lsg('__cx_local'))) { link = await setupScreen(link); }
     if (!link) { veil.remove(); loadScripts(); return; }

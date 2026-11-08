@@ -4,7 +4,7 @@
  * 聊天資料本來就存在本機（IndexedDB），同步資料（Firebase）不經過這裡。
  * 更新網站後，把下面的 VERSION 改一下（例如 v8），所有裝置會自動換成新版本。
  */
-const VERSION = 'v35-tw';
+const VERSION = 'v36-tw';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
@@ -51,6 +51,11 @@ self.addEventListener('fetch', event => {
   const own = url.href.startsWith(BASE);
 
   // Opening the app: the cached page, refreshed in the background.
+  // 其他獨立頁面（例如 recover.html）直接上網拿
+  if (req.mode === 'navigate' && own && /\.html$/.test(url.pathname) && !/\/index\.html$/.test(url.pathname)) {
+    event.respondWith(fetch(req).catch(() => caches.match(req)));
+    return;
+  }
   if (req.mode === 'navigate' && own) {
     event.respondWith(staleWhileRevalidate(event, new Request(BASE + 'index.html'), req));
     return;
