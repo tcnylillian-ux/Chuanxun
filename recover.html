@@ -138,7 +138,7 @@
     var sl = docs.find(function (x) { return /sessionList$/.test(x.d.k || ''); });
     if (sl && !sl.d.del) { try { (JSON.parse(await fetchValue(sl.d)).v || []).forEach(function (s) { if (s && s.id) names[s.id] = s.name; }); } catch (e) {} }
     var msgDocs = docs.filter(function (x) { return /_chatMessages$/.test(x.d.k || '') && !x.d.del; });
-    if (!msgDocs.length) { log('雲端沒有聊天紀錄。', 'err'); return; }
+    if (!msgDocs.length) log('雲端沒有聊天紀錄。', 'err');
     var FP = firebase.firestore.FieldPath.documentId(), results = [];
     for (var n = 0; n < msgDocs.length; n++) {
       var md = msgDocs[n], sid = (/^CHAT_APP_V3_(.+)_chatMessages$/.exec(md.d.k) || [])[1] || md.d.k;
@@ -162,7 +162,57 @@
       var best = extra.length ? { extra: extra } : null;
       results.push({ id: md.id, k: md.d.k, name: names[sid] || '聊天室', cur: cur, best: best });
     }
-    render(results);
+    if (msgDocs.length) render(results);
+    await runCards(docs, names, FP);
+  }
+  /* ---------- 字卡：找舊版本 ---------- */
+  function cardLabel(k) { return /_customReplyGroups$/.test(k) ? '字卡分組' : '字卡'; }
+  function cardSig(v, isG) { return isG ? v.map(function (g) { return (g && g.name || '') + '(' + ((g && g.items) || []).length + ')'; }) : v.filter(function (x) { return typeof x === 'string'; }); }
+  async function runCards(docs, names, FP) {
+    var keys = docs.filter(function (x) { return /_customReplies$|_customReplyGroups$/.test(x.d.k || '') && !x.d.del; });
+    if (!keys.length) return;
+    var head = document.createElement('h2'); head.textContent = '字卡的舊版本'; head.style.cssText = 'font-size:17px;margin:26px 0 4px'; out.appendChild(head);
+    var note = document.createElement('p'); note.className = 'mut'; note.textContent = '字卡不能自動判斷哪個是最新的，下面列出雲端找得到的舊版本，跟現在比多了哪些、少了哪些。找到有今天新加的那一個再用。'; out.appendChild(note);
+    for (var n = 0; n < keys.length; n++) {
+      var kd = keys[n], isG = /_customReplyGroups$/.test(kd.d.k), sid = (/^CHAT_APP_V3_(.+)_customReply/.exec(kd.d.k) || [])[1];
+      log('正在找' + cardLabel(kd.d.k) + '的舊版本…');
+      var cur = []; try { cur = JSON.parse(await fetchValue(kd.d)).v || []; } catch (e) {}
+      var vers = [], seen = {}, last = null;
+      seen[hash(JSON.stringify(cur))] = 1;
+      for (;;) {
+        var q = db.collection(P.kp).where(FP, '>=', kd.id + '_').where(FP, '<', kd.id + '_').orderBy(FP).limit(15);
+        if (last) q = q.startAfter(last);
+        var snap = await q.get(); if (!snap.docs.length) break;
+        snap.docs.forEach(function (d) { var x = d.data(); if (!x || typeof x.s !== 'string') return; try { var o = JSON.parse(x.s); if (o && Array.isArray(o.v)) { var h = hash(JSON.stringify(o.v)); if (!seen[h]) { seen[h] = 1; vers.push(o.v); } } } catch (e) {} });
+        last = snap.docs[snap.docs.length - 1].id; await pause();
+        if (snap.docs.length < 15) break;
+      }
+      var c = document.createElement('div'); c.className = 'card'; out.appendChild(c);
+      var cs = cardSig(cur, isG), cset = new Set(cs);
+      var h = '<h2>' + esc(names[sid] || '聊天室') + ' · ' + cardLabel(kd.d.k) + '</h2><div class="row"><b>現在</b><span>' + cur.length + (isG ? ' 組' : ' 張') + '</span></div>';
+      if (!vers.length) { h += '<div class="mut">雲端沒有留下舊版本（' + cardLabel(kd.d.k) + '資料比較小時，雲端只存一份）。</div>'; c.innerHTML = h; continue; }
+      var info = vers.map(function (v, i) { var vs = cardSig(v, isG), vset = new Set(vs); return { i: i, v: v, plus: vs.filter(function (x) { return !cset.has(x); }), minus: cs.filter(function (x) { return !vset.has(x); }) }; })
+        .filter(function (x) { return x.plus.length || x.minus.length; }).sort(function (a, b) { return b.plus.length - a.plus.length || a.minus.length - b.minus.length; }).slice(0, 12);
+      h += info.map(function (x, j) {
+        return '<div class="ver" data-j="' + j + '" style="border-top:1px solid var(--line);padding:10px 0"><div><b>版本 ' + (j + 1) + '</b>　' + x.v.length + (isG ? ' 組' : ' 張') + '　<span class="plus">多 ' + x.plus.length + '</span>　<span style="color:var(--bad)">少 ' + x.minus.length + '</span></div>' +
+          (x.plus.length ? '<div class="last">多的：' + esc(x.plus.slice(0, 6).join('　/　')) + (x.plus.length > 6 ? ' …' : '') + '</div>' : '') +
+          (x.minus.length ? '<div class="last">少的：' + esc(x.minus.slice(0, 6).join('　/　')) + (x.minus.length > 6 ? ' …' : '') + '</div>' : '') +
+          '<div class="btns">' + (!isG && x.plus.length ? '<button type="button" data-add>只把多的加回來</button>' : '') + '<button type="button" class="sec" data-rep>整份換成這個版本</button></div><div class="mut st"></div></div>';
+      }).join('');
+      c.innerHTML = h;
+      (function (kd, info, cur) {
+        c.addEventListener('click', async function (e) {
+          var b = e.target.closest('[data-add],[data-rep]'); if (!b) return;
+          var box = b.closest('.ver'), x = info[+box.dataset.j], st = box.querySelector('.st'), val;
+          if (b.hasAttribute('data-add')) { var have = new Set(cur); val = cur.concat(x.plus.filter(function (t) { return !have.has(t); })); }
+          else { if (!confirm('整份換成版本 ' + (+box.dataset.j + 1) + '？現在的' + cardLabel(kd.d.k) + '會被取代。')) return; val = x.v; }
+          b.disabled = true; st.textContent = '正在寫入…';
+          try { await writeKey(kd.id, kd.d.k, val); cur = val; st.textContent = '完成！現在 ' + val.length + (/Groups$/.test(kd.d.k) ? ' 組' : ' 張') + '。'; st.className = 'done st'; }
+          catch (err) { st.textContent = '失敗：' + (err && err.message || err); st.className = 'err st'; b.disabled = false; }
+        });
+      })(kd, info, cur);
+    }
+    log('找完了。', 'done');
   }
   function render(results) {
     var any = results.some(function (r) { return r.best; });
