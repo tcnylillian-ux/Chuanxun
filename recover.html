@@ -26,6 +26,8 @@
   .done { color:var(--ok); font-weight:600; }
   .err { color:var(--bad); }
   a { color:var(--ac); }
+  label.day { display:block; padding:8px 0; border-top:1px solid var(--line); font-size:14px; cursor:pointer; }
+  label.day input { width:18px; height:18px; vertical-align:-3px; accent-color:var(--ac); }
 </style>
 </head>
 <body>
@@ -74,31 +76,40 @@
     var s = ''; for (var i = 0; i < ps.length; i++) { if (!ps[i].exists) throw new Error('缺少片段'); s += ps[i].data().s; }
     return s;
   }
-  /* 兩個片段能不能接起來：接縫處那一則訊息要是完整的 JSON */
-  function adj(A, B) {
-    if (A.length !== SLICE) return false;
-    var i = A.lastIndexOf('},{"id":'), j = B.indexOf('},{"id":');
-    if (i < 0 || j < 0) return null;
-    try { var o = JSON.parse(A.slice(i + 2) + B.slice(0, j + 1)); return !!(o && typeof o === 'object' && 'id' in o); } catch (e) { return false; }
-  }
-  function versions(parts) {
-    var ids = Object.keys(parts), starts = ids.filter(function (k) { return parts[k].indexOf('{"v":[') === 0; });
-    var nb = {}; ids.forEach(function (a) { nb[a] = ids.filter(function (b) { return b !== a && parts[a].length === SLICE && adj(parts[a], parts[b]) !== false; }); });
-    var found = [], seen = {}, steps = 0;
-    function dfs(path, used) {
-      if (++steps > 40000 || found.length > 300) return;
-      var last = path[path.length - 1], s = parts[last];
-      if (s.length < SLICE || /\]\}$/.test(s)) {
-        var str = path.map(function (k) { return parts[k]; }).join('');
-        try { var o = JSON.parse(str); if (o && Array.isArray(o.v)) { var h = hash(str); if (!seen[h]) { seen[h] = 1; found.push({ arr: o.v, h: h }); } } } catch (e) {}
-        if (s.length < SLICE) return;
+  /* 從一個片段裡撈出完整的訊息；頭尾被切斷的留著之後拼 */
+  var SEP = '},{"id":';
+  function idOf(str) { var m = /^\{"id":(-?[0-9.eE+]+|"(?:[^"\\]|\\.)*")/.exec(str); if (!m) return null; try { return String(JSON.parse(m[1])); } catch (e) { return null; } }
+  function scan(s, found, heads, tails) {
+    var starts = [], i = -1, isFirst = s.indexOf('{"v":[{') === 0;
+    if (isFirst) starts.push(6);
+    while ((i = s.indexOf(SEP, i + 1)) >= 0) starts.push(i + 2);
+    if (!starts.length) return;
+    if (!isFirst) heads.push({ h: s.slice(0, starts[0] - 1), first: idOf(s.slice(starts[0])) });
+    for (var k = 0; k < starts.length; k++) {
+      var end = k + 1 < starts.length ? starts[k + 1] - 1 : -1;
+      if (end < 0) {
+        var t = s.slice(starts[k]);
+        if (/\]\}$/.test(t)) { try { add(found, JSON.parse(t.slice(0, -2))); } catch (e) {} }
+        else tails.push(t);
+        continue;
       }
-      if (path.length > 80) return;
-      nb[last].forEach(function (n) { if (!used[n]) { used[n] = 1; path.push(n); dfs(path, used); path.pop(); delete used[n]; } });
+      try { add(found, JSON.parse(s.slice(starts[k], end))); } catch (e) {}
     }
-    starts.forEach(function (s0) { var u = {}; u[s0] = 1; dfs([s0], u); });
-    return found;
   }
+  function add(found, o) { if (o && typeof o === 'object' && o.id != null) { var k = String(o.id); if (!found.has(k)) found.set(k, o); } }
+  function stitch(found, heads, tails) {
+    var hs = heads.filter(function (x) { return x.first != null; }).map(function (x) { return { h: x.h, f: Number(x.first) }; }).sort(function (a, b) { return a.f - b.f; });
+    tails.forEach(function (t) {
+      var id = idOf(t); if (id == null || found.has(id)) return;
+      var x = Number(id), n = 0;
+      for (var i = 0; i < hs.length && n < 8; i++) {
+        if (!(hs[i].f > x)) continue; n++;
+        try { var o = JSON.parse(t + hs[i].h); if (o && String(o.id) === id) { add(found, o); return; } } catch (e) {}
+      }
+    });
+  }
+  function pause() { return new Promise(function (r) { setTimeout(r, 0); }); }
+  function dayOf(ms) { var d = new Date(ms); return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate(); }
   function idset(arr) { var s = new Set(); arr.forEach(function (m) { if (m && m.id != null) s.add(String(m.id)); }); return s; }
   function mergeArr(cur, extra) {
     var have = idset(cur), add = extra.filter(function (m) { return m && m.id != null && !have.has(String(m.id)); });
@@ -133,40 +144,52 @@
       var md = msgDocs[n], sid = (/^CHAT_APP_V3_(.+)_chatMessages$/.exec(md.d.k) || [])[1] || md.d.k;
       log('正在找第 ' + (n + 1) + ' / ' + msgDocs.length + ' 個聊天室的舊版本…');
       var cur = []; try { cur = JSON.parse(await fetchValue(md.d)).v || []; } catch (e) {}
-      var pSnap = await db.collection(P.kp).where(FP, '>=', md.id + '_').where(FP, '<', md.id + '_').get(), parts = {};
-      pSnap.docs.forEach(function (d) { var x = d.data(); if (x && typeof x.s === 'string') parts[d.id] = x.s; });
-      var curIds = idset(cur), best = null;
-      versions(parts).forEach(function (v) {
-        var extra = v.arr.filter(function (m) { return m && m.id != null && !curIds.has(String(m.id)); });
-        if (!extra.length) return;
-        var sc = extra.length * 1e13 + tkey(lastOf(extra));
-        if (!best || sc > best.sc) best = { sc: sc, arr: v.arr, extra: extra };
-      });
+      var found = new Map(), heads = [], tails = [], last = null, got = 0;
+      for (;;) {
+        var q = db.collection(P.kp).where(FP, '>=', md.id + '_').where(FP, '<', md.id + '_').orderBy(FP).limit(15);
+        if (last) q = q.startAfter(last);
+        var snap = await q.get(); if (!snap.docs.length) break;
+        for (var di = 0; di < snap.docs.length; di++) { var x = snap.docs[di].data(); if (x && typeof x.s === 'string') scan(x.s, found, heads, tails); }
+        got += snap.docs.length; last = snap.docs[snap.docs.length - 1].id;
+        log('第 ' + (n + 1) + ' / ' + msgDocs.length + ' 個聊天室：看過 ' + got + ' 個片段，找到 ' + found.size + ' 則訊息…');
+        await pause();
+        if (snap.docs.length < 15) break;
+      }
+      stitch(found, heads, tails);
+      var curIds = idset(cur), extra = [];
+      found.forEach(function (m, k) { if (!curIds.has(k)) extra.push(m); });
+      extra.sort(function (a, b) { return tkey(a) - tkey(b); });
+      var best = extra.length ? { extra: extra } : null;
       results.push({ id: md.id, k: md.d.k, name: names[sid] || '聊天室', cur: cur, best: best });
     }
     render(results);
   }
   function render(results) {
     var any = results.some(function (r) { return r.best; });
-    log(any ? '找到了，請確認後按「合併回來」。' : '沒有找到被蓋掉的訊息。', any ? 'done' : '');
+    log(any ? '找到了，確認勾選的日子後按「合併勾選的」。' : '沒有找到被蓋掉的訊息。', any ? 'done' : '');
     results.forEach(function (r) {
       var c = document.createElement('div'); c.className = 'card';
       var lc = lastOf(r.cur), h = '<h2>' + esc(r.name) + '</h2>' +
         '<div class="row"><b>現在</b><span>' + r.cur.length + ' 則<div class="last">最後一則 ' + fmt(tkey(lc)) + '　' + esc(preview(lc)) + '</div></span></div>';
       if (r.best) {
-        var lb = lastOf(r.best.extra), first = r.best.extra.slice().sort(function (a, b) { return tkey(a) - tkey(b); })[0];
-        h += '<div class="row"><b>找回來的</b><span><span class="plus">多 ' + r.best.extra.length + ' 則</span>（' + fmt(tkey(first)) + ' ～ ' + fmt(tkey(lb)) + '）<div class="last">最後一則　' + esc(preview(lb)) + '</div></span></div>' +
-          '<div class="btns"><button type="button" data-go>合併回來</button><button type="button" class="sec" data-dl>先下載備份</button></div><div class="mut st"></div>';
+        var days = [], byDay = {}, cutoff = new Date(tkey(lc) || Date.now()); cutoff.setHours(0, 0, 0, 0); cutoff = cutoff.getTime() - 86400000;
+        r.best.extra.forEach(function (m) { var t = tkey(m), d = dayOf(t); if (!byDay[d]) { byDay[d] = { d: d, t: t, list: [] }; days.push(byDay[d]); } byDay[d].list.push(m); });
+        r.days = days;
+        h += '<div class="row"><b>找回來的</b><span><span class="plus">' + r.best.extra.length + ' 則現在沒有的訊息</span><div class="last">勾選要合併回來的日子（預設勾最近兩天；更早的可能是你以前自己刪掉的）</div></span></div>' +
+          days.map(function (x, i) { var lm = x.list[x.list.length - 1]; return '<label class="day"><input type="checkbox" data-i="' + i + '"' + (x.t >= cutoff ? ' checked' : '') + '> <b>' + x.d + '</b>　' + x.list.length + ' 則<div class="last">' + esc(preview(x.list[0])) + (x.list.length > 1 ? ' … ' + esc(preview(lm)) : '') + '</div></label>'; }).join('') +
+          '<div class="btns"><button type="button" data-go>合併勾選的</button><button type="button" class="sec" data-dl>先下載備份</button></div><div class="mut st"></div>';
       } else h += '<div class="mut">這個聊天室沒有少東西。</div>';
       c.innerHTML = h; out.appendChild(c);
       if (!r.best) return;
       var st = c.querySelector('.st');
-      c.querySelector('[data-dl]').onclick = function () { download('找回的聊天紀錄-' + r.name + '.json', { key: r.k, now: r.cur, found: r.best.arr }); };
+      c.querySelector('[data-dl]').onclick = function () { download('找回的聊天紀錄-' + r.name + '.json', { key: r.k, now: r.cur, found: r.best.extra }); };
       c.querySelector('[data-go]').onclick = async function () {
         var b = this; b.disabled = true; st.textContent = '正在合併…'; st.className = 'mut st';
         try {
           var fresh = r.cur; try { var d = await db.doc(P.kv + '/' + r.id).get(); if (d.exists) fresh = JSON.parse(await fetchValue(d.data())).v || r.cur; } catch (e) {}
-          var merged = mergeArr(fresh, r.best.extra);
+          var pick = []; c.querySelectorAll('.day input:checked').forEach(function (cb) { pick = pick.concat(r.days[+cb.dataset.i].list); });
+          if (!pick.length) { st.textContent = '還沒勾選要合併的日子'; b.disabled = false; return; }
+          var merged = mergeArr(fresh, pick);
           await writeKey(r.id, r.k, merged);
           st.textContent = '完成！現在一共 ' + merged.length + ' 則。回到傳訊就會看到（其他裝置打開時也會自動更新）。'; st.className = 'done st';
           b.textContent = '已合併';
