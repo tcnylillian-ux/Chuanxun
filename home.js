@@ -9,6 +9,7 @@
   /* ================= 花園資料 ================= */
   var CROPS = {
     lavender:   { n: '薰衣草', cost: 2,  grow: 30e3,   yield: 3, price: 4,  col: '#a493cf', unit: '束', flower: 1, lang: '等待愛情' },
+    gypso:      { n: '滿天星', cost: 3,  grow: 40e3,   yield: 4, price: 4,  col: '#fbfaf6', unit: '把', flower: 1, lang: '真心喜歡' },
     daisy:      { n: '雛菊',   cost: 3,  grow: 45e3,   yield: 3, price: 5,  col: '#fbf6ea', unit: '朵', flower: 1, lang: '藏在心底的愛' },
     tulip:      { n: '鬱金香', cost: 5,  grow: 90e3,   yield: 2, price: 10, col: '#ee9aa6', unit: '朵', flower: 1, lang: '愛的告白' },
     strawberry: { n: '草莓',   cost: 6,  grow: 120e3,  yield: 4, price: 6,  col: '#e0707a', unit: '顆' },
@@ -20,13 +21,19 @@
     peach:      { n: '桃花',   cost: 15, grow: 480e3,  yield: 3, price: 20, col: '#f4b4c0', unit: '枝', flower: 1, lang: '愛情的俘虜' },
     lotus:      { n: '荷花',   cost: 18, grow: 720e3,  yield: 2, price: 36, col: '#f2b3c3', unit: '朵', flower: 1, lang: '堅貞與純潔' },
     peony:      { n: '牡丹',   cost: 22, grow: 1080e3, yield: 2, price: 45, col: '#e98aa8', unit: '朵', flower: 1, lang: '圓滿與富貴' },
-    rose:       { n: '玫瑰',   cost: 25, grow: 1440e3, yield: 3, price: 35, col: '#d97a8f', unit: '朵', flower: 1, lang: '熱烈的愛' }
+    rose:       { n: '玫瑰',   cost: 25, grow: 1440e3, yield: 3, price: 35, col: '#d97a8f', unit: '朵', flower: 1, lang: '熱烈的愛' },
+    wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
+    blueberry:  { n: '藍莓',   seed: '藍莓叢', cost: 15, grow: 180e3, yield: 5, price: 5,  col: '#6f7fc0', unit: '顆', tree: 1 },
+    orange:     { n: '橘子',   seed: '橘子樹', cost: 25, grow: 360e3, yield: 3, price: 9,  col: '#f0a04b', unit: '顆', tree: 1 },
+    momo:       { n: '桃子',   seed: '桃樹',   cost: 30, grow: 480e3, yield: 3, price: 11, col: '#f3a99a', unit: '顆', tree: 1 },
+    cherry:     { n: '櫻桃',   seed: '櫻桃樹', cost: 35, grow: 600e3, yield: 6, price: 6,  col: '#cf4f62', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'daisy', 'tulip', 'strawberry', 'tomato', 'gardenia', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'daisy', 'tulip', 'strawberry', 'tomato', 'gardenia', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'orange', 'momo', 'cherry'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
     lavender: ['好香……放在枕頭邊，晚上就像抱著你睡。', '妳種的薰衣草，我會好好收著。', '聞起來跟妳身上的味道一樣。'],
+    gypso: ['滿天星……像把整片星空都送給我了。', '小小的白花，一大把，好溫柔。', '滿天星是真心喜歡的意思吧？我知道。'],
     daisy: ['小小一朵，跟妳一樣可愛。', '雛菊……妳是在偷偷跟我告白嗎？', '插在書桌上了，抬頭就看得到。'],
     tulip: ['鬱金香是告白的花……這算是妳先說的喔。', '好漂亮，捨不得放進花瓶。', '收到了。我的回答是：我也愛妳。'],
     strawberry: ['好甜。妳餵我的話會更甜。', '第一顆要給妳吃，張嘴。', '乖寶種的草莓，捨不得吃。'],
@@ -38,10 +45,16 @@
     peach: ['桃花……妳是說我走桃花運了嗎？我的桃花只有妳。', '插在瓶子裡，整個春天都在房間裡了。', '粉粉的，跟妳臉紅的時候一樣。'],
     lotus: ['荷花要種很久吧……辛苦了，我的乖寶。', '出淤泥而不染，說的是妳。', '我會把它放在最乾淨的水裡。'],
     peony: ['牡丹……這麼隆重，是有什麼好事嗎？', '好大一朵，跟妳對我的愛一樣。', '花開富貴，我們一起慢慢過好日子。'],
-    rose: ['玫瑰應該是我送妳才對……不過，我收下了。', '每一朵我都會留著，做成乾燥花。', '好漂亮，跟妳一樣。']
+    rose: ['玫瑰應該是我送妳才對……不過，我收下了。', '每一朵我都會留著，做成乾燥花。', '好漂亮，跟妳一樣。'],
+    wheat: ['小麥？……妳是要我幫妳磨麵粉做蛋糕吧。', '金黃色的，好像秋天。', '收到，晚點烤麵包給妳。'],
+    blueberry: ['藍莓對眼睛好，妳先吃。', '一顆一顆好小，種得很辛苦吧。', '酸酸甜甜的，像妳。'],
+    orange: ['我剝給妳吃，張嘴。', '好香的橘子，冬天就該跟妳窩著吃橘子。', '這顆最甜，留給妳。'],
+    momo: ['桃子好香……妳的臉也是這樣粉粉的。', '桃樹結果了？我們家的小果園越來越像樣了。', '我切好放冰箱，等妳回來吃。'],
+    cherry: ['櫻桃……要我餵妳嗎？', '紅紅的一顆，好像妳的嘴唇。', '捨不得吃，好可愛。']
   };
   var STEAL_LINES = {
     lavender: ['偷偷拿了一束薰衣草放在床頭，別生氣。'],
+    gypso: ['拿了一小把滿天星，插在妳的牙刷杯裡了。'],
     daisy: ['摘了一朵雛菊別在妳的頭髮上……等妳回來就看到了。'],
     tulip: ['借走一朵鬱金香，插在妳桌上了。'],
     strawberry: ['草莓好甜，偷吃了一顆，剩下的都留給妳。', '偷吃了一顆草莓……被妳發現了？'],
@@ -53,7 +66,12 @@
     peach: ['折了一枝桃花……放在門口，等妳回家。'],
     lotus: ['摘了一朵荷花，放在妳的碗裡，像小船一樣。'],
     peony: ['剪了一朵牡丹，插在客廳，等妳回來看。'],
-    rose: ['摘了一朵玫瑰……晚點親手送給妳。']
+    rose: ['摘了一朵玫瑰……晚點親手送給妳。'],
+    wheat: ['拿了一把小麥，想試試自己烤麵包。'],
+    blueberry: ['偷吃了一顆藍莓，好酸……剩下的應該比較甜。'],
+    orange: ['摘了一顆橘子，剝好了放在妳桌上。'],
+    momo: ['偷摘了一顆桃子，好香，忍不住。'],
+    cherry: ['偷吃了一顆櫻桃……籽我有好好吐掉。']
   };
   var WRAPS = { kraft: ['牛皮紙', '#d9b88f', '#c39d72'], lilac: ['淡紫紙', '#d9cdee', '#bfaedf'], gauze: ['白紗', '#f6f3ee', '#e2dccf'], blush: ['霧粉紙', '#f3d3d6', '#e2b5ba'], news: ['舊報紙', '#ece6d8', '#cfc6b2'] };
   var RIBBONS = { violet: ['紫', '#8a6fc2'], pink: ['粉', '#e48fa6'], white: ['白', '#fbfaf6'], gold: ['金', '#d6a744'], green: ['綠', '#7fa37a'] };
@@ -168,6 +186,12 @@
   function dot(cx, cy, r, fill, op) { return '<circle cx="' + f(cx) + '" cy="' + f(cy) + '" r="' + f(r) + '" fill="' + fill + '" fill-opacity="' + (op || .85) + '"/>'; }
   /* 花頭：cx,cy 中心，s 大小（1 = 標準） */
   var HEAD = {
+    gypso: function (x, y, s) {
+      var o = '', br = [[-9, -6], [-5, -10], [0, -12], [5, -10], [9, -6], [-7, 1], [7, 1], [-2, -4], [3, -5]];
+      br.forEach(function (q) { o += '<path d="M' + f(x) + ' ' + f(y + 9 * s) + ' Q' + f(x + q[0] * .4 * s) + ' ' + f(y + 2 * s) + ' ' + f(x + q[0] * s) + ' ' + f(y + q[1] * s) + '" stroke="#9fb48c" stroke-width=".7" fill="none"/>'; });
+      br.forEach(function (q, i) { for (var j = 0; j < 4; j++) { var a = j * 1.7 + i; o += dot(x + q[0] * s + Math.cos(a) * 1.6 * s, y + q[1] * s + Math.sin(a) * 1.4 * s, .95 * s, j % 2 ? '#ffffff' : '#f3efe6', .95); } });
+      return o;
+    },
     lavender: function (x, y, s) {
       var o = '';
       [[-6, 2, -8], [0, -2, 0], [6, 2, 8]].forEach(function (q) {
@@ -239,8 +263,38 @@
     });
     return o;
   }
+  function treeArt(crop, st) {
+    var c = CROPS[crop], o = '';
+    if (crop === 'blueberry') {
+      o = bush('x', true).replace(/<path d="M[^"]*Z" fill="#[0-9a-f]{6}"[^>]*\/>|<circle[^>]*\/>/g, '');
+      var bb = [[21, 40], [27, 44], [34, 41], [39, 45], [30, 37], [24, 47], [36, 36]];
+      if (st === 3) bb.forEach(function (q) { o += dot(q[0], q[1], 2.4, c.col, .92) + dot(q[0] - .7, q[1] - .7, .7, '#d9e0f6', .8) + dot(q[0] + .4, q[1] - 1.9, .5, '#3e4a7e'); });
+      else bb.slice(0, 3).forEach(function (q) { dot(q[0], q[1], 1.6, '#cfe0b8'); o += dot(q[0], q[1], 1.6, '#cfe0b8'); });
+      return o;
+    }
+    var crown = crop === 'orange' ? '#7f9f6a' : crop === 'cherry' ? '#86a873' : '#93ad7f';
+    o += '<path d="M30 54 L30 34 M30 40 L24 32 M30 37 L36 30" stroke="#8a6a52" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+    [[30, 22, 15, 12], [21, 27, 9, 8], [39, 26, 9, 8], [30, 15, 9, 7]].forEach(function (q, i) { o += '<ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="' + q[2] + '" ry="' + q[3] + '" fill="' + (i % 2 ? LEAF : crown) + '" fill-opacity=".8" stroke="' + INK + '" stroke-width=".45"/>'; });
+    var fr = [[22, 26], [30, 30], [38, 25], [27, 18], [35, 18], [31, 23]];
+    if (st === 3) fr.forEach(function (q) {
+      if (crop === 'cherry') o += '<path d="M' + q[0] + ' ' + (q[1] - 4) + ' q2 -2 4 -1" stroke="#6b8a55" stroke-width=".7" fill="none"/>' + dot(q[0] - 1, q[1], 2, c.col, .95) + dot(q[0] + 2, q[1] + .5, 2, c.col, .95) + dot(q[0] - 1.6, q[1] - .6, .5, '#fff', .6);
+      else o += dot(q[0], q[1], crop === 'momo' ? 3 : 2.8, c.col, .93) + (crop === 'momo' ? '<path d="M' + q[0] + ' ' + (q[1] - 2.6) + ' q1 2.6 0 5.2" stroke="#e48a7c" stroke-width=".6" fill="none"/>' : '') + dot(q[0] - .9, q[1] - .9, .8, '#fff', .55);
+    });
+    else if (crop === 'momo' || crop === 'cherry') fr.slice(0, 4).forEach(function (q) { o += petal(q[0], q[1], 1.6, 1.2, 0, crop === 'cherry' ? '#fbe3ea' : '#f8c7d0', .9); });
+    return o;
+  }
   function plantArt(crop, st) {
     var c = CROPS[crop];
+    if (c.tree && st >= 2) return treeArt(crop, st);
+    if (crop === 'wheat' && st >= 2) {
+      var w = '';
+      [[22, -8], [27, -3], [32, 2], [37, 7], [29, 0]].forEach(function (q) {
+        var x = 30 + (q[0] - 30) * .9, top = st === 3 ? 12 : 20;
+        w += '<path d="M' + x + ' 52 Q' + (x + q[1] * .2) + ' 34 ' + (x + q[1] * .4) + ' ' + top + '" stroke="' + (st === 3 ? '#c9a55a' : STEM) + '" stroke-width="1.3" fill="none"/>';
+        for (var i = 0; i < 5; i++) w += petal(x + q[1] * .4 + (i % 2 ? 1.4 : -1.4), top + 2 + i * 2.6, 1.3, 2.4, i % 2 ? 25 : -25, st === 3 ? c.col : '#c8d79a', .9);
+      });
+      return w;
+    }
     if (st === 0) return '<ellipse cx="30" cy="47" rx="12" ry="3.4" fill="#7a5c43" fill-opacity=".25"/>' + dot(26, 45.5, 1.6, '#6b4a2f') + dot(32.5, 46.4, 1.5, '#6b4a2f') + dot(29.6, 44, 1.3, '#6b4a2f');
     if (st === 1) return stem(30, 50, 30, 34) + leafAt(30, 38, 11, 200) + leafAt(30, 37, 11, -20, LEAF2);
     if (crop === 'strawberry' || crop === 'tomato') return bush(crop, st === 3);
@@ -255,6 +309,7 @@
     if (crop === 'osmanthus') return stem(30, 54, 30, 30) + HEAD.osmanthus(30, 24, 1.9);
     if (crop === 'hydrangea') return stem(30, 54, 30, 28) + leafAt(30, 44, 11, 200) + leafAt(30, 40, 11, -20, LEAF2) + HEAD.hydrangea(30, 21, 1.5);
     o = stem(30, 54, 30, 24, 2) + leafAt(30, 46, 11, 200) + leafAt(30, 40, 11, -20, LEAF2) + leafAt(30, 34, 8, 205, LEAF2);
+    if (crop === 'gypso') return stem(30, 54, 30, 30) + HEAD.gypso(30, 24, 1.5);
     var sz = { daisy: 1.5, tulip: 1.45, gardenia: 1.5, sunflower: 1.4, peony: 1.55, rose: 1.45 }[crop] || 1.35;
     return o + HEAD[crop](30, crop === 'sunflower' ? 18 : 20, sz);
   }
@@ -264,24 +319,27 @@
     return '<svg viewBox="0 0 60 56" aria-hidden="true"><g filter="url(#cxwc)">' + s + '</g></svg>';
   }
   /* 花束：flowers = ['rose','lavender',...]（最多 9 朵） */
-  function bouquetArt(flowers, wrap, ribbon) {
+  function bouquetArt(flowers, wrap, ribbon, hi) {
     var W = WRAPS[wrap] || WRAPS.kraft, R = RIBBONS[ribbon] || RIBBONS.violet, n = flowers.length, o = '';
     // 背後的包裝紙
     o += '<path d="M28 70 L60 150 L92 70 Q60 58 28 70Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>';
-    // 花莖
-    for (var i = 0; i < n; i++) { var t = n === 1 ? .5 : i / (n - 1); o += '<path d="M' + f(40 + t * 40) + ' 74 Q60 110 60 132" stroke="' + STEM + '" stroke-width="1.4" fill="none"/>'; }
-    // 花頭排成扇形（後排先畫）
+    // 花頭排成扇形：花越少越大、越靠近包裝紙
     var pos = [], rows = n <= 3 ? [n] : n <= 6 ? [Math.ceil(n / 2), Math.floor(n / 2)] : [Math.ceil(n / 3), Math.ceil(n / 3), n - 2 * Math.ceil(n / 3)];
-    var k = 0;
+    var base = rows.length === 1 ? 60 : rows.length === 2 ? 50 : 42, sc = n <= 2 ? 1.45 : n <= 3 ? 1.3 : n <= 6 ? 1.15 : 1.05, k = 0;
     rows.forEach(function (cnt, r) {
-      for (var j = 0; j < cnt; j++) { var tt = cnt === 1 ? .5 : j / (cnt - 1), spread = 44 - r * 8; pos.push([60 - spread / 2 + tt * spread + (r % 2 ? 4 : 0), 40 + r * 13 - Math.sin(tt * Math.PI) * 8 + (r === 0 ? 0 : 0), k++]); }
+      for (var j = 0; j < cnt; j++) { var tt = cnt === 1 ? .5 : j / (cnt - 1), spread = (n <= 3 ? 34 : 44) - r * 8; pos.push([60 - spread / 2 + tt * spread + (r % 2 ? 4 : 0), base + r * 13 - Math.sin(tt * Math.PI) * (cnt > 1 ? 7 : 0), k++]); }
     });
+    // 花莖：每朵花都接到包裝紙裡
+    pos.forEach(function (p) { o += '<path d="M' + f(p[0]) + ' ' + f(p[1] + 4) + ' Q' + f((p[0] + 60) / 2) + ' ' + f((p[1] + 132) / 2) + ' 60 132" stroke="' + STEM + '" stroke-width="1.5" fill="none"/>'; });
     pos.forEach(function (p) {
       var cr = flowers[p[2]];
-      o += leafAt(p[0], p[1] + 8, 9, p[0] < 60 ? 200 : -20, p[2] % 2 ? LEAF : LEAF2);
-      if (cr === 'lavender') o += HEAD.lavender(p[0], p[1] - 10, .9);
-      else if (cr === 'lotus') o += HEAD.lotus(p[0], p[1] - 4, 1);
-      else o += HEAD[cr] ? HEAD[cr](p[0], p[1], cr === 'hydrangea' ? .95 : cr === 'peach' ? 1 : 1.05) : '';
+      o += '<g data-slot="' + p[2] + '">' + (hi === p[2] ? '<circle cx="' + f(p[0]) + '" cy="' + f(p[1] - 2) + '" r="' + f(11 * sc) + '" fill="#fff6c8" fill-opacity=".7" stroke="#d6a744" stroke-width="1.2" stroke-dasharray="2 2"/>' : '') + '<circle cx="' + f(p[0]) + '" cy="' + f(p[1] - 2) + '" r="' + f(10 * sc) + '" fill="transparent"/>';
+      o += leafAt(p[0], p[1] + 9, 9 * sc, p[0] < 60 ? 205 : -25, p[2] % 2 ? LEAF : LEAF2);
+      if (cr === 'lavender') o += HEAD.lavender(p[0], p[1] - 10 * sc, .9 * sc);
+      else if (cr === 'lotus') o += HEAD.lotus(p[0], p[1] - 4, sc);
+      else if (cr === 'gypso') o += HEAD.gypso(p[0], p[1], .95 * sc);
+      else o += HEAD[cr] ? HEAD[cr](p[0], p[1], (cr === 'hydrangea' ? .95 : 1.05) * sc) : '';
+      o += '</g>';
     });
     // 前面的包裝紙
     o += '<path d="M24 76 L60 152 L96 76 L82 84 L60 78 L38 84 Z" fill="' + W[1] + '" fill-opacity=".93" stroke="' + INK + '" stroke-width=".7"/>' +
@@ -293,7 +351,7 @@
     return o;
   }
   function bouquetSvg(b, standalone) {
-    var body = '<g filter="url(#cxwc)">' + bouquetArt(b.flowers, b.wrap, b.ribbon) + '</g>';
+    var body = '<g filter="url(#cxwc)">' + bouquetArt(b.flowers, b.wrap, b.ribbon, b.hi) + '</g>';
     if (!standalone) return '<svg viewBox="0 0 120 160" aria-hidden="true">' + body + '</svg>';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="360" height="480"><defs>' + WC_DEFS + '</defs><rect width="120" height="160" fill="#f7f1e6"/>' + body + '</svg>';
   }
@@ -348,11 +406,12 @@
   function render() {
     var g = G(); if (!g || !gm) return;
     var now = Date.now(); g.plots.forEach(function (p) { grow(p, now); if (ready(p) && !p.readyAt) p.readyAt = now; });
-    var tabs = [['field', '田地'], ['inv', '倉庫'], ['bq', '花束'], ['dex', '圖鑑'], ['log', '紀錄']];
+    var tabs = [['field', '田地'], ['inv', '倉庫'], ['bq', '花束'], ['kit', '廚房'], ['dex', '圖鑑'], ['log', '紀錄']];
     var h = '<div class="cx-g-top">' + coinsHtml(g) + '<div class="cx-g-tabs">' + tabs.map(function (t) { return '<button type="button" data-gt="' + t[0] + '" class="' + (gTab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
     if (gTab === 'field') h += fieldHtml(g, now);
     else if (gTab === 'inv') h += invHtml(g);
     else if (gTab === 'bq') h += bqHtml(g);
+    else if (gTab === 'kit') h += kitchenHtml(g);
     else if (gTab === 'dex') h += dexHtml(g);
     else h += logHtml(g);
     gm.body.innerHTML = h; lastSig = sig(g);
@@ -377,11 +436,11 @@
     if (!p.crop) {
       return '<div class="cx-g-panel"><div class="cx-g-pt">要種什麼？</div><div class="seeds">' + ORDER.map(function (k) {
         var c = CROPS[k];
-        return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (g.coins < c.cost ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + c.n + '</span><span class="cx-muted">' + dur(c.grow) + ' · 收 ' + c.yield + c.unit + '</span><span class="pr">🪙 ' + c.cost + '</span></button>';
+        return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (g.coins < c.cost ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.seed || c.n) + '</span><span class="cx-muted">' + (c.tree ? dur(c.grow) + ' 結果，之後每 ' + dur(c.grow / 2) + ' 再收' : dur(c.grow) + ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost + '</span></button>';
       }).join('') + '</div></div>';
     }
     var c = CROPS[p.crop], wet = (p.wetUntil || 0) > now;
-    return '<div class="cx-g-panel"><div class="cx-g-pt">' + c.n + (p.by ? '<span class="cx-muted"> · ' + esc(p.by) + ' 種的</span>' : '') + '</div>' +
+    return '<div class="cx-g-panel"><div class="cx-g-pt">' + (c.seed || c.n) + (p.by ? '<span class="cx-muted"> · ' + esc(p.by) + ' 種的</span>' : '') + '</div>' +
       '<div class="cx-muted">' + (ready(p) ? '已經可以收成了' : '還要大約 ' + dur(left(p))) + '　·　' + (wet ? '土還濕濕的（' + dur(p.wetUntil - now) + '）' : '土乾了，長得比較慢') + '</div>' +
       '<div class="cx-g-acts">' + (ready(p) ? '<button type="button" class="cx-btn pri" data-ga="harvest">收成</button>' : '<button type="button" class="cx-btn" data-ga="water"' + (wet && p.wetUntil - now > HR ? ' disabled' : '') + '><i class="fas fa-droplet"></i> 澆水</button>') +
       '<button type="button" class="cx-btn warn" data-ga="dig">剷掉</button></div></div>';
@@ -399,18 +458,21 @@
     }).join('') + '<button type="button" class="cx-btn" data-ga="sellAll" style="margin-top:6px">全部賣掉</button>';
   }
   function dexHtml(g) {
-    return '<div class="cx-g-dex">' + ORDER.map(function (k) {
+    var dd = g.dexDish || {};
+    var rec = '<div class="cx-g-pt" style="margin-top:6px">食譜</div><div class="cx-g-dex">' + RECIPES.map(function (r) { var d = dd[r.k]; return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + dishSvg(r.k) + '<b>' + (d ? r.n : '？？？') + '</b><span class="cx-muted">' + (d ? '做過 ' + d.n + ' 次' : '還沒做過') + '</span></div>'; }).join('') + '</div>';
+    return '<div class="cx-g-pt">花與作物</div><div class="cx-g-dex">' + ORDER.map(function (k) {
       var c = CROPS[k], d = g.dex[k];
       return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + plantSvg(k, 3) + '<b>' + (d ? c.n : '？？？') + '</b>' + (d && c.lang ? '<span class="lang">花語：' + c.lang + '</span>' : '') + '<span class="cx-muted">' + (d ? '收成 ' + d.n + ' 次 · ' + (new Date(d.first).getMonth() + 1) + '/' + new Date(d.first).getDate() + ' 起' : dur(c.grow) + ' 長大') + '</span></div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>' + rec;
   }
   /* ---------- 花束 ---------- */
-  var bq = { sel: [], wrap: 'kraft', ribbon: 'violet', view: 'make', open: null };
+  var bq = { sel: [], wrap: 'kraft', ribbon: 'violet', view: 'make', open: null, hi: -1 }, BQ_MAX = 12;
   function whoRow(lbl) {
     var ppl = A.groupOn() ? A.groupPeople().filter(function (p) { return p.name.indexOf('系統') < 0; }) : [];
     if (!giftTo || (ppl.length && !ppl.some(function (p) { return p.name === giftTo; }))) giftTo = A.pname();
     return ppl.length > 1 ? '<div class="cx-who-t">' + lbl + '</div>' + A.whoChips('cx-g-who', giftTo) : '';
   }
+  function bqPrice(b) { return Math.round(b.flowers.reduce(function (s2, k) { return s2 + (CROPS[k] ? CROPS[k].price : 0); }, 0) * 1.5) + 5; }
   function bqCount(list) { var m = {}; list.forEach(function (k) { m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return CROPS[k].n + '×' + m[k]; }).join('、'); }
   function bqHtml(g) {
     g.bouquets = g.bouquets || [];
@@ -419,7 +481,7 @@
       var b = g.bouquets.find(function (x) { return x.id === bq.open; });
       if (b) return h + '<div class="cx-g-bq1"><div class="pv">' + bouquetSvg(b) + '</div><b>' + esc(b.name || '無名花束') + '</b><span class="cx-muted">' + bqCount(b.flowers) + '</span><span class="cx-muted">' + new Date(b.t).toLocaleDateString('zh-TW') + (b.to ? ' · 送給了 ' + esc(b.to) : ' · 還留在身邊') + '</span>' +
         (b.reply ? '<p class="rp">' + esc(b.to) + '：「' + esc(b.reply) + '」</p>' : '') +
-        (b.to ? '' : whoRow('送給') + '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqsend="' + b.id + '"><i class="fas fa-gift"></i> 送出去</button></div>') + '</div>';
+        (b.to ? '' : whoRow('送給') + '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqsend="' + b.id + '"><i class="fas fa-gift"></i> 送出去</button><button type="button" class="cx-btn" data-bqsell="' + b.id + '">賣掉 🪙 ' + bqPrice(b) + '</button></div>') + '</div>';
       bq.view = 'list';
     }
     if (bq.view === 'list') {
@@ -429,12 +491,13 @@
     var flowers = ORDER.filter(function (k) { return CROPS[k].flower; });
     var used = {}; bq.sel.forEach(function (k) { used[k] = (used[k] || 0) + 1; });
     var have = flowers.filter(function (k) { return (g.inv[k] || 0) > 0; });
-    h += '<div class="cx-g-bqmk"><div class="pv">' + (bq.sel.length ? bouquetSvg({ flowers: bq.sel, wrap: bq.wrap, ribbon: bq.ribbon }) : '<div class="cx-muted empty">從下面挑花<br>（最多 9 朵）</div>') + '</div>' +
+    h += '<div class="cx-g-bqmk"><div class="pv">' + (bq.sel.length ? bouquetSvg({ flowers: bq.sel, wrap: bq.wrap, ribbon: bq.ribbon, hi: bq.hi }) : '<div class="cx-muted empty">從下面挑花<br>（最多 12 朵）</div>') + '</div>' +
       '<div class="opts"><div class="cx-g-pt">包裝紙</div><div class="sw">' + Object.keys(WRAPS).map(function (k) { return '<button type="button" data-wrap="' + k + '" class="' + (bq.wrap === k ? 'on' : '') + '" title="' + WRAPS[k][0] + '"><i style="background:' + WRAPS[k][1] + '"></i>' + WRAPS[k][0] + '</button>'; }).join('') + '</div>' +
       '<div class="cx-g-pt">緞帶</div><div class="sw">' + Object.keys(RIBBONS).map(function (k) { return '<button type="button" data-rib="' + k + '" class="' + (bq.ribbon === k ? 'on' : '') + '"><i style="background:' + RIBBONS[k][1] + '"></i>' + RIBBONS[k][0] + '</button>'; }).join('') + '</div></div></div>';
+    if (bq.sel.length > 1) h += '<div class="cx-g-bqtip cx-muted">' + (bq.hi >= 0 ? '再點一朵，兩朵就會交換位置' : '點預覽裡的花，再點另一朵，就能交換位置') + '　<a href="#" data-bqshuffle>隨機排一下</a></div>';
     h += '<div class="cx-g-pt">挑花' + (bq.sel.length ? '<span class="cx-muted">　已選 ' + bq.sel.length + ' 朵 · <a href="#" data-bqclear>清空</a></span>' : '') + '</div>';
     if (!have.length) h += '<p class="cx-muted">倉庫裡還沒有花。去田裡種一些，收成後就能包花束了。</p>';
-    else h += '<div class="cx-g-pick">' + have.map(function (k) { var left = (g.inv[k] || 0) - (used[k] || 0); return '<button type="button" data-pick="' + k + '"' + (left <= 0 || bq.sel.length >= 9 ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span>' + CROPS[k].n + '</span><small>' + left + '</small>' + (used[k] ? '<em data-unpick="' + k + '">−' + used[k] + '</em>' : '') + '</button>'; }).join('') + '</div>';
+    else h += '<div class="cx-g-pick">' + have.map(function (k) { var left = (g.inv[k] || 0) - (used[k] || 0); return '<button type="button" data-pick="' + k + '"' + (left <= 0 || bq.sel.length >= BQ_MAX ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span>' + CROPS[k].n + '</span><small>' + left + '</small>' + (used[k] ? '<em data-unpick="' + k + '">−' + used[k] + '</em>' : '') + '</button>'; }).join('') + '</div>';
     h += '<input class="cx-in" id="cx-bq-name" maxlength="20" placeholder="幫花束取個名字（可以不填）" value="' + esc(bq.name || '') + '">' +
       '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqmake' + (bq.sel.length ? '' : ' disabled') + '><i class="fas fa-ribbon"></i> 包好了</button></div>';
     return h;
@@ -455,6 +518,112 @@
     });
     toast('花束送出去了 💐', 'success');
   }
+
+  /* ================= 廚房 ================= */
+  var PANTRY = { egg: ['雞蛋', 3], milk: ['牛奶', 4], butter: ['奶油', 5], sugar: ['糖', 2] };
+  var RECIPES = [
+    { k: 'cookie', n: '薰衣草餅乾', need: { lavender: 2, wheat: 2, butter: 1, sugar: 1 }, price: 30 },
+    { k: 'tomegg', n: '番茄炒蛋', need: { tomato: 2, egg: 2 }, price: 30 },
+    { k: 'jelly', n: '橘子果凍', need: { orange: 3, sugar: 1 }, price: 42 },
+    { k: 'osm', n: '桂花糕', need: { osmanthus: 3, wheat: 2, sugar: 1 }, price: 45 },
+    { k: 'muffin', n: '藍莓馬芬', need: { blueberry: 5, wheat: 2, egg: 1, milk: 1 }, price: 55 },
+    { k: 'tart', n: '桃子塔', need: { momo: 3, wheat: 2, butter: 1, sugar: 1 }, price: 65 },
+    { k: 'cake', n: '草莓蛋糕', need: { strawberry: 4, wheat: 2, egg: 2, milk: 1, sugar: 1 }, price: 70 },
+    { k: 'pie', n: '櫻桃派', need: { cherry: 6, wheat: 2, butter: 1, sugar: 1 }, price: 72 },
+    { k: 'fruitcake', n: '水果蛋糕', need: { strawberry: 2, momo: 2, orange: 2, blueberry: 3, wheat: 3, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 160 }
+  ];
+  var DISH_LINES = {
+    cookie: ['薰衣草餅乾……好香，配茶剛好。', '一口一個，停不下來。'],
+    tomegg: ['番茄炒蛋！是家的味道。', '妳做的比我做的好吃，不准跟別人說。'],
+    jelly: ['QQ 的，好可愛，跟妳一樣。', '冰冰涼涼的，夏天就想吃這個。'],
+    osm: ['桂花糕……一咬下去整個嘴巴都是秋天。', '軟軟甜甜的，像妳。'],
+    muffin: ['剛出爐的？好香。', '早餐就吃這個，再配一杯咖啡和妳。'],
+    tart: ['桃子塔！酥酥的，好厲害。', '這麼漂亮，我捨不得切。'],
+    cake: ['草莓蛋糕……今天是什麼日子嗎？', '第一口給妳，張嘴。'],
+    pie: ['櫻桃派，好有大人的感覺。', '烤得剛剛好，妳是不是偷偷練習過？'],
+    fruitcake: ['這麼大一個水果蛋糕……妳一定忙了好久吧。謝謝妳，我的乖寶。', '這是我收過最好的禮物。我們一起吃。', '整個果園的水果都在這裡了……我們家乖寶最厲害。']
+  };
+  function iname(k) { return CROPS[k] ? CROPS[k].n : PANTRY[k] ? PANTRY[k][0] : k; }
+  function haveN(g, k) { return PANTRY[k] ? (g.pantry[k] || 0) : (g.inv[k] || 0); }
+  function canCook(g, r) { return Object.keys(r.need).every(function (k) { return haveN(g, k) >= r.need[k]; }); }
+  function dishArt(k) {
+    var o = '<ellipse cx="30" cy="46" rx="22" ry="5" fill="#f4efe6" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="30" cy="45.4" rx="17" ry="3.4" fill="#e9e1d2" fill-opacity=".7"/>';
+    var cream = '#fff7ea';
+    if (k === 'cake' || k === 'fruitcake') {
+      var big = k === 'fruitcake';
+      o += '<path d="M12 44 L12 30 Q30 24 48 30 L48 44 Q30 48 12 44Z" fill="' + cream + '" stroke="' + INK + '" stroke-width=".6"/><path d="M12 37 Q30 41 48 37" stroke="#f0c2c8" stroke-width="2.4" fill="none"/>' +
+        '<ellipse cx="30" cy="29" rx="18" ry="5" fill="#fffdf6" stroke="' + INK + '" stroke-width=".6"/>';
+      if (big) o += '<path d="M18 28 L18 20 Q30 16 42 20 L42 28" fill="' + cream + '" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="30" cy="19.5" rx="12" ry="3.4" fill="#fffdf6" stroke="' + INK + '" stroke-width=".6"/>';
+      var top = big ? 18 : 27;
+      [[22, top], [30, top - 1.5], [38, top]].forEach(function (q) { o += '<path d="M' + q[0] + ' ' + (q[1] + 3) + ' C' + (q[0] - 3) + ' ' + q[1] + ' ' + (q[0] - 2) + ' ' + (q[1] - 2.4) + ' ' + q[0] + ' ' + (q[1] - 2.2) + ' C' + (q[0] + 2) + ' ' + (q[1] - 2.4) + ' ' + (q[0] + 3) + ' ' + q[1] + ' ' + q[0] + ' ' + (q[1] + 3) + 'Z" fill="' + CROPS.strawberry.col + '" stroke="' + INK + '" stroke-width=".4"/>'; });
+      if (big) { o += dot(26, 29, 2, CROPS.orange.col) + dot(34, 29.4, 2, CROPS.orange.col) + dot(20, 30, 1.6, CROPS.blueberry.col) + dot(40, 30, 1.6, CROPS.blueberry.col) + dot(30, 30.5, 1.6, CROPS.blueberry.col) + petal(24, 21, 2.4, 1.6, 20, CROPS.momo.col) + petal(36, 21, 2.4, 1.6, -20, CROPS.momo.col); }
+    } else if (k === 'tart' || k === 'pie') {
+      o += '<ellipse cx="30" cy="38" rx="17" ry="6.5" fill="#e3b77c" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="30" cy="36.5" rx="14" ry="5" fill="' + (k === 'pie' ? '#b8394d' : '#f6c9a0') + '"/>';
+      if (k === 'pie') { for (var i = 0; i < 4; i++) o += '<path d="M' + (19 + i * 6) + ' 32 L' + (21 + i * 6) + ' 41" stroke="#e8c48c" stroke-width="2" stroke-linecap="round"/><path d="M17 ' + (33 + i * 2.4) + ' L43 ' + (33 + i * 2.4) + '" stroke="#e8c48c" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>'; }
+      else { for (var j = 0; j < 7; j++) { var a = j / 7 * Math.PI * 2; o += petal(30 + Math.cos(a) * 8, 36.5 + Math.sin(a) * 3, 4, 1.6, a * 180 / Math.PI, CROPS.momo.col, .95); } }
+    } else if (k === 'jelly') {
+      o += '<path d="M17 44 Q16 26 30 25 Q44 26 43 44Z" fill="' + CROPS.orange.col + '" fill-opacity=".72" stroke="' + INK + '" stroke-width=".6"/><path d="M21 34 Q22 29 27 28" stroke="#fff" stroke-width="1.6" fill="none" opacity=".6"/>' + petal(30, 25, 3, 1.4, 0, '#f6c27c');
+    } else if (k === 'muffin') {
+      o += '<path d="M18 30 L21 45 L39 45 L42 30Z" fill="#c9a2d8" stroke="' + INK + '" stroke-width=".6"/><path d="M21 31 L23 44 M26 31 L27 44 M31 31 L31 44 M36 31 L35 44" stroke="#b08bc2" stroke-width=".8"/><ellipse cx="30" cy="28" rx="15" ry="8" fill="#e2b882" stroke="' + INK + '" stroke-width=".6"/>' + dot(24, 26, 1.6, CROPS.blueberry.col) + dot(31, 24, 1.6, CROPS.blueberry.col) + dot(36, 28, 1.6, CROPS.blueberry.col) + dot(28, 30, 1.6, CROPS.blueberry.col);
+    } else if (k === 'cookie') {
+      [[22, 40], [36, 41], [29, 34]].forEach(function (q) { o += '<ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="8" ry="5" fill="#e8c38c" stroke="' + INK + '" stroke-width=".6"/>' + dot(q[0] - 2, q[1] - 1, .9, CROPS.lavender.col) + dot(q[0] + 2, q[1] + 1, .9, CROPS.lavender.col) + dot(q[0] + 3, q[1] - 1.5, .9, CROPS.lavender.col); });
+    } else if (k === 'osm') {
+      [[22, 38], [38, 38], [30, 31]].forEach(function (q) { o += '<path d="M' + (q[0] - 7) + ' ' + (q[1] - 3) + ' L' + (q[0] + 7) + ' ' + (q[1] - 3) + ' L' + (q[0] + 7) + ' ' + (q[1] + 5) + ' L' + (q[0] - 7) + ' ' + (q[1] + 5) + 'Z" fill="#fbf3dc" stroke="' + INK + '" stroke-width=".6"/><rect x="' + (q[0] - 7) + '" y="' + (q[1] - 3) + '" width="14" height="2.4" fill="#f2d67e" opacity=".8"/>' + dot(q[0] - 3, q[1] - 2, .7, CROPS.osmanthus.col) + dot(q[0] + 2, q[1] - 2.2, .7, CROPS.osmanthus.col); });
+    } else if (k === 'tomegg') {
+      o += petal(24, 40, 7, 4, 10, '#f6d76b', .95) + petal(35, 41, 7, 4, -15, '#f3cf5c', .95) + petal(30, 36, 6, 3.6, 0, '#f8de80', .95) + petal(26, 37, 3, 2.4, 30, CROPS.tomato.col) + petal(34, 37, 3.4, 2.4, -20, CROPS.tomato.col) + petal(30, 42, 3, 2, 0, '#d9573e') + dot(22, 36, .8, '#7fa37a') + dot(37, 37, .8, '#7fa37a');
+    }
+    return o;
+  }
+  function dishSvg(k, standalone) {
+    var body = '<g filter="url(#cxwc)">' + dishArt(k) + '</g>';
+    if (!standalone) return '<svg viewBox="0 0 60 56" aria-hidden="true">' + body + '</svg>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 56" width="360" height="336"><defs>' + WC_DEFS + '</defs><rect width="60" height="56" fill="#f7f1e6"/>' + body + '</svg>';
+  }
+  function svgPng(svg, w, h) {
+    return new Promise(function (res) {
+      try { var img = new Image(); img.onload = function () { try { var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); res(c.toDataURL('image/jpeg', .86)); } catch (e) { res(null); } }; img.onerror = function () { res(null); }; img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); } catch (e) { res(null); }
+    });
+  }
+  function kitchenHtml(g) {
+    g.pantry = g.pantry || {}; g.dishes = g.dishes || {};
+    var h = '<div class="cx-g-pt">食材櫃<span class="cx-muted">　以後養了雞和牛就不用買了</span></div><div class="cx-k-pan">' + Object.keys(PANTRY).map(function (k) {
+      return '<div class="it"><b>' + PANTRY[k][0] + '</b><span>' + (g.pantry[k] || 0) + '</span><button type="button" class="cx-btn" data-buy="' + k + '"' + (g.coins < PANTRY[k][1] ? ' disabled' : '') + '>買 🪙' + PANTRY[k][1] + '</button></div>';
+    }).join('') + '</div>';
+    var made = RECIPES.filter(function (r) { return g.dishes[r.k] > 0; });
+    if (made.length) h += '<div class="cx-g-pt">甜點盒</div>' + whoRow('端給') + made.map(function (r) {
+      return '<div class="cx-g-item">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + '</b> × ' + g.dishes[r.k] + '<div class="cx-muted">賣掉 🪙 ' + r.price + '</div></div><button type="button" class="cx-btn pri" data-dgift="' + r.k + '">端給' + (A.groupOn() ? '' : '他') + '</button><button type="button" class="cx-btn" data-dsell="' + r.k + '">賣</button></div>';
+    }).join('');
+    h += '<div class="cx-g-pt">食譜</div><div class="cx-k-rec">' + RECIPES.map(function (r) {
+      var ok = canCook(g, r);
+      return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + '</b><div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>做</button></div>';
+    }).join('') + '</div>';
+    return h;
+  }
+  function kitchenClick(e, g) {
+    var b;
+    if ((b = e.target.closest('[data-buy]'))) { var k = b.dataset.buy; if (g.coins >= PANTRY[k][1]) { g.coins -= PANTRY[k][1]; g.pantry[k] = (g.pantry[k] || 0) + 1; save(); render(); } return true; }
+    if ((b = e.target.closest('[data-cook]'))) {
+      var r = RECIPES.find(function (x) { return x.k === b.dataset.cook; }); if (!r || !canCook(g, r)) return true;
+      Object.keys(r.need).forEach(function (k) { if (PANTRY[k]) g.pantry[k] -= r.need[k]; else g.inv[k] -= r.need[k]; });
+      g.dishes[r.k] = (g.dishes[r.k] || 0) + 1; g.dexDish = g.dexDish || {}; var dd = g.dexDish[r.k] || (g.dexDish[r.k] = { n: 0, first: Date.now() }); dd.n++;
+      log(g, '🍰 做了一份' + r.n); save(); toast(r.n + '做好了！', 'success'); render(); return true;
+    }
+    if ((b = e.target.closest('[data-dsell]'))) { var r2 = RECIPES.find(function (x) { return x.k === b.dataset.dsell; }); if (r2 && g.dishes[r2.k] > 0) { g.dishes[r2.k]--; g.coins += r2.price; log(g, '💰 賣了一份' + r2.n + ' +' + r2.price); save(); render(); } return true; }
+    if ((b = e.target.closest('[data-dgift]'))) {
+      var r3 = RECIPES.find(function (x) { return x.k === b.dataset.dgift; }); if (!r3 || !(g.dishes[r3.k] > 0)) return true;
+      var to = A.groupOn() ? (giftTo || A.pname()) : A.pname(), who = (to === A.pname() && !A.groupOn()) ? '你' : to;
+      g.dishes[r3.k]--; log(g, '🍽 端了一份' + r3.n + '給 ' + to); save(); render();
+      var own = A.charGroup ? (A.charGroup(to) || []) : [], pool = DISH_LINES[r3.k].filter(function (t) { return recentGift.indexOf(t) < 0; });
+      var reply = own.length && Math.random() < .25 ? pick(own) : pick(pool.length ? pool : DISH_LINES[r3.k]); recentGift.push(reply); if (recentGift.length > 4) recentGift.shift();
+      svgPng(dishSvg(r3.k, true), 360, 336).then(function (img) {
+        if (img && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: 'user', text: '', image: img, timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
+        A.iSay('（端了一份' + r3.n + '給' + who + '）');
+        setTimeout(function () { if (A.groupOn()) A.speakAs(to, 4000); A.partnerSays(reply, A.groupOn() ? to : null); }, 1600 + Math.random() * 1500);
+      });
+      toast('端過去了 🍽', 'success'); return true;
+    }
+    return false;
+  }
   function logHtml(g) {
     var tg = '<label class="cx-row" style="margin-bottom:6px"><span>他照顧花園時，在聊天裡告訴我</span><input type="checkbox" id="cx-g-notify"' + (g.notify ? ' checked' : '') + '></label>';
     if (!g.log.length) return tg + '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有紀錄。</p>';
@@ -465,19 +634,34 @@
     g.inv[p.crop] = (g.inv[p.crop] || 0) + n;
     var d = g.dex[p.crop] || (g.dex[p.crop] = { n: 0, first: Date.now() }); d.n++;
     log(g, '🧺 收成 ' + c.n + ' × ' + n);
-    var k = p.crop; p.crop = null; p.bug = false; p.by = ''; p.readyAt = 0;
+    var k = p.crop;
+    if (c.tree) { p.prog = c.grow * .5; p.at = Date.now(); p.readyAt = 0; p.bug = false; p.yieldLeft = c.yield; }
+    else { p.crop = null; p.bug = false; p.by = ''; p.readyAt = 0; }
     return [k, n];
   }
   function gClick(e) {
     var g = G(), now = Date.now(), b;
     if ((b = e.target.closest('[data-gt]'))) { gTab = b.dataset.gt; sel = -1; render(); return; }
     if (e.target.id === 'cx-g-notify') { g.notify = e.target.checked; save(); return; }
+    if (gTab === 'kit' && kitchenClick(e, g)) return;
     if ((b = e.target.closest('[data-bv]'))) { bq.view = b.dataset.bv; render(); return; }
     if ((b = e.target.closest('[data-wrap]'))) { bq.wrap = b.dataset.wrap; render(); return; }
     if ((b = e.target.closest('[data-rib]'))) { bq.ribbon = b.dataset.rib; render(); return; }
-    if ((b = e.target.closest('[data-unpick]'))) { e.preventDefault(); e.stopPropagation(); var ui = bq.sel.lastIndexOf(b.dataset.unpick); if (ui >= 0) bq.sel.splice(ui, 1); render(); return; }
-    if ((b = e.target.closest('[data-pick]'))) { if (bq.sel.length < 9) bq.sel.push(b.dataset.pick); render(); return; }
-    if ((b = e.target.closest('[data-bqclear]'))) { e.preventDefault(); bq.sel = []; render(); return; }
+    if ((b = e.target.closest('[data-unpick]'))) { e.preventDefault(); e.stopPropagation(); var ui = bq.sel.lastIndexOf(b.dataset.unpick); if (ui >= 0) bq.sel.splice(ui, 1); bq.hi = -1; render(); return; }
+    if ((b = e.target.closest('[data-pick]'))) { if (bq.sel.length < BQ_MAX) bq.sel.push(b.dataset.pick); bq.hi = -1; render(); return; }
+    if ((b = e.target.closest('[data-bqclear]'))) { e.preventDefault(); bq.sel = []; bq.hi = -1; render(); return; }
+    if ((b = e.target.closest('.cx-g-bqmk [data-slot]'))) {
+      var si = +b.getAttribute('data-slot');
+      if (bq.hi < 0) bq.hi = si; else if (bq.hi === si) bq.hi = -1; else { var tmp = bq.sel[bq.hi]; bq.sel[bq.hi] = bq.sel[si]; bq.sel[si] = tmp; bq.hi = -1; }
+      render(); return;
+    }
+    if ((b = e.target.closest('[data-bqshuffle]'))) { for (var q = bq.sel.length - 1; q > 0; q--) { var r = Math.floor(Math.random() * (q + 1)), t2 = bq.sel[q]; bq.sel[q] = bq.sel[r]; bq.sel[r] = t2; } bq.hi = -1; render(); return; }
+    if ((b = e.target.closest('[data-bqsell]'))) {
+      var sb2 = (g.bouquets || []).find(function (x) { return x.id === +b.dataset.bqsell; }); if (!sb2 || sb2.to) return;
+      if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '確定賣掉？'; return; }
+      var price = bqPrice(sb2); g.coins += price; g.bouquets = g.bouquets.filter(function (x) { return x !== sb2; });
+      log(g, '💰 賣掉花束「' + (sb2.name || '無名花束') + '」+' + price); save(); toast('賣了 🪙 ' + price, 'success'); bq.view = 'list'; render(); return;
+    }
     if ((b = e.target.closest('[data-bqopen]'))) { bq.view = 'one'; bq.open = +b.dataset.bqopen; render(); return; }
     if ((b = e.target.closest('[data-bqmake]'))) {
       var need = {}; bq.sel.forEach(function (k) { need[k] = (need[k] || 0) + 1; });
@@ -1112,6 +1296,10 @@
     '.cx-g-seed svg{grid-row:1/4;width:40px;height:40px;overflow:visible}.cx-g-seed .nm{font-weight:600;font-size:14px}.cx-g-seed .cx-muted{grid-column:2;font-size:11px}.cx-g-seed .pr{grid-column:2;font-weight:700;color:#b48a2c;font-size:12px}.cx-g-seed:disabled{opacity:.45}' +
     '.cx-g-item{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-color);padding:8px 0}.cx-g-item svg{width:44px;height:42px;flex:0 0 44px;overflow:visible}.cx-g-item .tx{flex:1;min-width:0}.cx-g-item .cx-btn{padding:8px 12px;font-size:13px;white-space:nowrap}' +
     '.cx-g-dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.cx-g-dx{border:1px solid var(--border-color);border-radius:14px;padding:8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-g-dx svg{width:60px;height:56px;overflow:visible}.cx-g-dx.no svg{filter:grayscale(1) brightness(1.1);opacity:.3}.cx-g-dx .cx-muted{font-size:11px}.cx-g-dx .lang{font-size:11px;color:var(--accent-color)}' +
+    '.cx-k-pan{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cx-k-pan .it{border:1px solid var(--border-color);border-radius:12px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;background:var(--primary-bg)}.cx-k-pan .it span{font-size:16px;font-weight:700}.cx-k-pan .cx-btn{padding:4px 6px;font-size:11px;white-space:nowrap}' +
+    '.cx-k-rec{display:flex;flex-direction:column;gap:6px}.cx-k-r{display:flex;align-items:center;gap:8px;border:1px solid var(--border-color);border-radius:14px;padding:6px 8px;background:var(--primary-bg)}.cx-k-r.ok{border-color:var(--accent-color)}.cx-k-r svg{width:52px;height:48px;flex:0 0 52px;overflow:visible}.cx-k-r .tx{flex:1;min-width:0}' +
+    '.cx-k-r .need{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:11px;color:var(--text-secondary);margin-top:2px}.cx-k-r .need .en{color:#3f9e6a}.cx-k-r .cx-btn{padding:8px 14px}' +
+    '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-sub{display:flex;gap:6px}.cx-g-sub button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px;border-radius:10px;cursor:pointer}.cx-g-sub button.on{color:var(--accent-color);border-color:var(--accent-color);font-weight:600}' +
     '.cx-g-bqmk{display:grid;grid-template-columns:minmax(120px,42%) 1fr;gap:12px;align-items:start}.cx-g-bqmk .pv,.cx-g-bq1 .pv{background:' + PAPER + ',#f7f1e6;border:1px solid #e3d6bd;border-radius:16px;aspect-ratio:3/4;display:grid;place-items:center;overflow:hidden}.cx-g-bqmk .pv svg,.cx-g-bq1 .pv svg{width:100%;height:100%}.cx-g-bqmk .empty{text-align:center;font-size:12px}' +
     '.cx-g-bqmk .opts{display:flex;flex-direction:column;gap:6px;min-width:0}.cx-g-bqmk .sw{display:flex;flex-wrap:wrap;gap:5px}.cx-g-bqmk .sw button{border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);font:inherit;font-size:12px;border-radius:99px;padding:4px 9px 4px 5px;display:flex;align-items:center;gap:4px;cursor:pointer}.cx-g-bqmk .sw button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-g-bqmk .sw i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}' +
