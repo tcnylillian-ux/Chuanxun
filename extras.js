@@ -1763,6 +1763,58 @@
   function curStickers() { var a = [], b = []; try { a = stickerLibrary || []; } catch (e) {} try { b = myStickerLibrary || []; } catch (e) {} return stkSet([a, b]); }
   async function sessStickers(sid) { var P = pfx(), a = null, b = null; try { a = await localforage.getItem(P + sid + '_stickerLibrary'); } catch (e) {} try { b = await localforage.getItem(P + sid + '_myStickerLibrary'); } catch (e) {} return stkSet([a, b]); }
   function imgBytes(arr, stk) { var n = 0, b = 0, sn = 0, sb = 0, u = {}, ub = 0; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && m.image) { if (stk && stk[m.image]) { sn++; sb += m.image.length * 2; if (!u[m.image]) { u[m.image] = 1; ub += m.image.length * 2; } } else { n++; b += m.image.length * 2; } } }); return { n: n, b: b, sn: sn, sb: sb, su: Object.keys(u).length, sub: ub }; }
+  function isStkKey(k) { return /_(stickerLibrary|myStickerLibrary)$/.test(k); }
+  function stkSrc(x) { return typeof x === 'string' ? x : (x && x.src) || ''; }
+  function isAnim(src) {
+    if (/^data:image\/gif/i.test(src)) return true;
+    try { var head = atob(src.split(',')[1].slice(0, 4000)); return /ANIM|acTL/.test(head); } catch (e) { return false; }
+  }
+  async function stkScan() {
+    var ks = []; try { ks = (await localforage.keys()).filter(isStkKey); } catch (e) {}
+    var n = 0, b = 0, gif = 0, seen = {};
+    for (var i = 0; i < ks.length; i++) { var v = null; try { v = await localforage.getItem(ks[i]); } catch (e) {} (Array.isArray(v) ? v : []).forEach(function (x) { var s2 = stkSrc(x); if (!s2 || seen[s2]) return; seen[s2] = 1; n++; b += s2.length * 2; if (isAnim(s2)) gif++; }); }
+    return { n: n, b: b, gif: gif, keys: ks };
+  }
+  function shrink(src) {
+    return new Promise(function (res) {
+      if (typeof src !== 'string' || src.indexOf('data:image/') !== 0 || src.length < 24000 || isAnim(src)) return res(src);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight, M = 240, sc = Math.min(1, M / Math.max(w, h));
+          var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+          var x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+          var alpha = false; try { var d = x.getImageData(0, 0, c.width, c.height).data; for (var i = 3; i < d.length; i += 16) if (d[i] < 250) { alpha = true; break; } } catch (e) { alpha = true; }
+          var out = c.toDataURL('image/webp', .82);
+          if (out.indexOf('data:image/webp') !== 0) out = alpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', .84);
+          res(out.length < src.length * .85 ? out : src);
+        } catch (e) { res(src); }
+      };
+      img.onerror = function () { res(src); }; img.src = src;
+    });
+  }
+  async function stkZip(btn) {
+    var S = await stkScan(), map = {}, list = [], done = 0;
+    for (var i = 0; i < S.keys.length; i++) { var v = await localforage.getItem(S.keys[i]); (Array.isArray(v) ? v : []).forEach(function (x) { var s2 = stkSrc(x); if (s2 && !(s2 in map)) { map[s2] = s2; list.push(s2); } }); }
+    var mem = []; try { mem = mem.concat(stickerLibrary || [], myStickerLibrary || []); } catch (e) {}
+    mem.forEach(function (x) { var s2 = stkSrc(x); if (s2 && !(s2 in map)) { map[s2] = s2; list.push(s2); } });
+    for (var j = 0; j < list.length; j++) { map[list[j]] = await shrink(list[j]); done++; if (btn && done % 5 === 0) btn.textContent = '壓縮中 ' + done + ' / ' + list.length; }
+    var changed = list.filter(function (k) { return map[k] !== k; }).length;
+    if (!changed) return { changed: 0 };
+    function conv(arr) { return (arr || []).map(function (x) { if (typeof x === 'string') return map[x] || x; if (x && x.src && map[x.src]) return Object.assign({}, x, { src: map[x.src] }); return x; }); }
+    try { if (typeof stickerLibrary !== 'undefined') { var a = conv(stickerLibrary); stickerLibrary.length = 0; a.forEach(function (x) { stickerLibrary.push(x); }); } } catch (e) {}
+    try { if (typeof myStickerLibrary !== 'undefined') { var b2 = conv(myStickerLibrary); myStickerLibrary.length = 0; b2.forEach(function (x) { myStickerLibrary.push(x); }); } } catch (e) {}
+    try { (typeof messages !== 'undefined' ? messages : []).forEach(function (m) { if (m && typeof m.image === 'string' && map[m.image]) m.image = map[m.image]; }); } catch (e) {}
+    var cur = curSid(), P = pfx();
+    for (var k = 0; k < S.keys.length; k++) { if (S.keys[k].indexOf(P + cur + '_') === 0) continue; var v2 = await localforage.getItem(S.keys[k]); if (Array.isArray(v2)) await localforage.setItem(S.keys[k], conv(v2)); }
+    var mk = []; try { mk = (await localforage.keys()).filter(function (x) { return /_chatMessages$/.test(x) && x.indexOf(P + cur + '_') !== 0; }); } catch (e) {}
+    for (var q = 0; q < mk.length; q++) { var arr = await localforage.getItem(mk[q]), ch = false; (arr || []).forEach(function (m) { if (m && typeof m.image === 'string' && map[m.image]) { m.image = map[m.image]; ch = true; } }); if (ch) await localforage.setItem(mk[q], arr); }
+    if (typeof saveData === 'function') await saveData();
+    try { if (window.__cxImg) await window.__cxImg.gc(); } catch (e) {}
+    try { if (typeof renderReplyLibrary === 'function') renderReplyLibrary(); } catch (e) {}
+    return { changed: changed };
+  }
+
   async function clnScan() {
     var keys = []; try { keys = await localforage.keys(); } catch (e) {}
     var P = pfx(), ids = {}; sessions().forEach(function (s) { if (s && s.id) ids[s.id] = s.name || s.id; });
@@ -1784,6 +1836,7 @@
       if (window.caches) { var cn = await caches.keys(); for (var c = 0; c < cn.length; c++) { var ch = await caches.open(cn[c]), rq = await ch.keys(); for (var r = 0; r < rq.length; r++) { var res = await ch.match(rq[r]); if (res) { try { info.cache += (await res.clone().blob()).size; } catch (e) {} } } } }
     } catch (e) {}
     try { if (navigator.storage && navigator.storage.estimate) info.est = await navigator.storage.estimate(); } catch (e) {}
+    try { info.stk = await stkScan(); } catch (e) { info.stk = { n: 0, b: 0, gif: 0, keys: [] }; }
     clnInfo = info; return info;
   }
   function clnOpen() {
@@ -1793,6 +1846,14 @@
         var b = e.target.closest('button[data-k]'); if (!b) return;
         var k = b.dataset.k;
         if (k === 'img') { await clnImages(); return; }
+        if (k === 'stkzip') {
+          if (!(await confirmAsync('壓縮表情庫裡比較大的表情包？會變小一點但看起來差不多，壓縮後不能還原。'))) return;
+          b.disabled = true; b.textContent = '壓縮中……';
+          var before = clnInfo && clnInfo.stk ? clnInfo.stk.b : 0, r = { changed: 0 };
+          try { r = await stkZip(b); } catch (er) { console.warn(er); }
+          var after = (await stkScan()).b;
+          toast(r.changed ? '壓縮了 ' + r.changed + ' 張，表情庫從 ' + mb(before) + ' 變成 ' + mb(after) + ' 🗜' : '表情包都已經很小了，不用壓縮', 'success'); clnRefresh(); return;
+        }
         if (k === 'orphan') { if (!(await confirmAsync('清掉已刪除聊天室留下的資料？'))) return; for (var i = 0; i < clnInfo.orphan.keys.length; i++) { try { await localforage.removeItem(clnInfo.orphan.keys[i]); } catch (er) {} } toast('已清除', 'success'); clnRefresh(); return; }
         if (k === 'avatars') { for (var j = 0; j < clnInfo.avatars.keys.length; j++) { try { await localforage.removeItem(clnInfo.avatars.keys[j]); } catch (er) {} } toast('已清除', 'success'); clnRefresh(); return; }
         if (k === 'slimOn' || k === 'slimOff') {
@@ -1839,6 +1900,9 @@
         '<div class="cx-muted">同一張表情包傳了很多次，原本每次都會完整存一份。開啟後同一張圖只存一份，聊天紀錄看起來完全一樣。之後新傳的也會自動這樣存。</div>' +
         (SL.on ? '<div class="cx-muted">現在實際只存了：聊天紀錄 ' + mb(SL.chat) + ' ＋ 不重複的圖片 ' + SL.images + ' 張 ' + mb(SL.store) + '</div><button class="cx-btn" data-k="slimOff">關閉瘦身</button>'
           : '<button class="cx-btn pri" data-k="slimOn">開啟表情包瘦身</button>') + '</div>' : '') +
+      '<div class="cx-sec"><h4>🗜 壓縮表情包 <small>表情庫 ' + I.stk.n + ' 張 · ' + mb(I.stk.b) + (I.stk.gif ? '（動圖 ' + I.stk.gif + ' 張）' : '') + '</small></h4>' +
+        '<div class="cx-muted">把表情庫裡比較大的靜態圖縮成適合聊天的大小（最長邊 240）。透明背景會保留；會動的 GIF 不會動到。聊天裡傳過的同一張也會一起換成小的。</div>' +
+        '<button class="cx-btn pri" data-k="stkzip"' + (I.stk.n ? '' : ' disabled') + '>壓縮表情包</button></div>' +
       '<div class="cx-sec"><h4>📦 網站暫存 <small>' + mb(I.cache) + '</small></h4><div class="cx-muted">讓網站離線也能打開的檔案。清掉不影響任何聊天資料，下次打開會重新下載。</div><button class="cx-btn" data-k="cache"' + (I.cache ? '' : ' disabled') + '>清除暫存</button></div>' +
       '<div class="cx-sec"><h4>🗑 已刪除聊天室的殘留 <small>' + mb(I.orphan.b) + '</small></h4><div class="cx-muted">刪掉聊天室後沒清乾淨的資料。</div><button class="cx-btn" data-k="orphan"' + (I.orphan.keys.length ? '' : ' disabled') + '>清除殘留</button></div>' +
       '<div class="cx-sec"><h4>👤 沒在用的成員頭像 <small>' + I.avatars.keys.length + ' 張 · ' + mb(I.avatars.b) + '</small></h4><div class="cx-muted">已經刪掉的群組成員留下的頭像。</div><button class="cx-btn" data-k="avatars"' + (I.avatars.keys.length ? '' : ' disabled') + '>清除</button></div>' +
@@ -1921,6 +1985,7 @@
       ['🏠 小窩', '上面最左邊的小房子。像手機桌面一樣，所有功能都排在裡面，還有花園狀態、他的狀態、最近的重要日。最下面可以勾「打開網站時先顯示小窩」。右上角「整理」或長按任何圖示，可以拖曳換位置；把一個圖示拖到另一個上面就變成資料夾，點開資料夾可以改名字，拖到框外就移出來。', ['fn', 'home']],
       ['花園', '在小窩裡。點空地買種子種下，記得澆水（乾掉的土長得慢）。長好了點一下收成，放進倉庫可以賣錢或送給他。每天第一次進花園會收到他給的零用錢。「花束」頁可以挑花、選包裝紙和緞帶包成花束，送給他時會傳一張花束的圖到聊天裡。「圖鑑」裡有每種花的花語。點預覽裡的花再點另一朵可以交換位置；沒送出去的花束也可以賣掉。', ['fn', 'garden']],
       ['果樹和廚房', '藍莓、橘子、桃樹、櫻桃種一次就可以一直收（收完過一陣子又會結果）。小麥長得很快。「廚房」裡用水果、小麥和食材櫃的雞蛋、牛奶、奶油、糖做甜點，做好可以端給他（會傳一張甜點的圖）或賣掉，水果蛋糕最值錢。', ['fn', 'garden']],
+      ['農場：花園、果園、牧場', '花園裡「農場」上面可以切換三塊地。花園種花和作物；果園種果樹；牧場養動物。牧場有雞、鴨子、乳牛、兔子四個圈，雞一開始就有，其他三個要用金幣蓋起來：鴨池 🪙120、兔子窩 🪙180、牛棚 🪙250。雞和鴨下蛋、乳牛擠牛奶（廚房可以做成奶油）、兔子吃胡蘿蔔，會叼花回來。用小麥（兔子用胡蘿蔔）或飼料袋餵牠們，吃飽了才會有東西收。點動物可以改名字，你不在的時候他也會幫忙餵。', ['fn', 'garden']],
       ['摸魚小貓', '小窩裡的小遊戲。左右拖動小貓接住小魚、薰衣草和愛心，躲開加班文件和鬧鐘。每 5 分換 1 枚花園金幣（一天最多 40）。', ['fn', 'home']],
       ['他會幫忙照顧', '你不在的時候，他會幫你澆水，偶爾偷摘一顆、在空地偷偷種薰衣草，聊天裡會告訴你（可以在花園的「紀錄」關掉）。群聊時是大家輪流來。', null],
       ['田裡有蟲', '點一下就抓走了，還會拿到 1 枚金幣。有蟲的那格不會長大。', null]

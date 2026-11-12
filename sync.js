@@ -272,6 +272,7 @@
   function imgOn() { return lsg('cxImgDedupe') === '1'; }
   function imgHash(s) { var a = 2166136261, b = 5381; for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); a ^= c; a = Math.imul(a, 16777619); b = Math.imul(b, 33) ^ c; } return (a >>> 0).toString(36) + (b >>> 0).toString(36) + s.length.toString(36); }
   function isMsgKey(k) { return typeof k === 'string' && /_chatMessages$/.test(k); }
+  function isStkKey(k) { return typeof k === 'string' && /_(stickerLibrary|myStickerLibrary)$/.test(k); }
   function imgLayer() {
     var imgMap = new Map(), imgCache = {}, known = {}, chain = {};
     var setW = localforage.setItem, rmW = localforage.removeItem;
@@ -313,27 +314,51 @@
       }
       return arr;
     }
+    /* 表情包庫：每個聊天室的表情包也只存一份 */
+    async function packList(arr) {
+      var out = new Array(arr.length);
+      for (var i = 0; i < arr.length; i++) {
+        var x = arr[i];
+        if (typeof x === 'string') out[i] = await pack(x);
+        else if (x && typeof x === 'object' && typeof x.src === 'string') { var ps = await pack(x.src); out[i] = ps === x.src ? x : Object.assign({}, x, { src: ps }); }
+        else out[i] = x;
+      }
+      return out;
+    }
+    async function unpackList(arr) {
+      if (!Array.isArray(arr)) return arr;
+      var out = [];
+      for (var i = 0; i < arr.length; i++) {
+        var x = arr[i];
+        if (typeof x === 'string' && x.indexOf('cximg:') === 0) { var v = await unpack(x); if (v) out.push(v); }
+        else if (x && typeof x === 'object' && typeof x.src === 'string' && x.src.indexOf('cximg:') === 0) { var v2 = await unpack(x.src); if (v2) out.push(Object.assign({}, x, { src: v2 })); }
+        else out.push(x);
+      }
+      return out;
+    }
     function hasRefs(arr) { return Array.isArray(arr) && arr.some(function (m) { return m && typeof m.image === 'string' && m.image.indexOf('cximg:') === 0; }); }
     localforage.setItem = function (k, v, cb) {
-      if (!isMsgKey(k) || !Array.isArray(v) || !imgOn()) return setW(k, v, cb);
-      var job = (chain[k] || Promise.resolve()).then(function () { return packMsgs(v); }).then(function (pv) { return setW(k, pv); }).then(function () { if (cb) cb(null, v); return v; });
+      var stk = isStkKey(k);
+      if (!(isMsgKey(k) || stk) || !Array.isArray(v) || !imgOn()) return setW(k, v, cb);
+      var job = (chain[k] || Promise.resolve()).then(function () { return stk ? packList(v) : packMsgs(v); }).then(function (pv) { return setW(k, pv); }).then(function () { if (cb) cb(null, v); return v; });
       chain[k] = job.catch(function () {});
       return job;
     };
     localforage.getItem = function (k, cb) {
       var p = lfGet(k);
-      if (isMsgKey(k)) p = p.then(unpackMsgs);
+      if (isMsgKey(k)) p = p.then(unpackMsgs); else if (isStkKey(k)) p = p.then(unpackList);
       if (cb) p.then(function (v) { cb(null, v); }, function (e) { cb(e); });
       return p;
     };
     async function msgKeys() { var ks = []; try { ks = await lfKeys(); } catch (e) {} return ks.filter(isMsgKey); }
+    async function refKeys() { var ks = []; try { ks = await lfKeys(); } catch (e) {} return ks.filter(function (k) { return isMsgKey(k) || isStkKey(k); }); }
     async function resaveAll() {
-      var ks = await msgKeys();
+      var ks = await refKeys();
       for (var i = 0; i < ks.length; i++) { var v = await localforage.getItem(ks[i]); if (Array.isArray(v)) await localforage.setItem(ks[i], v); }
     }
     async function gc() {
-      var used = {}, ks = await msgKeys(), all = [];
-      for (var i = 0; i < ks.length; i++) { var raw = await lfGet(ks[i]); (raw || []).forEach(function (m) { [m && m.image, m && m.replyTo && m.replyTo.image].forEach(function (x) { if (typeof x === 'string' && x.indexOf('cximg:') === 0) used[x.slice(6)] = 1; }); }); }
+      var used = {}, ks = await refKeys(), all = [];
+      for (var i = 0; i < ks.length; i++) { var raw = await lfGet(ks[i]); (Array.isArray(raw) ? raw : []).forEach(function (m) { [typeof m === 'string' ? m : null, m && m.src, m && m.image, m && m.replyTo && m.replyTo.image].forEach(function (x) { if (typeof x === 'string' && x.indexOf('cximg:') === 0) used[x.slice(6)] = 1; }); }); }
       try { all = (await lfKeys()).filter(function (k) { return k.indexOf(IMGP) === 0; }); } catch (e) {}
       var n = 0; for (var j = 0; j < all.length; j++) { var h = all[j].slice(IMGP.length); if (!used[h]) { await rmW(all[j]); delete known[h]; delete imgCache[h]; n++; } }
       return n;
@@ -349,8 +374,18 @@
     window.__cxImg = {
       on: imgOn, stats: stats, gc: gc,
       enable: async function () { localStorage.setItem('cxImgDedupe', '1'); await resaveAll(); await gc(); },
-      disable: async function () { localStorage.setItem('cxImgDedupe', '0'); await resaveAll(); await gc(); }
+      disable: async function () { localStorage.setItem('cxImgDedupe', '0'); await resaveAll(); await gc(); },
+      refKeys: refKeys
     };
+    // 已經開了瘦身的話，把舊的表情包庫也改成只存一份（每台裝置做一次）
+    setTimeout(async function () {
+      if (!imgOn() || lsg('__cx_stk_packed') === '1') return;
+      try {
+        var ks = (await refKeys()).filter(isStkKey);
+        for (var i = 0; i < ks.length; i++) { var v = await localforage.getItem(ks[i]); if (Array.isArray(v)) await localforage.setItem(ks[i], v); }
+        lss('__cx_stk_packed', '1');
+      } catch (e) { console.warn('[cx] stk pack', e); }
+    }, 9000);
   }
   localforage.config = function () { return true; };
   Storage.prototype.setItem = function (k, v) { lsSet.call(this, k, v); if (this === LS) markDirty('ls', String(k)); };
