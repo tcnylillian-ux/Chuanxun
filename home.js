@@ -21,6 +21,9 @@
     peach:      { n: '桃花',   cost: 15, grow: 480e3,  yield: 3, price: 20, col: '#f4b4c0', unit: '枝', flower: 1, lang: '愛情的俘虜' },
     lotus:      { n: '荷花',   cost: 18, grow: 720e3,  yield: 2, price: 36, col: '#f2b3c3', unit: '朵', flower: 1, lang: '堅貞與純潔' },
     peony:      { n: '牡丹',   cost: 22, grow: 1080e3, yield: 2, price: 45, col: '#e98aa8', unit: '朵', flower: 1, lang: '圓滿與富貴' },
+    marigold:   { n: '金盞花', cost: 4,  grow: 75e3,   yield: 3, price: 7,  col: '#f6a23a', unit: '朵', flower: 1, lang: '迎接幸福' },
+    cornflower: { n: '矢車菊', cost: 6,  grow: 100e3,  yield: 3, price: 9,  col: '#8fb5ee', unit: '朵', flower: 1, lang: '遇見幸福' },
+    lilyvalley: { n: '鈴蘭',   cost: 9,  grow: 200e3,  yield: 3, price: 14, col: '#f4f7ea', unit: '枝', flower: 1, lang: '幸福歸來' },
     rose:       { n: '玫瑰',   cost: 25, grow: 1440e3, yield: 3, price: 35, col: '#d97a8f', unit: '朵', flower: 1, lang: '熱烈的愛' },
     carrot:     { n: '胡蘿蔔', cost: 3,  grow: 60e3,   yield: 3, price: 4,  col: '#f08a3c', unit: '根' },
     wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
@@ -29,7 +32,7 @@
     momo:       { n: '桃子',   seed: '桃樹',   cost: 30, grow: 480e3, yield: 3, price: 11, col: '#f3a99a', unit: '顆', tree: 1 },
     cherry:     { n: '櫻桃',   seed: '櫻桃樹', cost: 35, grow: 600e3, yield: 6, price: 6,  col: '#cf4f62', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'tulip', 'strawberry', 'tomato', 'gardenia', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'orange', 'momo', 'cherry'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'tulip', 'cornflower', 'strawberry', 'tomato', 'gardenia', 'lilyvalley', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'orange', 'momo', 'cherry'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
@@ -305,6 +308,22 @@
       [9, 6.5, 4].forEach(function (R, k) { for (var i = 0; i < 9 - k * 2; i++) { var a = i / (9 - k * 2) * 360 + k * 20, r = a * Math.PI / 180; o += petal(x + Math.cos(r) * R * .55 * s, y + Math.sin(r) * R * .5 * s, R * .55 * s, R * .38 * s, a, cols[k], .82); } });
       return o + dot(x, y, 1.6 * s, '#f1d27c');
     },
+    marigold: function (x, y, s) {
+      var o = '';
+      [8, 5.6, 3.2].forEach(function (R, k) { var n = 14 - k * 3; for (var i = 0; i < n; i++) { var a = i / n * 360 + k * 13, r = a * Math.PI / 180; o += petal(x + Math.cos(r) * R * .55 * s, y + Math.sin(r) * R * .5 * s, R * .48 * s, R * .34 * s, a, ['#f39a3a', '#f6b04a', '#f9c86a'][k], .92); } });
+      return o + dot(x, y, 1.4 * s, '#e88a2a');
+    },
+    cornflower: function (x, y, s) {
+      var o = '';
+      for (var i = 0; i < 10; i++) { var a = i / 10 * 360, r = a * Math.PI / 180; o += petal(x + Math.cos(r) * 4.6 * s, y + Math.sin(r) * 4.6 * s, 3.2 * s, 1.5 * s, a, i % 2 ? '#8fb5ee' : '#a9c6f2', .92); }
+      return o + dot(x, y, 2 * s, '#5f7fc8', .9) + dot(x, y, .9 * s, '#f6e08a');
+    },
+    lilyvalley: function (x, y, s) {
+      var o = '<path d="M' + f(x - 4 * s) + ' ' + f(y + 12 * s) + ' Q' + f(x - 3 * s) + ' ' + f(y - 8 * s) + ' ' + f(x + 8 * s) + ' ' + f(y - 6 * s) + '" stroke="' + STEM + '" stroke-width="1.2" fill="none"/>';
+      [[-3, -4], [1, -7], [5, -6.4], [8, -4]].forEach(function (q, i) { var bx = x + q[0] * s, by = y + q[1] * s + 4 * s;
+        o += '<path d="M' + f(bx) + ' ' + f(by - 3 * s) + ' l0 ' + f(1.6 * s) + '" stroke="' + STEM + '" stroke-width=".6"/><path d="M' + f(bx - 2 * s) + ' ' + f(by + 1.8 * s) + ' Q' + f(bx - 2.2 * s) + ' ' + f(by - 1.6 * s) + ' ' + f(bx) + ' ' + f(by - 1.6 * s) + ' Q' + f(bx + 2.2 * s) + ' ' + f(by - 1.6 * s) + ' ' + f(bx + 2 * s) + ' ' + f(by + 1.8 * s) + ' Q' + f(bx) + ' ' + f(by + 1 * s) + ' ' + f(bx - 2 * s) + ' ' + f(by + 1.8 * s) + 'Z" fill="#fffef6" stroke="' + INK + '" stroke-width=".5"/>'; });
+      return leafAt(x - 3 * s, y + 12 * s, 14 * s, -110, LEAF2) + o;
+    },
     rose: function (x, y, s) {
       var c = CROPS.rose.col;
       return dot(x, y, 7 * s, c, .85) + '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(7 * s) + '" fill="none" stroke="' + INK + '" stroke-width=".5"/>' +
@@ -420,7 +439,8 @@
     return o;
   }
   function bouquetSvg(b, standalone) {
-    var body = '<g filter="url(#cxwc)">' + bouquetArt(b.flowers, b.wrap, b.ribbon, b.hi) + '</g>';
+    if (b.recipe) return BQX.svg(b.recipe, standalone);
+    var body = '<g>' + bouquetArt(b.flowers, b.wrap, b.ribbon, b.hi) + '</g>';
     if (!standalone) return '<svg viewBox="0 0 120 160" aria-hidden="true">' + body + '</svg>';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="360" height="480"><defs>' + WC_DEFS + '</defs><rect width="120" height="160" fill="#f7f1e6"/>' + body + '</svg>';
   }
@@ -428,11 +448,395 @@
     return new Promise(function (res) {
       try {
         var img = new Image(), url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bouquetSvg(b, true));
-        img.onload = function () { try { var c = document.createElement('canvas'); c.width = 360; c.height = 480; var x = c.getContext('2d'); x.drawImage(img, 0, 0, 360, 480); res(c.toDataURL('image/jpeg', .86)); } catch (e) { res(null); } };
+        img.onload = function () { try { var c = document.createElement('canvas'); c.width = 360; c.height = 480; var x = c.getContext('2d'); x.fillStyle = '#f7f1e6'; x.fillRect(0, 0, 360, 480); x.drawImage(img, 0, 0, 360, 480); res(c.toDataURL('image/jpeg', .86)); } catch (e) { res(null); } };
         img.onerror = function () { res(null); }; img.src = url;
       } catch (e) { res(null); }
     });
   }
+  /* ================= 配方花束（照參考圖描的，貼紙風） ================= */
+  var BQX = (function () {
+    function f(n) { return Math.round(n * 10) / 10; }
+  function hx(c) { c = c.replace('#', ''); if (c.length === 3) c = c.replace(/(.)/g, '$1$1'); return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)]; }
+  function mix(a, b, t) { var p = hx(a), q = hx(b); return '#' + p.map(function (v, i) { var n = Math.round(v + (q[i] - v) * t); return (n < 16 ? '0' : '') + n.toString(16); }).join(''); }
+  function dk(c) { return mix(c, '#5a3b30', .55); }
+  function circ(x, y, r, fill, stroke, w) { return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(r) + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="' + (w || .6) + '"' : '') + '/>'; }
+  function P(x, y) { return f(x) + ' ' + f(y); }
+  function scallop(x, y, r, n, rot, ry) {
+    ry = ry || 1; var d = '';
+    for (var i = 0; i <= n; i++) {
+      var a = rot + i / n * Math.PI * 2, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r * ry;
+      if (!i) { d = 'M' + P(px, py); continue; }
+      var am = rot + (i - .5) / n * Math.PI * 2, cx = x + Math.cos(am) * r * 1.32, cy = y + Math.sin(am) * r * 1.32 * ry;
+      d += ' Q' + P(cx, cy) + ' ' + P(px, py);
+    }
+    return d + 'Z';
+  }
+  /* ===== 貼紙風一比一：每樣東西用自己的深色描邊、漸層、白色反光 ===== */
+  var GID = 0;
+  function SK() {
+    var defs = [], u = 'g' + (GID++) + '_';
+    return {
+      lg: function (top, bot, ang) { var id = u + defs.length; defs.push('<linearGradient id="' + id + '" x1="0" y1="0" x2="' + (ang ? 1 : 0) + '" y2="1"><stop offset="0" stop-color="' + top + '"/><stop offset="1" stop-color="' + bot + '"/></linearGradient>'); return 'url(#' + id + ')'; },
+      rg: function (inC, outC) { var id = u + defs.length; defs.push('<radialGradient id="' + id + '" cx=".45" cy=".4" r=".65"><stop offset="0" stop-color="' + inC + '"/><stop offset="1" stop-color="' + outC + '"/></radialGradient>'); return 'url(#' + id + ')'; },
+      defs: function () { return '<defs>' + defs.join('') + '</defs>'; }
+    };
+  }
+  function sp(d, fill, stroke, w, ex) { return '<path d="' + d + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (w || .9) + '" stroke-linejoin="round" stroke-linecap="round"' + (ex || '') + '/>'; }
+  function hl(d, w, op) { return '<path d="' + d + '" stroke="#fff" stroke-width="' + (w || 1.2) + '" fill="none" stroke-linecap="round" opacity="' + (op || .75) + '"/>'; }
+  function star4(x, y, r, c) { var d = dk(c); return sp('M' + P(x, y - r) + ' Q' + P(x + r * .22, y - r * .22) + ' ' + P(x + r, y) + ' Q' + P(x + r * .22, y + r * .22) + ' ' + P(x, y + r) + ' Q' + P(x - r * .22, y + r * .22) + ' ' + P(x - r, y) + ' Q' + P(x - r * .22, y - r * .22) + ' ' + P(x, y - r) + 'Z', c, mix(c, '#4a5a8a', .35), .6); }
+  function star5(x, y, r, c) { var pts = ''; for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .48 : r; pts += (i ? ' L' : 'M') + P(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } return sp(pts + 'Z', c, dk(c), .6); }
+  function heartS(x, y, s, c) { return sp('M' + P(x, y + 2.8 * s) + ' C' + P(x - 4.4 * s, y) + ' ' + P(x - 3.4 * s, y - 3.6 * s) + ' ' + P(x - 1.3 * s, y - 3.4 * s) + ' C' + P(x - .3 * s, y - 3.3 * s) + ' ' + P(x, y - 2.4 * s) + ' ' + P(x, y - 2 * s) + ' C' + P(x, y - 2.4 * s) + ' ' + P(x + .3 * s, y - 3.3 * s) + ' ' + P(x + 1.3 * s, y - 3.4 * s) + ' C' + P(x + 3.4 * s, y - 3.6 * s) + ' ' + P(x + 4.4 * s, y) + ' ' + P(x, y + 2.8 * s) + 'Z', c, dk(c), .6); }
+  function arcText(id, txt, cx, cy, r, a0, a1, cols, size) {
+    var x0 = cx + Math.cos(a0) * r, y0 = cy + Math.sin(a0) * r, x1 = cx + Math.cos(a1) * r, y1 = cy + Math.sin(a1) * r;
+    var o = '<path id="' + id + '" d="M' + P(x0, y0) + ' A' + r + ' ' + r + ' 0 0 1 ' + P(x1, y1) + '" fill="none"/>', t = '';
+    for (var i = 0; i < txt.length; i++) t += '<tspan fill="' + cols[i % cols.length] + '">' + txt[i] + '</tspan>';
+    return o + '<text font-family="Arial Rounded MT Bold,Nunito,Arial,sans-serif" font-weight="900" font-size="' + (size || 7) + '" letter-spacing=".6" stroke="#fff" stroke-width=".5" paint-order="stroke"><textPath href="#' + id + '" startOffset="50%" text-anchor="middle">' + t + '</textPath></text>';
+  }
+  /* 紗包：c 主色。回傳 back（放花後面）、front（放花前面） */
+  function sheer(k, c, ribC) {
+    var d = dk(c), L = mix(c, '#fff', .55), rd = dk(ribC);
+    var back = sp('M20 74 Q40 62 60 64 Q82 60 100 68 L74 126 L46 126Z', k.lg(mix(c, '#fff', .75), mix(c, '#fff', .45)), d, .8);
+    var front =
+      sp('M100 68 Q90 90 58 104 L60 128 L72 126Z', k.lg(mix(c, '#fff', .5), c), d, .9) +
+      sp('M16 76 Q30 86 50 88 Q66 89 78 84 L68 128 L50 128Z', k.lg(mix(c, '#fff', .6), mix(c, '#fff', .1)), d, .9) +
+      hl('M24 82 Q36 100 50 120', 1.4, .7) + hl('M88 80 Q80 96 70 106', 1.2, .6) + hl('M60 94 L62 118', 1, .5) +
+      // 裙邊
+      sp('M50 129 Q44 140 42 150 Q51 155 60 153 Q69 155 78 150 Q76 140 70 129Z', k.lg(mix(c, '#fff', .45), c), d, .9) + hl('M50 136 L47 148', 1, .6) +
+      // 蝴蝶結
+      sp('M60 129 Q48 118 43 124 Q40 132 60 130Z', k.lg(mix(ribC, '#fff', .3), ribC), rd, .9) + sp('M60 129 Q72 118 77 124 Q80 132 60 130Z', k.lg(mix(ribC, '#fff', .3), ribC), rd, .9) +
+      sp('M58.6 131 Q56 138 52 144 L55 145.4 Q58 139 60.4 132Z', ribC, rd, .7) + sp('M61.4 131 Q64 138 68 144 L65 145.4 Q62 139 59.6 132Z', ribC, rd, .7) +
+      '<ellipse cx="60" cy="129.6" rx="3.2" ry="2.8" fill="' + ribC + '" stroke="' + rd + '" stroke-width=".9"/>' + hl('M46 123 q3 -2 6 1', .9, .7) + hl('M74 123 q-3 -2 -6 1', .9, .7);
+    return { back: back, front: front };
+  }
+  function leafS(k, x, y, len, deg, w) {
+    var a = deg * Math.PI / 180, x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len, nx = -Math.sin(a) * len * (w || .22), ny = Math.cos(a) * len * (w || .22);
+    return sp('M' + P(x, y) + ' Q' + P((x + x2) / 2 + nx, (y + y2) / 2 + ny) + ' ' + P(x2, y2) + ' Q' + P((x + x2) / 2 - nx * .6, (y + y2) / 2 - ny * .6) + ' ' + P(x, y) + 'Z', k.lg('#a9d58c', '#6fae5a'), '#4f8a45', .8) +
+      '<path d="M' + P(x + (x2 - x) * .15, y + (y2 - y) * .15) + ' Q' + P((x + x2) / 2 + nx * .3, (y + y2) / 2 + ny * .3) + ' ' + P(x + (x2 - x) * .8, y + (y2 - y) * .8) + '" stroke="#c8e6b0" stroke-width=".8" fill="none" opacity=".8"/>';
+  }
+  function stemS(x, y, x0, y0) { x0 = x0 || 60; y0 = y0 || 124; return '<path d="M' + P(x0 + (x - x0) * .1, y0) + ' Q' + P(x + (x0 - x) * .3, (y + y0) / 2) + ' ' + P(x, y) + '" stroke="#4f8a45" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M' + P(x0 + (x - x0) * .1, y0) + ' Q' + P(x + (x0 - x) * .3, (y + y0) / 2) + ' ' + P(x, y) + '" stroke="#86c06c" stroke-width="1.4" fill="none" stroke-linecap="round"/>'; }
+  function tulipS(k, x, y, s, rot) {
+    var c1 = '#fbc9d4', c2 = '#f18fa6', d = '#dc6f8a', g = k.lg(c1, c2), g2 = k.lg('#fde1e7', '#f5a7b8');
+    var o = sp('M' + P(x - 8 * s, y - 3 * s) + ' C' + P(x - 9.4 * s, y + 8 * s) + ' ' + P(x - 5 * s, y + 12 * s) + ' ' + P(x, y + 12 * s) + ' C' + P(x + 5 * s, y + 12 * s) + ' ' + P(x + 9.4 * s, y + 8 * s) + ' ' + P(x + 8 * s, y - 3 * s) + ' C' + P(x + 7.6 * s, y - 9 * s) + ' ' + P(x + 5 * s, y - 11.6 * s) + ' ' + P(x + 3.4 * s, y - 10 * s) + ' C' + P(x + 2 * s, y - 12.6 * s) + ' ' + P(x - 2 * s, y - 12.6 * s) + ' ' + P(x - 3.4 * s, y - 10 * s) + ' C' + P(x - 5 * s, y - 11.6 * s) + ' ' + P(x - 7.6 * s, y - 9 * s) + ' ' + P(x - 8 * s, y - 3 * s) + 'Z', g, d, 1);
+    o += sp('M' + P(x - 4.6 * s, y - 5 * s) + ' C' + P(x - 6 * s, y + 5 * s) + ' ' + P(x - 2.4 * s, y + 11.4 * s) + ' ' + P(x, y + 11.6 * s) + ' C' + P(x + 2.4 * s, y + 11.4 * s) + ' ' + P(x + 6 * s, y + 5 * s) + ' ' + P(x + 4.6 * s, y - 5 * s) + ' C' + P(x + 3 * s, y - 10.4 * s) + ' ' + P(x - 3 * s, y - 10.4 * s) + ' ' + P(x - 4.6 * s, y - 5 * s) + 'Z', g2, d, .8);
+    o += '<path d="M' + P(x - 6.4 * s, y + 3 * s) + ' Q' + P(x - 5.6 * s, y + 9 * s) + ' ' + P(x - 2.4 * s, y + 11 * s) + ' M' + P(x + 6.4 * s, y + 3 * s) + ' Q' + P(x + 5.6 * s, y + 9 * s) + ' ' + P(x + 2.4 * s, y + 11 * s) + '" stroke="' + d + '" stroke-width=".6" fill="none" opacity=".6"/>';
+    o += hl('M' + P(x - 2.6 * s, y - 6 * s) + ' Q' + P(x - 3.4 * s, y - 1 * s) + ' ' + P(x - 2.6 * s, y + 3 * s), 1.4 * s * .7, .85);
+    return '<g transform="rotate(' + (rot || 0) + ' ' + f(x) + ' ' + f(y) + ')">' + o + '</g>';
+  }
+  function bellS(k, x, y, s) {
+    var o = sp('M' + P(x - 3.6 * s, y + 3 * s) + ' C' + P(x - 4.2 * s, y - 2 * s) + ' ' + P(x - 2.4 * s, y - 4.4 * s) + ' ' + P(x, y - 4.4 * s) + ' C' + P(x + 2.4 * s, y - 4.4 * s) + ' ' + P(x + 4.2 * s, y - 2 * s) + ' ' + P(x + 3.6 * s, y + 3 * s) + ' Q' + P(x + 4.4 * s, y + 4.6 * s) + ' ' + P(x + 2.4 * s, y + 4 * s) + ' Q' + P(x + 1.2 * s, y + 5.2 * s) + ' ' + P(x, y + 4 * s) + ' Q' + P(x - 1.2 * s, y + 5.2 * s) + ' ' + P(x - 2.4 * s, y + 4 * s) + ' Q' + P(x - 4.4 * s, y + 4.6 * s) + ' ' + P(x - 3.6 * s, y + 3 * s) + 'Z', k.lg('#ffffff', '#eef4e2'), '#7fae6a', .8);
+    return o + hl('M' + P(x - 1.8 * s, y - 2.6 * s) + ' Q' + P(x - 2.6 * s, y) + ' ' + P(x - 2 * s, y + 2 * s), .8, .9);
+  }
+  function lilyArc(k, x0, y0, cx, cy, ex, ey, n, s) {
+    var o = '<path d="M' + P(x0, y0) + ' Q' + P(cx, cy) + ' ' + P(ex, ey) + '" stroke="#4f8a45" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M' + P(x0, y0) + ' Q' + P(cx, cy) + ' ' + P(ex, ey) + '" stroke="#86c06c" stroke-width="1.1" fill="none" stroke-linecap="round"/>', b = '';
+    for (var i = 0; i < n; i++) { var t = .42 + i * (.58 / n), px = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * ex, py = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * ey;
+      o += '<path d="M' + P(px, py) + ' q.6 2.4 0 ' + f(4 * s) + '" stroke="#5f9a50" stroke-width=".8" fill="none"/>'; b += bellS(k, px, py + 7.6 * s, s * (1 - i * .04)); }
+    return o + b;
+  }
+  function puffS(k, x, y, s, c) { // 藍色重瓣小花（矢車菊感）
+    var d = dk(c), o = '';
+    for (var r = 0; r < 2; r++) for (var i = 0; i < 9; i++) { var a = (i + r * .5) / 9 * 360, rr = r ? 3.4 : 5.4;
+      o += '<g transform="rotate(' + f(a) + ' ' + f(x) + ' ' + f(y) + ')">' + sp('M' + P(x - 1.9 * s, y - 1 * s) + ' Q' + P(x - 2.2 * s, y - rr * s - 1.6 * s) + ' ' + P(x, y - rr * s - 2 * s) + ' Q' + P(x + 2.2 * s, y - rr * s - 1.6 * s) + ' ' + P(x + 1.9 * s, y - 1 * s) + 'Z', r ? mix(c, '#fff', .35) : c, d, .5) + '</g>'; }
+    return o + circ(x, y, 2 * s, '#fff3b0', '#d9b94a', .5);
+  }
+  function frillS(k, x, y, s, c) { // 康乃馨／金盞花那種皺邊花
+    var d = dk(c), o = sp(scallop(x, y, 7.2 * s, 18, 0), k.rg(mix(c, '#fff', .3), c), d, .8);
+    o += sp(scallop(x, y - .4 * s, 5 * s, 14, .2), k.rg(mix(c, '#fff', .45), mix(c, '#fff', .1)), d, .7) + sp(scallop(x, y - .6 * s, 2.8 * s, 9, .5), mix(c, '#fff', .35), d, .6);
+    for (var i = 0; i < 8; i++) { var a = i * .785; o += '<path d="M' + P(x + Math.cos(a) * 3 * s, y + Math.sin(a) * 3 * s) + ' L' + P(x + Math.cos(a) * 6 * s, y + Math.sin(a) * 6 * s) + '" stroke="' + d + '" stroke-width=".4" opacity=".55"/>'; }
+    return o + hl('M' + P(x - 4.6 * s, y - 2.4 * s) + ' Q' + P(x - 3.6 * s, y - 4.8 * s) + ' ' + P(x - 1 * s, y - 5.4 * s), 1, .7);
+  }
+  function babyS(k, x, y, s) {
+    var o = '';
+    for (var i = 0; i < 5; i++) { var a = i * 72; o += '<g transform="rotate(' + a + ' ' + f(x) + ' ' + f(y) + ')">' + sp('M' + P(x, y) + ' Q' + P(x - 2.2 * s, y - 2.6 * s) + ' ' + P(x - 1 * s, y - 4.2 * s) + ' Q' + P(x, y - 4.8 * s) + ' ' + P(x + 1 * s, y - 4.2 * s) + ' Q' + P(x + 2.2 * s, y - 2.6 * s) + ' ' + P(x, y) + 'Z', '#ffffff', '#8fbde6', .55) + '</g>'; }
+    return o + circ(x, y, 1 * s, '#cfe6fb', '#8fbde6', .4);
+  }
+  function lavS(k, x0, y0, deg, len, s) {
+    var a = deg * Math.PI / 180, o = '<path d="M' + P(x0, y0) + ' L' + P(x0 + Math.cos(a) * len, y0 + Math.sin(a) * len) + '" stroke="#4f8a45" stroke-width="2.2" stroke-linecap="round"/>', fl = '';
+    for (var i = 12; i >= 0; i--) {
+      var t = 1 - i * .04, px = x0 + Math.cos(a) * len * t, py = y0 + Math.sin(a) * len * t, nx = -Math.sin(a), ny = Math.cos(a), r = (2.1 - i * .03) * s;
+      [-1, 1, 0].forEach(function (sd, j) { var cx = px + nx * sd * 1.9 * s, cy = py + ny * sd * 1.9 * s + (j === 2 ? -.6 : 0);
+        fl += '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + f(r * .9) + '" ry="' + f(r * 1.1) + '" fill="' + (i < 3 ? '#c9b6ef' : j === 2 ? '#a88be0' : '#9a7dd6') + '" stroke="#7059b3" stroke-width=".55"/>'; });
+    }
+    return o + fl;
+  }
+  function frame(k, inner, deco) { return k.defs() + inner + (deco || ''); }
+  var STK = {
+    tulip: function () { var k = SK(), w = sheer(k, '#f7b8c6', '#f290a8'), o = '';
+      [[36, 48], [84, 48], [60, 30], [60, 64]].forEach(function (q) { o += stemS(q[0], q[1] + 10); });
+      o += leafS(k, 58, 110, 46, -128, .26) + leafS(k, 62, 110, 46, -52, .26);
+      o += tulipS(k, 36, 48, 1.55, -14) + tulipS(k, 84, 48, 1.55, 14) + tulipS(k, 60, 30, 1.6, 0) + tulipS(k, 60, 64, 1.6, 0);
+      var deco = arcText('t1', 'HAPPY DAY', 60, 72, 54, Math.PI * 1.08, Math.PI * 1.42, ['#f08aa6', '#f4a3b8', '#8fc4c0'], 7.5) + arcText('t2', 'TO YOU', 60, 72, 54, Math.PI * 1.6, Math.PI * 1.92, ['#f4a3b8', '#f08aa6'], 7.5) +
+        star4(20, 98, 6, '#bfe0f6') + star4(28, 108, 3.4, '#bfe0f6') + star4(98, 102, 4, '#bfe0f6') + star4(104, 46, 3, '#9fd3cf');
+      return frame(k, w.back + o + w.front, deco); },
+    lily: function () { var k = SK(), w = sheer(k, '#f6eaa0', '#eed777'), o = '';
+      o += leafS(k, 56, 116, 60, -112, .2) + leafS(k, 64, 116, 58, -66, .2);
+      o += lilyArc(k, 54, 122, 40, 18, 82, 22, 7, 1.15) + lilyArc(k, 64, 122, 82, 30, 30, 34, 6, 1.1) + lilyArc(k, 58, 122, 58, 8, 92, 18, 5, 1);
+      var deco = star5(16, 64, 5, '#f6d870') + star4(20, 34, 3.4, '#f6d870') + heartS(20, 92, 1.4, '#f4a8b6') + heartS(28, 100, 1, '#f4a8b6') + star5(100, 102, 6, '#f6d870') + star4(104, 74, 3, '#f6d870');
+      return frame(k, w.back + o + w.front, deco); },
+    gerbera: function () { var k = SK(), w = sheer(k, '#bfe6ea', '#8cc8e6'), o = '';
+      var F = [[38, 40, 'y'], [58, 32, 'y'], [80, 42, 'b'], [42, 60, 'b'], [64, 56, 'b'], [84, 64, 'y'], [30, 58, 'y']];
+      F.forEach(function (q) { o += stemS(q[0], q[1]); }); o += leafS(k, 56, 100, 22, -150) + leafS(k, 64, 100, 22, -30);
+      F.forEach(function (q) { o += q[2] === 'b' ? puffS(k, q[0], q[1], 1.35, '#9ec5f2') : frillS(k, q[0], q[1], 1.35, '#f8de7a'); });
+      var deco = arcText('g1', 'HAPPY', 60, 74, 54, Math.PI * 1.1, Math.PI * 1.38, ['#7fb6ea', '#f08aa6', '#f4c95c'], 8) + arcText('g2', 'BIRTHDAY', 60, 74, 54, Math.PI * 1.5, Math.PI * 1.9, ['#f4c95c', '#f6d870'], 7) +
+        star4(18, 100, 5, '#f6d870') + star4(102, 104, 6, '#f6d870') + star4(26, 112, 3, '#bfe0f6') + star4(104, 52, 3, '#f6d870');
+      return frame(k, w.back + o + w.front, deco); },
+    gyp: function () { var k = SK(), w = sheer(k, '#bfe0f2', '#86bfe8'), o = '', pts = [];
+      for (var i = 0; i < 46; i++) { var a = i * 2.39996, r = Math.sqrt((i + .5) / 46); var px = 60 + Math.cos(a) * r * 34, py = 54 + Math.sin(a) * r * 26; if (py > 76) py = 76 - (py - 76) * .3; pts.push([px, py]); }
+      pts.forEach(function (q, i) { if (i % 2) o += '<path d="M' + P(60 + (q[0] - 60) * .1, 122) + ' L' + P(q[0], q[1]) + '" stroke="#5f9a50" stroke-width=".9"/>'; });
+      pts.sort(function (a, b) { return a[1] - b[1]; }).forEach(function (q) { o += babyS(k, q[0], q[1], 1.3); });
+      var deco = '<path d="M18 52 Q14 70 22 92 Q30 110 26 124" stroke="#c9a3b0" stroke-width=".6" fill="none"/>' + sp('M18 38 C8 38 6 52 18 54 C30 52 28 38 18 38Z', k.rg('#ffd6e0', '#f08aa6'), '#d66f8c', .8) + hl('M13 42 q-1 3 1 6', 1, .8) + sp('M17 54 L19 54 L18.6 56.4 L17.4 56.4Z', '#f08aa6', '#d66f8c', .5) +
+        '<path d="M66 24 Q86 34 108 30" stroke="#b9a7c8" stroke-width=".6" fill="none"/>' + ['#9cc3ef', '#9fd8b8', '#f6d870', '#f39a9a', '#9cc3ef'].map(function (c, i) { var x = 70 + i * 8, y = 26 + Math.sin(i * .7) * 2 + i * .6; return sp('M' + P(x, y) + ' L' + P(x + 6, y + .4) + ' L' + P(x + 3.2, y + 7) + 'Z', c, dk(c), .5); }).join('') +
+        arcText('h1', 'HAPPY', 60, 74, 50, Math.PI * 1.32, Math.PI * 1.62, ['#a48fe0', '#f08aa6'], 8) +
+        ['#f39a9a', '#f6d870', '#9fd8b8', '#9cc3ef', '#c3a9ec'].map(function (c, i) { return '<path d="M86 116 A' + (14 - i * 2) + ' ' + (14 - i * 2) + ' 0 0 1 ' + f(114 - i * 4) + ' 116" stroke="' + c + '" stroke-width="2" fill="none"/>'; }).join('') + sp('M84 116 q-2 -4 2 -5 q2 -3 5 0 q3 0 2 5Z', '#fff', '#c9d3dc', .5) + sp('M108 116 q-2 -4 2 -5 q2 -3 5 0 q3 0 2 5Z', '#fff', '#c9d3dc', .5) +
+        star5(22, 108, 5, '#c9c2ee') + star5(104, 90, 4, '#c9b6ef');
+      return frame(k, w.back + o + w.front, deco); },
+    orange: function () { var k = SK(), w = sheer(k, '#f9d0a0', '#f4a560'), o = '';
+      var F = [[40, 40, '#f6b23e'], [62, 32, '#f8c24e'], [84, 44, '#f6b23e'], [34, 60, '#f07a3c'], [58, 56, '#f8c24e'], [80, 64, '#f6b23e']];
+      F.forEach(function (q) { o += stemS(q[0], q[1]); }); o += stemS(94, 30) + leafS(k, 58, 100, 22, -150) + leafS(k, 62, 100, 22, -30);
+      o += sp('M94 30 C89 26 90 18 95 16 C99 19 99 26 94 30Z', k.lg('#fbc06a', '#f08a3c'), '#d66d2c', .7) + leafS(k, 94, 31, 5, 140) + leafS(k, 94, 31, 5, 40);
+      F.forEach(function (q) { o += frillS(k, q[0], q[1], 1.5, q[2]); });
+      var deco = arcText('o1', 'WITH LOVE!', 60, 74, 56, Math.PI * 1.1, Math.PI * 1.55, ['#6fb6c0', '#7fb6ea', '#9fd3cf'], 7.5) + star4(98, 104, 5, '#f6d870') + star4(18, 100, 4, '#bfe0f6') + star4(26, 110, 2.6, '#bfe0f6') + circ(14, 86, 1.6, '#f4a8b6');
+      return frame(k, w.back + o + w.front, deco); },
+    lav: function () { var k = SK(), w = sheer(k, '#dccdf2', '#b39ae4'), o = '';
+      o += leafS(k, 56, 112, 34, -130, .2) + leafS(k, 64, 112, 34, -50, .2) + leafS(k, 58, 112, 28, -100, .18);
+      o += lavS(k, 58, 124, -112, 90, 1.55) + lavS(k, 62, 124, -68, 90, 1.55) + lavS(k, 60, 124, -90, 102, 1.65);
+      var deco = star4(18, 94, 4, '#f6d870') + star4(22, 104, 2.4, '#f6d870') + circ(26, 98, 1, '#f6d870') + heartS(24, 116, 1.4, '#f4a8b6') + star5(102, 106, 5.4, '#f6d870') + star4(100, 40, 3, '#c9b6ef') + star4(106, 64, 2.4, '#bfe0f6');
+      return frame(k, w.back + o + w.front, deco); }
+  };
+  /* ===== 描圖版：座標直接照原圖量的 ===== */
+  function tulipT(k, cx, cy, w, h, rot) {
+    var g = k.lg('#fbd0d8', '#f398ab'), g2 = k.lg('#fde4e9', '#f6aebd'), d = '#cf5f79';
+    function X(u) { return f(cx + u * w); } function Y(v) { return f(cy + v * h); }
+    var o = sp('M' + X(-.8) + ' ' + Y(-.86) + ' C' + X(-1.02) + ' ' + Y(-.5) + ' ' + X(-1.04) + ' ' + Y(.3) + ' ' + X(-.86) + ' ' + Y(.62) + ' C' + X(-.62) + ' ' + Y(1) + ' ' + X(.62) + ' ' + Y(1) + ' ' + X(.86) + ' ' + Y(.62) + ' C' + X(1.04) + ' ' + Y(.3) + ' ' + X(1.02) + ' ' + Y(-.5) + ' ' + X(.8) + ' ' + Y(-.86) + ' C' + X(.66) + ' ' + Y(-.98) + ' ' + X(.46) + ' ' + Y(-.9) + ' ' + X(.36) + ' ' + Y(-.78) + ' C' + X(.24) + ' ' + Y(-1.02) + ' ' + X(-.24) + ' ' + Y(-1.02) + ' ' + X(-.36) + ' ' + Y(-.78) + ' C' + X(-.46) + ' ' + Y(-.9) + ' ' + X(-.66) + ' ' + Y(-.98) + ' ' + X(-.8) + ' ' + Y(-.86) + 'Z', g, d, 1.6);
+    o += sp('M' + X(-.52) + ' ' + Y(-.7) + ' C' + X(-.66) + ' ' + Y(-.2) + ' ' + X(-.62) + ' ' + Y(.62) + ' ' + X(-.36) + ' ' + Y(.86) + ' C' + X(-.16) + ' ' + Y(.98) + ' ' + X(.16) + ' ' + Y(.98) + ' ' + X(.36) + ' ' + Y(.86) + ' C' + X(.62) + ' ' + Y(.62) + ' ' + X(.66) + ' ' + Y(-.2) + ' ' + X(.52) + ' ' + Y(-.7) + ' C' + X(.36) + ' ' + Y(-1) + ' ' + X(-.36) + ' ' + Y(-1) + ' ' + X(-.52) + ' ' + Y(-.7) + 'Z', g2, d, 1.3);
+    o += '<path d="M' + X(-.84) + ' ' + Y(-.1) + ' Q' + X(-.8) + ' ' + Y(.5) + ' ' + X(-.56) + ' ' + Y(.8) + ' M' + X(.84) + ' ' + Y(-.1) + ' Q' + X(.8) + ' ' + Y(.5) + ' ' + X(.56) + ' ' + Y(.8) + '" stroke="' + d + '" stroke-width="1" fill="none" opacity=".55"/>';
+    o += hl('M' + X(-.3) + ' ' + Y(-.62) + ' Q' + X(-.42) + ' ' + Y(-.2) + ' ' + X(-.34) + ' ' + Y(.2), 2.2, .8);
+    return '<g transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')">' + o + '</g>';
+  }
+  function leafT(k, d, dark) { return sp(d, k.lg(dark ? '#7fae55' : '#b3d47c', dark ? '#4f8a35' : '#88b85a'), '#3d6a2a', 1.5); }
+  function stemT(d) { return '<path d="' + d + '" stroke="#3d6a2a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="' + d + '" stroke="#78b04e" stroke-width="2.8" fill="none" stroke-linecap="round"/>'; }
+  function wrapT(k, c, line, rib, back, front, waist, skirt, bow) {
+    var o = { back: sp(back, k.lg(mix(c, '#fff', .7), mix(c, '#fff', .35)), line, 1.4) };
+    var b = bow, rd = dk(rib);
+    o.front = sp(front, k.lg(mix(c, '#fff', .6), mix(c, '#fff', .15)), line, 1.4) + sp(skirt, k.lg(mix(c, '#fff', .5), c), line, 1.4) +
+      sp('M' + b[0] + ' ' + b[1] + ' Q' + (b[0] - 26) + ' ' + (b[1] - 16) + ' ' + (b[0] - 28) + ' ' + (b[1] - 3) + ' Q' + (b[0] - 28) + ' ' + (b[1] + 10) + ' ' + b[0] + ' ' + (b[1] + 2) + 'Z', k.lg(mix(rib, '#fff', .35), rib), rd, 1.4) +
+      sp('M' + b[0] + ' ' + b[1] + ' Q' + (b[0] + 26) + ' ' + (b[1] - 16) + ' ' + (b[0] + 28) + ' ' + (b[1] - 3) + ' Q' + (b[0] + 28) + ' ' + (b[1] + 10) + ' ' + b[0] + ' ' + (b[1] + 2) + 'Z', k.lg(mix(rib, '#fff', .35), rib), rd, 1.4) +
+      sp('M' + (b[0] - 3) + ' ' + (b[1] + 2) + ' L' + (b[0] - 15) + ' ' + (b[1] + 26) + ' L' + (b[0] - 9) + ' ' + (b[1] + 28) + ' L' + b[0] + ' ' + (b[1] + 4) + 'Z', rib, rd, 1.2) +
+      sp('M' + (b[0] + 3) + ' ' + (b[1] + 2) + ' L' + (b[0] + 15) + ' ' + (b[1] + 26) + ' L' + (b[0] + 9) + ' ' + (b[1] + 28) + ' L' + b[0] + ' ' + (b[1] + 4) + 'Z', rib, rd, 1.2) +
+      '<ellipse cx="' + b[0] + '" cy="' + (b[1] + 1) + '" rx="5" ry="4.4" fill="' + rib + '" stroke="' + rd + '" stroke-width="1.4"/>';
+    return o;
+  }
+  function ruffT(k, cx, cy, r, c, line, center) {
+    var o = sp(scallop(cx, cy, r * .82, 14, .2, .92), k.rg(mix(c, '#fff', .35), c), line, 1.5);
+    o += sp(scallop(cx, cy - r * .05, r * .56, 11, .5, .92), k.rg(mix(c, '#fff', .45), mix(c, '#fff', .1)), line, 1.1);
+    for (var i = 0; i < 10; i++) { var a = i * .628 + .3; o += '<path d="M' + P(cx + Math.cos(a) * r * .3, cy + Math.sin(a) * r * .28) + ' L' + P(cx + Math.cos(a) * r * .7, cy + Math.sin(a) * r * .64) + '" stroke="' + line + '" stroke-width=".8" opacity=".45"/>'; }
+    return o + (center ? circ(cx, cy - r * .05, r * .26, center) : sp(scallop(cx, cy - r * .06, r * .26, 7, .9), mix(c, '#fff', .3), line, .9));
+  }
+  function blueT(k, cx, cy, r) {
+    var o = '', g = k.rg('#d6e6fd', '#8fb4ee'), d = '#3e6aa8';
+    for (var i = 0; i < 8; i++) { var a = i / 8 * Math.PI * 2 - Math.PI / 2, px = cx + Math.cos(a) * r * .56, py = cy + Math.sin(a) * r * .56;
+      o += '<ellipse cx="' + f(px) + '" cy="' + f(py) + '" rx="' + f(r * .42) + '" ry="' + f(r * .34) + '" transform="rotate(' + f(a * 180 / Math.PI + 90) + ' ' + f(px) + ' ' + f(py) + ')" fill="' + g + '" stroke="' + d + '" stroke-width="1.5"/>'; }
+    for (var j = 0; j < 6; j++) { var b = j / 6 * Math.PI * 2 - Math.PI / 2; o += '<path d="M' + P(cx + Math.cos(b) * r * .28, cy + Math.sin(b) * r * .28) + ' L' + P(cx + Math.cos(b) * r * .7, cy + Math.sin(b) * r * .7) + '" stroke="#6f97d6" stroke-width=".9" opacity=".7"/>'; }
+    o += circ(cx, cy, r * .26, '#f8d468', '#d9a83a', 1);
+    for (var m = 0; m < 6; m++) o += circ(cx + Math.cos(m) * r * .13, cy + Math.sin(m) * r * .13, r * .04, '#d9963a');
+    return o + hl('M' + P(cx - r * .7, cy - r * .3) + ' Q' + P(cx - r * .6, cy - r * .62) + ' ' + P(cx - r * .3, cy - r * .74), 1.6, .7);
+  }
+  function bellT(k, x, y, w) {
+    var s = w / 13;
+    var o = sp('M' + P(x - 6 * s, y + 4 * s) + ' C' + P(x - 7 * s, y - 3 * s) + ' ' + P(x - 4 * s, y - 7.4 * s) + ' ' + P(x, y - 7.4 * s) + ' C' + P(x + 4 * s, y - 7.4 * s) + ' ' + P(x + 7 * s, y - 3 * s) + ' ' + P(x + 6 * s, y + 4 * s) +
+      ' Q' + P(x + 9.4 * s, y + 6 * s) + ' ' + P(x + 8.6 * s, y + 8 * s) + ' Q' + P(x + 6 * s, y + 6.4 * s) + ' ' + P(x + 4.2 * s, y + 8.6 * s) + ' Q' + P(x + 2 * s, y + 6.6 * s) + ' ' + P(x, y + 8.8 * s) + ' Q' + P(x - 2 * s, y + 6.6 * s) + ' ' + P(x - 4.2 * s, y + 8.6 * s) + ' Q' + P(x - 6 * s, y + 6.4 * s) + ' ' + P(x - 8.6 * s, y + 8 * s) + ' Q' + P(x - 9.4 * s, y + 6 * s) + ' ' + P(x - 6 * s, y + 4 * s) + 'Z',
+      k.lg('#f4f9ec', '#ffffff'), '#6d8aa0', 1.4);
+    return o + '<path d="M' + P(x - 3 * s, y - 5 * s) + ' Q' + P(x - 4.6 * s, y) + ' ' + P(x - 3.4 * s, y + 4 * s) + '" stroke="#dfe9d4" stroke-width="1.4" fill="none"/>';
+  }
+  function lavSpikeT(k, x0, y0, x1, y1, wBot, wTop) {
+    var o = '', n = 15, d = '#6a52ad';
+    for (var i = n - 1; i >= 0; i--) {
+      var t = i / (n - 1), x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, w = wBot + (wTop - wBot) * t, r = w * .24;
+      [-1, 1, 0].forEach(function (sd, j) { var cx = x + sd * w * .3, cy = y + (j === 2 ? -r * .5 : 0);
+        o += '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + f(r * (j === 2 ? .95 : 1)) + '" ry="' + f(r * .82) + '" fill="' + (t > .8 ? '#d6c8f4' : j === 2 ? '#cbb8f2' : '#b39ce6') + '" stroke="' + d + '" stroke-width="1.1"/>'; });
+      if (i % 3 === 1) o += circ(x - w * .1, y - r * .3, r * .22, '#8a6e52');
+    }
+    return o;
+  }
+  var TR = {
+    tulip: { vb: '72 18 190 248', draw: function (k) {
+      var w = wrapT(k, '#f8bfca', '#e98fa3', '#f39aae', 'M82 104 Q95 160 146 202 L190 202 Q230 160 246 108 Q164 92 82 104Z', 'M88 140 Q128 158 166 160 Q206 156 242 132 Q228 170 190 202 L146 202 Q104 172 88 140Z', 0, 'M146 204 Q138 232 133 252 Q166 262 200 252 Q195 232 188 204Z', [167, 210]);
+      var o = stemT('M163 80 Q165 140 167 196') + stemT('M128 112 Q148 150 162 196') + stemT('M200 112 Q182 150 172 196');
+      o += leafT(k, 'M145 82 Q138 94 151 106 Q156 92 145 82Z', 1) + leafT(k, 'M188 82 Q195 94 182 106 Q177 92 188 82Z', 1);
+      o += tulipT(k, 164, 53, 25, 27, 0) + tulipT(k, 113, 90, 24, 27, -20) + tulipT(k, 215, 90, 24, 27, 20);
+      o += leafT(k, 'M96 118 Q130 118 156 152 Q116 152 96 118Z') + leafT(k, 'M234 116 Q200 118 176 152 Q216 152 234 116Z');
+      o += leafT(k, 'M150 138 Q150 172 167 197 Q160 168 160 138Z', 1) + leafT(k, 'M184 138 Q184 172 167 197 Q174 168 174 138Z', 1);
+      o += tulipT(k, 165, 122, 25, 26, 0);
+      return w.back + o + w.front + hl('M100 150 Q118 176 140 196', 2, .55) + hl('M232 140 Q220 162 202 182', 2, .5); } },
+    lily: { vb: '322 18 196 248', draw: function (k) {
+      var w = wrapT(k, '#f8eba8', '#d9c46a', '#f3dc7a', 'M334 126 Q420 108 508 124 Q472 170 446 206 L396 206 Q368 170 334 126Z', 'M336 130 Q420 154 506 128 Q472 172 446 206 L396 206 Q368 172 336 130Z', 0, 'M396 214 Q388 236 386 254 Q420 262 454 254 Q450 236 444 214Z', [420, 210]);
+      var o = '', b = '';
+      function arc(d, bells) { o += stemT(d); bells.forEach(function (q) { o += '<path d="M' + q[0] + ' ' + (q[1] - 12) + ' q1 4 0 8" stroke="#4f8a35" stroke-width="1.6" fill="none"/>'; b += bellT(k, q[0], q[1], q[2]); }); }
+      arc('M422 196 C414 140 404 62 382 40 C372 32 362 38 360 46', [[358, 56, 20], [380, 52, 17], [398, 64, 18]]);
+      arc('M420 180 C412 130 402 84 380 82 C368 82 360 90 358 96', [[358, 104, 20], [384, 102, 18], [406, 104, 16], [370, 130, 18], [396, 134, 18], [380, 154, 16]]);
+      arc('M424 196 C432 140 446 54 466 36 C476 30 486 38 488 48', [[488, 58, 20], [470, 70, 18], [452, 86, 16]]);
+      arc('M428 172 C436 124 450 96 472 94 C484 94 492 100 494 106', [[494, 114, 20], [470, 112, 18], [446, 116, 17], [460, 140, 17], [438, 150, 16]]);
+      o += b + leafT(k, 'M368 138 Q402 146 424 176 Q388 174 368 138Z') + leafT(k, 'M478 136 Q454 148 430 170 Q464 166 478 136Z');
+      return w.back + o + w.front + hl('M346 138 Q368 170 392 196', 2, .55); } },
+    gerbera: { vb: '62 300 216 240', draw: function (k) {
+      var w = wrapT(k, '#bfe8ee', '#8cc4d0', '#9fd4ea', 'M84 402 Q170 384 252 400 Q228 446 194 484 L148 484 Q112 446 84 402Z', 'M88 416 Q170 446 252 406 Q228 450 194 484 L148 484 Q110 450 88 416Z', 0, 'M148 488 Q140 510 134 530 Q170 540 206 530 Q200 510 194 488Z', [171, 492]);
+      var o = stemT('M150 410 Q160 440 168 470') + stemT('M176 410 Q172 440 170 470') + stemT('M210 400 Q190 440 172 470') + stemT('M120 420 Q150 446 166 470');
+      o += ruffT(k, 100, 372, 32, '#f9e08f', '#e2bf5a') + ruffT(k, 166, 330, 32, '#f9e08f', '#e2bf5a') + ruffT(k, 130, 348, 22, '#fae49a', '#e2bf5a') + ruffT(k, 224, 388, 32, '#f9e08f', '#e2bf5a', '#f3b84a');
+      o += blueT(k, 207, 346, 30) + sp('M146 343 C139 343 138 356 146 360 C154 356 153 343 146 343Z', k.lg('#c7e0a0', '#7fae55'), '#3d6a2a', 1.2);
+      o += leafT(k, 'M196 446 Q214 418 232 414 Q222 438 196 446Z') + leafT(k, 'M150 418 Q146 432 158 444 Q160 428 150 418Z', 1);
+      o += blueT(k, 176, 382, 34) + blueT(k, 128, 394, 34);
+      return w.back + o + w.front + hl('M98 424 Q118 452 140 476', 2, .55); } },
+    orange: { vb: '72 582 200 232', draw: function (k) {
+      var w = wrapT(k, '#fbd3a8', '#ecaa70', '#f6a05a', 'M94 698 Q170 684 246 694 Q228 732 194 762 L146 762 Q112 732 94 698Z', 'M96 704 Q170 732 244 700 Q228 732 194 762 L146 762 Q112 732 96 704Z', 0, 'M146 766 Q138 786 134 805 Q168 814 202 805 Q198 786 192 766Z', [168, 770]);
+      var o = stemT('M130 680 Q152 712 165 744') + stemT('M172 700 Q170 724 168 746') + stemT('M210 690 Q186 718 172 746') + stemT('M172 640 Q170 690 168 744') + stemT('M205 652 Q210 634 222 622');
+      o += sp('M224 600 C212 600 210 616 222 624 C236 622 236 602 224 600Z', k.lg('#fbb26a', '#f07e2e'), '#c9601f', 1.4) + leafT(k, 'M218 626 Q232 624 240 632 Q226 638 218 626Z');
+      o += leafT(k, 'M108 690 Q130 690 150 706 Q118 712 108 690Z') + leafT(k, 'M228 696 Q206 700 188 712 Q216 716 228 696Z');
+      o += ruffT(k, 172, 618, 34, '#f9b23e', '#de8a2a') + ruffT(k, 120, 652, 34, '#f7883c', '#d2602a', '#fbbf6a') + ruffT(k, 224, 662, 34, '#f9b23e', '#de8a2a') + ruffT(k, 172, 672, 36, '#f9b840', '#de8a2a');
+      return w.back + o + w.front + hl('M100 700 Q120 728 140 752', 2, .55); } },
+    lav: { vb: '338 568 186 244', draw: function (k) {
+      var w = wrapT(k, '#ddd0f4', '#b4a0dc', '#b79ae6', 'M358 684 Q432 670 508 684 Q486 730 458 756 L402 756 Q378 730 358 684Z', 'M360 694 Q434 716 508 690 Q486 730 458 756 L402 756 Q378 730 360 694Z', 0, 'M402 768 Q396 790 392 805 Q430 814 466 805 Q462 790 458 768Z', [430, 765]);
+      var o = stemT('M398 700 Q412 724 426 744') + stemT('M420 690 Q424 720 428 746') + stemT('M458 700 Q444 724 432 744');
+      o += leafT(k, 'M406 700 Q414 720 428 742 Q414 714 414 700Z', 1) + leafT(k, 'M448 700 Q440 720 430 742 Q444 714 442 700Z', 1);
+      o += lavSpikeT(k, 396, 700, 370, 604, 34, 15) + lavSpikeT(k, 458, 700, 484, 604, 34, 15) + lavSpikeT(k, 421, 692, 422, 576, 40, 17);
+      o += leafT(k, 'M384 690 Q396 708 420 730 Q398 716 384 690Z', 1) + leafT(k, 'M470 690 Q456 710 434 730 Q456 716 470 690Z', 1) + leafT(k, 'M352 668 Q382 686 400 706 Q370 704 352 668Z') + leafT(k, 'M504 668 Q476 688 458 706 Q490 702 504 668Z');
+      return w.back + o + w.front + hl('M368 702 Q384 726 402 748', 2, .55); } }
+  };
+  /* 薰衣草：一整條花穗，外緣坑坑巴巴，裡面畫小花 */
+  function lavSpikeT(k, x0, y0, x1, y1, wBot, wTop) {
+    var n = 12, L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = -uy, ny = ux;
+    function pt(t, side, extra) { var w = (wBot + (wTop - wBot) * t) / 2 + (extra || 0); return [x0 + (x1 - x0) * t + nx * side * w, y0 + (y1 - y0) * t + ny * side * w]; }
+    var d = 'M' + P.apply(null, pt(0, -1)), bump = (wBot + wTop) * .1;
+    for (var i = 0; i < n; i++) { var a = pt((i + .5) / n, -1, bump), b = pt((i + 1) / n, -1, -bump * .4); d += ' Q' + P(a[0], a[1]) + ' ' + P(b[0], b[1]); }
+    var tip = [x1 + ux * wTop * .45, y1 + uy * wTop * .45], tl = pt(1, -1), tr = pt(1, 1);
+    d += ' Q' + P(tl[0] + ux * wTop * .5, tl[1] + uy * wTop * .5) + ' ' + P(tip[0], tip[1]) + ' Q' + P(tr[0] + ux * wTop * .5, tr[1] + uy * wTop * .5) + ' ' + P(tr[0], tr[1]);
+    for (var j = n - 1; j >= 0; j--) { var c = pt((j + .25) / n, 1, bump), e = pt(Math.max(0, j - .25) / n, 1, -bump * .4); d += ' Q' + P(c[0], c[1]) + ' ' + P(e[0], e[1]); }
+    var o = sp(d + 'Z', k.lg('#d2c0f4', '#9d84da'), '#6a52ad', 1.5);
+    for (var r = 0; r < n; r++) { var t = (r + .5) / n, w = (wBot + (wTop - wBot) * t) / 2, cx = x0 + (x1 - x0) * t, cy = y0 + (y1 - y0) * t, side = r % 2 ? 1 : -1;
+      var fx = cx + nx * side * w * .35, fy = cy + ny * side * w * .35;
+      o += '<path d="M' + P(fx - w * .32, fy + 1) + ' q' + f(w * .32) + ' ' + f(-w * .45) + ' ' + f(w * .64) + ' 0" stroke="#6a52ad" stroke-width="1" fill="none" opacity=".75"/>';
+      o += '<ellipse cx="' + f(fx) + '" cy="' + f(fy - w * .1) + '" rx="' + f(w * .22) + '" ry="' + f(w * .14) + '" fill="#e6dcfb" opacity=".8"/>';
+      if (r % 3 === 0) o += circ(cx - nx * side * w * .3, cy - ny * side * w * .3, Math.max(1, w * .08), '#8a6e52');
+    }
+    return o;
+  }
+  /* 其他參考圖要用的花 */
+  function roseT(k, cx, cy, r, c) {
+    var d = dk(c), o = sp(scallop(cx, cy, r * .84, 7, .3, .92), k.rg(mix(c, '#fff', .45), c), d, 1.5);
+    o += sp(scallop(cx, cy - r * .06, r * .6, 6, 1, .9), k.rg(mix(c, '#fff', .55), mix(c, '#fff', .15)), d, 1.2);
+    o += '<path d="M' + P(cx - r * .36, cy - r * .02) + ' Q' + P(cx - r * .02, cy - r * .5) + ' ' + P(cx + r * .36, cy - r * .08) + ' Q' + P(cx + r * .12, cy + r * .3) + ' ' + P(cx - r * .16, cy + r * .06) + ' Q' + P(cx - r * .02, cy - r * .22) + ' ' + P(cx + r * .14, cy - r * .02) + '" stroke="' + d + '" stroke-width="1.3" fill="none" stroke-linecap="round"/>';
+    o += '<path d="M' + P(cx - r * .74, cy + r * .2) + ' Q' + P(cx - r * .5, cy + r * .6) + ' ' + P(cx, cy + r * .64) + ' M' + P(cx + r * .74, cy + r * .1) + ' Q' + P(cx + r * .6, cy + r * .5) + ' ' + P(cx + r * .2, cy + r * .66) + '" stroke="' + d + '" stroke-width="1" fill="none" opacity=".6"/>';
+    return o + hl('M' + P(cx - r * .62, cy - r * .3) + ' Q' + P(cx - r * .5, cy - r * .64) + ' ' + P(cx - r * .16, cy - r * .74), 2, .65);
+  }
+  function daisyT(k, cx, cy, r, rot) {
+    var o = '';
+    for (var i = 0; i < 22; i++) { var a = i / 22 * 360 + (rot || 0); o += '<ellipse cx="' + f(cx) + '" cy="' + f(cy - r * .58) + '" rx="' + f(r * .12) + '" ry="' + f(r * .4) + '" transform="rotate(' + f(a) + ' ' + f(cx) + ' ' + f(cy) + ')" fill="' + k.lg('#ffffff', '#eef0fa') + '" stroke="#8f8fb0" stroke-width="1.2"/>'; }
+    return o + circ(cx, cy, r * .26, k.rg('#fbe08a', '#e9b23a'), '#c58a2a', 1.4) + circ(cx - r * .07, cy - r * .07, r * .08, '#fdf0b8');
+  }
+  function sunT(k, cx, cy, r) {
+    var o = '';
+    for (var kk = 0; kk < 2; kk++) for (var i = 0; i < 16; i++) { var a = (i + kk * .5) / 16 * Math.PI * 2, r0 = r * .42, r1 = r * (kk ? .88 : 1), w = .2;
+      o += sp('M' + P(cx + Math.cos(a - w) * r0, cy + Math.sin(a - w) * r0) + ' Q' + P(cx + Math.cos(a - .13) * r1 * .8, cy + Math.sin(a - .13) * r1 * .8) + ' ' + P(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1) + ' Q' + P(cx + Math.cos(a + .13) * r1 * .8, cy + Math.sin(a + .13) * r1 * .8) + ' ' + P(cx + Math.cos(a + w) * r0, cy + Math.sin(a + w) * r0) + 'Z', k.lg(kk ? '#fde58a' : '#f9d35a', kk ? '#f6c53e' : '#eeb030'), '#c88a22', 1.2); }
+    o += circ(cx, cy, r * .44, k.rg('#7a4a2a', '#4a2c18'), '#3a2414', 1.5) + circ(cx, cy, r * .26, '#6a3f22');
+    for (var j = 0; j < 18; j++) { var b = j * 2.4, rr = Math.sqrt(j / 18) * r * .36; o += circ(cx + Math.cos(b) * rr, cy + Math.sin(b) * rr, r * .025, '#9a6a3a'); }
+    return o;
+  }
+  function eucaT(k, x0, y0, x1, y1, n, rr) {
+    var o = '<path d="M' + P(x0, y0) + ' L' + P(x1, y1) + '" stroke="#6f8f8a" stroke-width="1.6"/>';
+    for (var i = 1; i <= n; i++) { var t = i / (n + .5), x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, s = i % 2 ? 1 : -1, sz = rr * (1 - t * .35);
+      o += '<ellipse cx="' + f(x + s * sz * 1.1) + '" cy="' + f(y) + '" rx="' + f(sz) + '" ry="' + f(sz * .8) + '" fill="' + k.lg('#c4d8d2', '#93b3ad') + '" stroke="#5f7f7a" stroke-width="1.2"/>'; }
+    return o;
+  }
+  function smallT(k, x, y, r, c) {
+    var d = dk(c), o = '';
+    for (var i = 0; i < 5; i++) { var a = i * 72 - 90, px = x + Math.cos(a * Math.PI / 180) * r * .55, py = y + Math.sin(a * Math.PI / 180) * r * .55; o += circ(px, py, r * .48, k.rg(mix(c, '#fff', .4), c), d, 1.1); }
+    return o + circ(x, y, r * .3, '#fbe7a0', '#c99a3a', .9);
+  }
+  function budT(k, x, y, r, c) { var d = dk(c); return sp('M' + P(x - r, y + r * .3) + ' Q' + P(x - r * 1.1, y - r) + ' ' + P(x, y - r * 1.2) + ' Q' + P(x + r * 1.1, y - r) + ' ' + P(x + r, y + r * .3) + ' Q' + P(x, y + r) + ' ' + P(x - r, y + r * .3) + 'Z', k.lg(mix(c, '#fff', .3), c), d, 1.3) + sp('M' + P(x - r * .9, y + r * .4) + ' L' + P(x - r * .2, y + r * .2) + ' L' + P(x, y + r * 1.1) + ' L' + P(x + r * .2, y + r * .2) + ' L' + P(x + r * .9, y + r * .4) + ' Q' + P(x, y + r * 1.4) + ' ' + P(x - r * .9, y + r * .4) + 'Z', '#86b95c', '#3d6a2a', 1.1); }
+  function tulipLie(k, cx, cy, w, h, rot, c1, c2) { return tulipT(k, cx, cy, w, h, rot).replace(/#fbd0d8/g, c1 || '#fbd0d8').replace(/#f398ab/g, c2 || '#f398ab'); }
+  var TR2 = {
+    purple: { vb: '0 0 528 559', draw: function (k) {
+      var lil = '#c8b2ec', line = '#8f74c6';
+      var o = sp('M2 22 L268 14 Q380 60 462 108 Q500 150 526 200 L330 330 L120 330 Q40 290 2 210Z', k.lg('#e6dcf8', '#cfbdf0'), line, 1.6);
+      o += stemT('M250 400 Q245 300 238 190') + stemT('M250 400 Q270 300 300 230') + stemT('M250 400 Q200 320 160 160') + stemT('M250 400 Q300 330 340 260') + stemT('M250 400 Q240 300 252 160');
+      o += leafT(k, 'M276 6 Q258 110 244 210 Q262 110 292 10Z', 1) + leafT(k, 'M340 300 Q400 270 450 250 Q410 300 340 300Z') + leafT(k, 'M210 330 Q180 280 190 230 Q220 280 210 330Z', 1);
+      o += tulipLie(k, 236, 110, 34, 72, -6) + tulipLie(k, 302, 168, 32, 62, 12) + tulipLie(k, 356, 184, 26, 52, 22);
+      o += daisyT(k, 160, 118, 112);
+      o += tulipLie(k, 118, 232, 30, 42, -24) + tulipLie(k, 196, 250, 38, 40, 0) + tulipLie(k, 300, 252, 26, 46, 78, '#fbd6dc', '#f2a6b6');
+      o += budT(k, 252, 156, 16, '#f4f6fb');
+      [[160, 250], [182, 264], [146, 274], [200, 286], [168, 296], [222, 262], [190, 240]].forEach(function (q) { o += star5(q[0], q[1], 14, '#bfe0f8'); });
+      o += daisyT(k, 346, 250, 104, 8);
+      o += sp('M8 200 Q60 280 140 318 Q300 318 470 240 L526 200 Q470 330 380 400 L190 400 Q60 320 8 200Z', k.lg('#d9c8f4', '#b39ae6'), line, 1.6);
+      o += sp('M462 108 Q500 150 526 200 L470 232 Q474 170 462 108Z', k.lg('#c3abea', '#9b80d8'), line, 1.4);
+      o += hl('M60 260 Q140 330 220 380', 3, .5) + hl('M420 300 Q380 350 340 390', 3, .45);
+      o += sp('M160 400 Q150 480 165 545 Q250 558 330 548 Q320 470 330 404Z', k.lg('#cdb8f2', '#a88ae0'), line, 1.6);
+      o += sp('M182 384 L332 404 L330 428 L182 410Z', k.lg('#fbe7a0', '#f2cf5a'), '#c9a23a', 1.4) + sp('M284 410 Q330 470 382 522 L360 532 Q310 480 268 424Z', k.lg('#fbe7a0', '#f2cf5a'), '#c9a23a', 1.4) + sp('M268 424 L272 522 L292 526 L292 424Z', '#f4d66c', '#c9a23a', 1.4);
+      return o; } },
+    roses: { vb: '0 0 620 760', draw: function (k) {
+      var pap = '#fbe2c0', line = '#8a6a4a';
+      var o = sp('M70 40 L590 136 L560 330 L20 270Z', k.lg('#fbe2c0', '#f4cf9c'), line, 2);
+      o += stemT('M290 470 Q295 300 296 210') + stemT('M290 470 Q250 330 170 250') + stemT('M290 470 Q330 360 380 300') + stemT('M290 470 Q280 400 240 345') + stemT('M290 470 Q250 200 222 50') + stemT('M290 470 Q230 250 182 92') + stemT('M290 470 Q400 200 460 36') + stemT('M290 470 Q350 250 415 145');
+      o += leafT(k, 'M78 130 Q120 150 116 200 Q66 180 78 130Z') + leafT(k, 'M44 250 Q100 260 120 300 Q60 300 44 250Z', 1) + leafT(k, 'M118 330 Q150 300 170 350 Q140 370 118 330Z') + leafT(k, 'M404 100 Q440 80 450 120 Q420 130 404 100Z') + leafT(k, 'M430 60 Q470 40 490 80 Q450 90 430 60Z', 1) + leafT(k, 'M440 360 Q480 340 500 370 Q470 390 440 360Z');
+      o += eucaT(k, 470, 340, 560, 120, 6, 13).replace(/c4d8d2/g, 'd7e6a6').replace(/93b3ad/g, 'b7cf7e').replace(/5f7f7a/g, '6f8a3a').replace(/6f8f8a/g, '6f8a3a') + eucaT(k, 480, 380, 590, 280, 4, 13).replace(/c4d8d2/g, 'd7e6a6').replace(/93b3ad/g, 'b7cf7e').replace(/5f7f7a/g, '6f8a3a').replace(/6f8f8a/g, '6f8a3a');
+      o += budT(k, 222, 46, 20, '#e8504a') + budT(k, 182, 84, 18, '#e8504a') + budT(k, 462, 30, 18, '#e8504a');
+      o += smallT(k, 156, 128, 18, '#f8e27a') + smallT(k, 132, 160, 15, '#f8e27a') + smallT(k, 418, 140, 18, '#f39a5a') + smallT(k, 400, 166, 14, '#f39a5a') + smallT(k, 432, 202, 18, '#f3ec8a') + smallT(k, 488, 206, 18, '#b8bdf0') + smallT(k, 502, 258, 22, '#ee6a62') + smallT(k, 484, 300, 16, '#ee8a6a');
+      o += roseT(k, 296, 142, 92, '#f2875f') + roseT(k, 170, 238, 90, '#f6a3a0') + roseT(k, 384, 302, 88, '#f8bf8f') + roseT(k, 240, 348, 86, '#fbe7a0');
+      o += sp('M18 268 Q60 250 120 320 Q190 400 280 455 L278 528 Q120 450 18 268Z', k.lg('#fbe2c0', '#f4cf9c'), line, 2);
+      o += sp('M560 322 Q500 380 420 398 Q340 410 268 460 L278 528 Q420 430 560 322Z', k.lg('#fbe2c0', '#f4cf9c'), line, 2);
+      o += sp('M246 556 L194 692 Q280 742 386 692 L334 556Z', k.lg('#fbe2c0', '#f4cf9c'), line, 2) + sp('M246 522 L334 522 L334 560 L246 560Z', '#f6d6a8', line, 2);
+      var R = '#ee3e30', Rd = '#b8261c';
+      o += sp('M290 572 Q200 520 180 572 Q188 620 290 584Z', k.lg('#f66a5a', R), Rd, 2) + sp('M290 572 Q380 520 400 572 Q392 620 290 584Z', k.lg('#f66a5a', R), Rd, 2) + sp('M282 584 L214 690 L240 696 L292 590Z', R, Rd, 2) + sp('M298 584 L346 688 L320 696 L288 590Z', R, Rd, 2) + '<ellipse cx="290" cy="578" rx="16" ry="14" fill="' + R + '" stroke="' + Rd + '" stroke-width="2"/>';
+      return o; } },
+    sun: { vb: '0 0 441 640', draw: function (k) {
+      var line = '#a67a46';
+      var o = sp('M10 100 L100 30 L292 26 Q312 110 326 186 L312 322 L48 322 L4 200Z', k.lg('#f6d9a8', '#ebbf7a'), line, 1.8);
+      o += sp('M318 168 L440 200 L412 322 L330 330Z', k.lg('#f2cf96', '#e3b06a'), line, 1.6);
+      o += eucaT(k, 150, 240, 152, 0, 9, 9) + eucaT(k, 300, 160, 324, 36, 6, 8);
+      o += leafT(k, 'M96 200 Q130 180 164 210 Q130 236 96 200Z') + leafT(k, 'M80 300 Q120 276 164 300 Q120 334 80 300Z', 1) + leafT(k, 'M324 340 Q360 320 398 352 Q360 372 324 340Z') + leafT(k, 'M170 370 Q206 344 244 372 Q206 396 170 370Z', 1);
+      o += ruffT(k, 222, 122, 66, '#f4b8c8', '#d27d96') + ruffT(k, 294, 166, 42, '#f4b8c8', '#d27d96') + ruffT(k, 366, 210, 52, '#f4b8c8', '#d27d96');
+      o += sunT(k, 244, 272, 108);
+      o += sp('M44 300 Q150 334 240 334 Q330 326 404 304 L384 352 Q300 420 210 440 Q110 420 44 352Z', k.lg('#f4d39c', '#e4b26a'), line, 1.8);
+      o += sp('M8 140 L4 280 L52 300 Q34 210 8 140Z', '#efc98a', line, 1.6);
+      o += sp('M92 436 Q62 520 66 600 Q160 632 246 612 Q252 520 242 436Z', k.lg('#f2cf96', '#dfa960'), line, 1.8) + hl('M120 460 Q112 530 118 600', 3, .45);
+      var R = '#ec7c9a', Rd = '#b84a6a';
+      o += sp('M160 450 Q70 400 46 432 Q50 480 150 468Z', k.lg('#f6a2b8', R), Rd, 1.6) + sp('M160 450 Q260 420 290 470 Q280 540 196 478Z', k.lg('#f6a2b8', R), Rd, 1.6) + sp('M140 462 Q100 530 72 612 L94 616 Q124 540 160 470Z', R, Rd, 1.4) + sp('M200 470 Q240 520 278 572 L262 584 Q224 530 186 476Z', R, Rd, 1.4) + '<ellipse cx="164" cy="460" rx="14" ry="11" fill="' + R + '" stroke="' + Rd + '" stroke-width="1.6"/>';
+      return o; } },
+    pink: { vb: '0 0 384 399', draw: function (k) {
+      var o = '';
+      [[156, 300], [166, 310], [176, 300], [186, 312], [196, 300], [206, 310], [216, 300], [226, 306]].forEach(function (q, i) { o += '<path d="M' + q[0] + ' ' + q[1] + ' L' + (q[0] + (i - 3.5) * 5) + ' 396" stroke="' + (i % 2 ? '#3d6a2a' : '#6d9a4a') + '" stroke-width="7" stroke-linecap="round"/>'; });
+      o += leafT(k, 'M60 18 Q112 40 100 86 Q50 64 60 18Z') + leafT(k, 'M14 104 Q60 100 80 132 Q30 140 14 104Z', 1) + leafT(k, 'M8 190 Q60 170 90 196 Q40 220 8 190Z') + leafT(k, 'M376 92 Q340 104 320 140 Q370 130 376 92Z') + leafT(k, 'M286 196 Q320 196 330 228 Q290 222 286 196Z', 1) + leafT(k, 'M296 6 Q306 40 290 64 Q280 30 296 6Z') + leafT(k, 'M28 160 Q12 168 4 160 Q14 148 28 160Z', 1);
+      o += smallT(k, 76, 150, 22, '#fdf7f2') + smallT(k, 272, 150, 24, '#f7eef0') + smallT(k, 298, 96, 20, '#fdf7f2') + smallT(k, 196, 174, 22, '#fdf7f2') + smallT(k, 92, 108, 16, '#fdf7f2') + budT(k, 106, 74, 12, '#e9a0b2') + budT(k, 176, 146, 14, '#9cc06a');
+      o += roseT(k, 232, 46, 44, '#f4b3c2') + roseT(k, 130, 78, 46, '#f6c0cc') + roseT(k, 208, 96, 62, '#f2a3b6') + roseT(k, 134, 142, 54, '#f7c6d0');
+      o += leafT(k, 'M216 148 Q246 120 262 150 Q240 176 216 148Z', 1);
+      var R = '#ec9fb2', Rd = '#c46a84';
+      o += sp('M176 226 L214 226 L216 304 L176 304Z', k.lg('#f6bccb', R), Rd, 1.6) + '<path d="M176 250 H216 M176 270 H216 M176 288 H216" stroke="' + Rd + '" stroke-width="1" opacity=".6"/>';
+      o += sp('M190 214 Q140 180 110 200 Q100 236 186 228Z', k.lg('#f8c6d2', R), Rd, 1.6) + sp('M196 214 Q260 176 290 206 Q296 250 202 228Z', k.lg('#f8c6d2', R), Rd, 1.6);
+      o += sp('M184 226 Q90 240 4 286 L12 300 Q100 262 190 236Z', k.lg('#f6bccb', R), Rd, 1.4) + sp('M180 232 Q130 290 104 394 L122 396 Q146 300 192 240Z', k.lg('#f6bccb', '#e08aa0'), Rd, 1.4) + sp('M206 232 Q270 290 300 372 L284 380 Q254 300 198 240Z', k.lg('#f6bccb', R), Rd, 1.4);
+      o += '<ellipse cx="193" cy="220" rx="14" ry="12" fill="' + R + '" stroke="' + Rd + '" stroke-width="1.6"/>';
+      return o; } }
+  };
+
+    function gypBody() { var s = STK.gyp(), cut = s.indexOf('<path d="M18 52'); return cut > 0 ? s.slice(0, cut) : s; }
+    function svg(key, standalone) {
+      var vb, body;
+      if (key === 'gyp') { vb = '0 0 120 160'; body = gypBody(); }
+      else if (TR2[key]) { var k2 = SK(), b2 = TR2[key].draw(k2); vb = TR2[key].vb; body = '<style>.ns *{vector-effect:non-scaling-stroke}</style>' + k2.defs() + '<g class="ns">' + b2 + '</g>'; }
+      else if (TR[key]) { var k = SK(), b1 = TR[key].draw(k); vb = TR[key].vb; body = k.defs() + b1; }
+      else return '';
+      if (!standalone) return '<svg viewBox="' + vb + '" aria-hidden="true">' + body + '</svg>';
+      var v = vb.split(' ').map(Number);
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '" width="360" height="480" preserveAspectRatio="xMidYMid meet"><rect x="' + (v[0] - v[2]) + '" y="' + (v[1] - v[3]) + '" width="' + v[2] * 3 + '" height="' + v[3] * 3 + '" fill="#f7f1e6"/>' + body + '</svg>';
+    }
+    return { svg: svg };
+  })();
+  var BQR = [
+    { k: 'tulip', n: '鬱金香花束', need: { tulip: 4 } },
+    { k: 'lily', n: '鈴蘭花束', need: { lilyvalley: 5 } },
+    { k: 'gerbera', n: '晴天花束', need: { marigold: 4, cornflower: 3 } },
+    { k: 'gyp', n: '滿天星花束', need: { gypso: 8 } },
+    { k: 'orange', n: '金盞花束', need: { marigold: 5 } },
+    { k: 'lav', n: '薰衣草花束', need: { lavender: 6 } },
+    { k: 'purple', n: '春日花束', need: { tulip: 4, daisy: 2, cornflower: 1 } },
+    { k: 'roses', n: '玫瑰花束', need: { rose: 4, daisy: 2 } }
+  ];
   /* ================= 花園畫面 ================= */
   var recentGift = [];
   var gm = null, gTab = 'field', sel = '', giftTo = null, timer = null;
@@ -781,23 +1185,30 @@
     }).join('') + '</div>' + rec;
   }
   /* ---------- 花束 ---------- */
-  var bq = { sel: [], wrap: 'kraft', ribbon: 'violet', view: 'make', open: null, hi: -1 }, BQ_MAX = 12;
+  var bq = { sel: [], wrap: 'kraft', ribbon: 'violet', view: 'recipe', open: null, hi: -1 }, BQ_MAX = 12;
   function whoRow(lbl) {
     var ppl = A.groupOn() ? A.groupPeople().filter(function (p) { return p.name.indexOf('系統') < 0; }) : [];
     if (!giftTo || (ppl.length && !ppl.some(function (p) { return p.name === giftTo; }))) giftTo = A.pname();
     return ppl.length > 1 ? '<div class="cx-who-t">' + lbl + '</div>' + A.whoChips('cx-g-who', giftTo) : '';
   }
-  function bqPrice(b) { return Math.round(b.flowers.reduce(function (s2, k) { return s2 + (CROPS[k] ? CROPS[k].price : 0); }, 0) * 1.5) + 5; }
+  function bqPrice(b) { return Math.round(b.flowers.reduce(function (s2, k) { return s2 + (CROPS[k] ? CROPS[k].price : 0); }, 0) * (b.recipe ? 2 : 1.5)) + (b.recipe ? 10 : 5); }
   function bqCount(list) { var m = {}; list.forEach(function (k) { m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return CROPS[k].n + '×' + m[k]; }).join('、'); }
   function bqHtml(g) {
     g.bouquets = g.bouquets || [];
-    var h = '<div class="cx-g-sub"><button type="button" data-bv="make" class="' + (bq.view === 'make' ? 'on' : '') + '">包花束</button><button type="button" data-bv="list" class="' + (bq.view !== 'make' ? 'on' : '') + '">我的花束（' + g.bouquets.length + '）</button></div>';
+    var h = '<div class="cx-g-sub"><button type="button" data-bv="recipe" class="' + (bq.view === 'recipe' ? 'on' : '') + '">花束配方</button><button type="button" data-bv="make" class="' + (bq.view === 'make' ? 'on' : '') + '">自己包</button><button type="button" data-bv="list" class="' + (bq.view === 'list' || bq.view === 'one' ? 'on' : '') + '">我的花束（' + g.bouquets.length + '）</button></div>';
     if (bq.view === 'one' && bq.open) {
       var b = g.bouquets.find(function (x) { return x.id === bq.open; });
       if (b) return h + '<div class="cx-g-bq1"><div class="pv">' + bouquetSvg(b) + '</div><b>' + esc(b.name || '無名花束') + '</b><span class="cx-muted">' + bqCount(b.flowers) + '</span><span class="cx-muted">' + new Date(b.t).toLocaleDateString('zh-TW') + (b.to ? ' · 送給了 ' + esc(b.to) : ' · 還留在身邊') + '</span>' +
         (b.reply ? '<p class="rp">' + esc(b.to) + '：「' + esc(b.reply) + '」</p>' : '') +
         (b.to ? '' : whoRow('送給') + '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqsend="' + b.id + '"><i class="fas fa-gift"></i> 送出去</button><button type="button" class="cx-btn" data-bqsell="' + b.id + '">賣掉 🪙 ' + bqPrice(b) + '</button></div>') + '</div>';
       bq.view = 'list';
+    }
+    if (bq.view === 'recipe') {
+      return h + '<p class="cx-muted" style="margin:0 0 8px">花收齊了就能直接包好，比自己包的賣得更貴。</p><div class="cx-g-bqr">' + BQR.map(function (r) {
+        var ok = Object.keys(r.need).every(function (k) { return (g.inv[k] || 0) >= r.need[k]; });
+        return '<div class="cx-g-bqrc' + (ok ? ' ok' : '') + '">' + BQX.svg(r.k) + '<b>' + r.n + '</b><div class="nd">' + Object.keys(r.need).map(function (k) { var have = g.inv[k] || 0; return '<span class="' + (have >= r.need[k] ? 'y' : 'n') + '">' + CROPS[k].n + ' ' + Math.min(have, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div>' +
+          '<button type="button" class="cx-btn' + (ok ? ' pri' : '') + '" data-bqr="' + r.k + '"' + (ok ? '' : ' disabled') + '><i class="fas fa-ribbon"></i> 包起來</button></div>';
+      }).join('') + '</div>';
     }
     if (bq.view === 'list') {
       if (!g.bouquets.length) return h + '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有包過花束。</p>';
@@ -985,6 +1396,16 @@
       log(g, '💰 賣掉花束「' + (sb2.name || '無名花束') + '」+' + price); save(); toast('賣了 🪙 ' + price, 'success'); bq.view = 'list'; render(); return;
     }
     if ((b = e.target.closest('[data-bqopen]'))) { bq.view = 'one'; bq.open = +b.dataset.bqopen; render(); return; }
+    if ((b = e.target.closest('[data-bqr]'))) {
+      var rr = BQR.find(function (x) { return x.k === b.dataset.bqr; }); if (!rr) return;
+      if (Object.keys(rr.need).some(function (k) { return (g.inv[k] || 0) < rr.need[k]; })) { toast('倉庫裡的花不夠', 'info'); return; }
+      var fl = []; Object.keys(rr.need).forEach(function (k) { g.inv[k] -= rr.need[k]; for (var i = 0; i < rr.need[k]; i++) fl.push(k); });
+      g.bouquets = g.bouquets || [];
+      var rb = { id: Date.now(), flowers: fl, recipe: rr.k, wrap: 'kraft', ribbon: 'violet', name: rr.n, t: Date.now() };
+      g.bouquets.push(rb); if (g.bouquets.length > 60) g.bouquets.shift();
+      log(g, '💐 包了一束' + rr.n); save();
+      bq.view = 'one'; bq.open = rb.id; toast('包好了！', 'success'); render(); return;
+    }
     if ((b = e.target.closest('[data-bqmake]'))) {
       var need = {}; bq.sel.forEach(function (k) { need[k] = (need[k] || 0) + 1; });
       if (Object.keys(need).some(function (k) { return (g.inv[k] || 0) < need[k]; })) { toast('倉庫裡的花不夠了', 'info'); return; }
@@ -1641,6 +2062,7 @@
     '.cx-g-bqmk .opts{display:flex;flex-direction:column;gap:6px;min-width:0}.cx-g-bqmk .sw{display:flex;flex-wrap:wrap;gap:5px}.cx-g-bqmk .sw button{border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);font:inherit;font-size:12px;border-radius:99px;padding:4px 9px 4px 5px;display:flex;align-items:center;gap:4px;cursor:pointer}.cx-g-bqmk .sw button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-g-bqmk .sw i{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}' +
     '.cx-g-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}.cx-g-pick button{position:relative;border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);border-radius:12px;padding:4px 2px 6px;font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;cursor:pointer}.cx-g-pick svg{width:46px;height:44px;overflow:visible}.cx-g-pick small{color:var(--text-secondary);font-size:11px}.cx-g-pick button:disabled{opacity:.5}' +
     '.cx-g-pt a{color:var(--accent-color)}.cx-g-pick em{position:absolute;top:2px;right:2px;font-style:normal;font-size:11px;background:var(--accent-color);color:#fff;border-radius:99px;padding:0 6px;cursor:pointer}' +
+    '.cx-g-bqr{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.cx-g-bqrc{border:1px solid var(--border-color);background:var(--secondary-bg);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;opacity:.85}.cx-g-bqrc.ok{opacity:1;border-color:var(--accent-color)}.cx-g-bqrc svg{width:100%;aspect-ratio:3/4}.cx-g-bqrc b{font-size:14px}.cx-g-bqrc .nd{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:11px}.cx-g-bqrc .nd span{padding:1px 6px;border-radius:8px;background:var(--primary-bg)}.cx-g-bqrc .nd .y{color:#4f8a35}.cx-g-bqrc .nd .n{color:var(--text-secondary)}.cx-g-bqrc .cx-btn{width:100%;justify-content:center}.cx-g-bq1 .pv svg,.cx-g-bqmk .pv svg{max-height:52vh}' +
     '.cx-g-bqs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}.cx-g-bqc{border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);border-radius:14px;padding:6px;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-width:0}.cx-g-bqc svg{width:100%;aspect-ratio:3/4}.cx-g-bqc b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cx-g-bqc .cx-muted{font-size:11px}' +
     '.cx-g-bq1{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.cx-g-bq1 .pv{width:min(240px,70%)}.cx-g-bq1 .rp{color:var(--accent-color);margin:4px 0;font-size:14px}.cx-g-bq1 .cx-who,.cx-g-bq1 .cx-g-acts{width:100%}' +
     '.cx-g-log div{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--border-color)}.cx-g-tip{text-align:center}' +
