@@ -4,7 +4,7 @@
  * 聊天資料本來就存在本機（IndexedDB），同步資料（Firebase）不經過這裡。
  * 更新網站後，把下面的 VERSION 改一下（例如 v8），所有裝置會自動換成新版本。
  */
-const VERSION = 'v37-tw';
+const VERSION = 'v43-tw';
 const CACHE = 'chuanxun-' + VERSION;
 const BASE = new URL('./', self.location).href;
 
@@ -14,7 +14,7 @@ const LOCAL = [
   'config.js', 'utils.js', 'backup-engine.js', 'state.js', 'core.js',
   'mood.js', 'envelope.js', 'reply-library.js',
   'theme-editor.js', 'group-chat.js', 'call.js',
-  'games.js', 'features.js', 'data.js', 'onboarding.js', 'listeners.js', 'app.js', 'qa.js', 'extras.js'
+  'games.js', 'features.js', 'data.js', 'onboarding.js', 'listeners.js', 'app.js', 'qa.js', 'extras.js', 'home.js'
 ].map(p => BASE + p);
 
 const REMOTE = [

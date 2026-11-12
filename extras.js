@@ -1626,25 +1626,79 @@
     });
   }
 
-  /* 拍一拍：拍誰 */
+  /* 拍一拍：拍誰（自定義只要打動作，名字會自動補上） */
   var pokeTo = null;
+  var POKE_PH = '打動作就好，例如：抱抱、摸摸你的頭';
+  function pokeCompose(raw, to) {
+    var me = myname(), t = String(raw || '').replace(/[「」『』“”"]/g, '').replace(/\s+/g, ' ').trim();
+    if (t.indexOf(me) === 0) t = t.slice(me.length).trim();
+    if (!t) return me + ' 拍了拍 ' + to;
+    t = t.replace(/對方|你|妳/g, to);
+    var named = t.indexOf(to) >= 0 || groupPeople().some(function (p) { return p.name && t.indexOf(p.name) >= 0; });
+    if (!named) t = t.length <= 3 ? t + to : '對' + to + t;
+    return me + ' ' + t;
+  }
   function pokeWhoInit() {
     var pm = document.getElementById('poke-modal'), inp = document.getElementById('poke-input'), sb = document.getElementById('send-poke');
     if (!pm || !inp || !sb || document.getElementById('cx-poke-who-wrap')) return;
     var wrap = document.createElement('div'); wrap.id = 'cx-poke-who-wrap'; inp.parentNode.insertBefore(wrap, inp);
-    bindChips(wrap, function (n) { pokeTo = n; inp.placeholder = '例如：親了親' + n + '的臉頰'; });
+    var prev = document.createElement('div'); prev.id = 'cx-poke-prev'; prev.className = 'cx-muted'; prev.style.cssText = 'margin:6px 2px 0;min-height:1.4em'; inp.parentNode.insertBefore(prev, inp.nextSibling);
+    function showPrev() { var v = inp.value.trim(); prev.textContent = v ? '會顯示：' + pokeCompose(v, pokeTo || pname()) : ''; }
+    inp.addEventListener('input', showPrev);
+    bindChips(wrap, function (n) { pokeTo = n; showPrev(); });
     new MutationObserver(function () {
       var open = pm.style.display && pm.style.display !== 'none';
-      if (open && !wrap.dataset.open) { wrap.dataset.open = '1'; pokeTo = pname(); var h = whoChips('cx-poke-who', pokeTo); wrap.innerHTML = h ? '<div class="cx-who-t">拍誰</div>' + h : ''; }
+      if (open && !wrap.dataset.open) { wrap.dataset.open = '1'; pokeTo = pname(); inp.placeholder = POKE_PH; var h = whoChips('cx-poke-who', pokeTo); wrap.innerHTML = h ? '<div class="cx-who-t">拍誰</div>' + h : ''; showPrev(); }
       if (!open) delete wrap.dataset.open;
     }).observe(pm, { attributes: true, attributeFilter: ['style', 'class'] });
     sb.addEventListener('click', function () {
-      if (!groupOn() || !pokeTo) return;
-      if (pokeTo !== pname() && !inp.value.trim()) inp.value = myname() + ' 拍了拍 ' + pokeTo;
-      if (inp.value) inp.value = inp.value.replace(/"\s*"|“\s*”|「\s*」|『\s*』|''/g, function (q) { return q.charAt(0) + pokeTo + q.charAt(q.length - 1); });
-      speakAs(pokeTo);
+      var to = (groupOn() && pokeTo) ? pokeTo : pname();
+      inp.value = pokeCompose(inp.value, to);
+      if (groupOn()) speakAs(to);
+      setTimeout(function () { prev.textContent = ''; }, 0);
     }, true);
   }
+
+  /* 表情 › 拍一拍 的快捷動作：換成拍一拍庫裡的動作，「你」換成你拍的人 */
+  var qpTo = null;
+  function qpList() { var me = myname(); return ((typeof customPokes !== 'undefined' && customPokes) || []).filter(function (t) { return t && typeof t === 'string' && t.indexOf(me) < 0; }); }
+  function qpText(t, to) {
+    try { if (typeof window._sanitizePokeTextForDisplay === 'function') t = window._sanitizePokeTextForDisplay(t); } catch (e) {}
+    return /你|妳|對方/.test(t) ? t.replace(/你|妳|對方/g, to) : t;
+  }
+  function qpDecorate(v) {
+    var list = qpList(); if (!list.length) return;
+    v.dataset.cx = '1';
+    if (!qpTo || (groupOn() && !groupPeople().some(function (p) { return p.name === qpTo; })) || (!groupOn() && qpTo !== pname())) qpTo = pname();
+    var title = Array.prototype.find.call(v.children, function (x) { return !x.className && /快捷動作/.test(x.textContent); });
+    v.querySelectorAll('.poke-quick-item').forEach(function (x) { x.remove(); });
+    var box = document.createElement('div'); box.id = 'cx-qp';
+    var chips = whoChips('cx-qp-who', qpTo);
+    if (title) title.after(box); else v.appendChild(box);
+    function draw() {
+      box.innerHTML = (chips ? whoChips('cx-qp-who', qpTo) : '') + list.map(function (t, i) { return '<div class="poke-quick-item" data-qp="' + i + '">' + esc(qpText(t, qpTo)) + '</div>'; }).join('');
+    }
+    draw();
+    box.addEventListener('click', function (e) {
+      var c = e.target.closest('.cx-who [data-who]');
+      if (c) { e.stopPropagation(); qpTo = c.dataset.who; draw(); return; }
+      var it = e.target.closest('[data-qp]'); if (!it) return;
+      e.stopPropagation();
+      var txt = myname() + ' ' + qpText(list[+it.dataset.qp], qpTo);
+      try { txt = _formatPokeText(txt); } catch (e2) {}
+      if (groupOn()) speakAs(qpTo);
+      addMessage({ id: Date.now(), text: txt, timestamp: new Date(), type: 'system' });
+      try { playSound('poke'); } catch (e3) {}
+      var pk = document.getElementById('user-sticker-picker'); if (pk) pk.classList.remove('active');
+      try { var d = settings.replyDelayMin + Math.random() * (settings.replyDelayMax - settings.replyDelayMin); setTimeout(simulateReply, d); } catch (e4) { try { setTimeout(simulateReply, 1500); } catch (e5) {} }
+    });
+  }
+  (function qpInit() {
+    var ca = document.getElementById('combo-content-area'); if (!ca) return;
+    new MutationObserver(function () { var v = ca.querySelector('.poke-list-view'); if (v && !v.dataset.cx) qpDecorate(v); }).observe(ca, { childList: true, subtree: true });
+    var s2 = document.createElement('style'); s2.textContent = '#cx-qp .cx-who{margin:0 0 8px}#cx-qp .poke-quick-item{margin-bottom:6px}';
+    document.head.appendChild(s2);
+  })();
 
 
 
@@ -1863,6 +1917,12 @@
   function goBtn(id) { closeAllModals(); setTimeout(function () { var b = document.getElementById(id); if (b) b.click(); }, 250); }
   function goCard(id) { closeAllModals(); setTimeout(function () { var s = document.getElementById('settings-modal'); if (s) showModal(s); setTimeout(function () { var c = document.getElementById(id); if (c) c.click(); }, 250); }, 200); }
   var HELP = [
+    { s: '小窩與花園', items: [
+      ['🏠 小窩', '上面最左邊的小房子。像手機桌面一樣，所有功能都排在裡面，還有花園狀態、他的狀態、最近的重要日。最下面可以勾「打開網站時先顯示小窩」。', ['fn', 'home']],
+      ['花園', '在小窩裡。點空地買種子種下，記得澆水（乾掉的土長得慢）。長好了點一下收成，放進倉庫可以賣錢或送給他。每天第一次進花園會收到他給的零用錢。', ['fn', 'garden']],
+      ['他會幫忙照顧', '你不在的時候，他會幫你澆水，偶爾偷摘一顆、在空地偷偷種薰衣草，聊天裡會告訴你（可以在花園的「紀錄」關掉）。群聊時是大家輪流來。', null],
+      ['田裡有蟲', '點一下就抓走了，還會拿到 1 枚金幣。有蟲的那格不會長大。', null]
+    ] },
     { s: '畫面上的按鈕', items: [
       ['左上角的頭像', '主角的頭像。點一下可以換頭像、改名字。', null],
       ['💬 會話管理', '開好幾個聊天室，每個聊天室的聊天紀錄、字卡、信件、群聊設定都是分開的。可以一個角色開一個，當私訊用。', ['btn', 'session-manager-btn']],
@@ -1881,7 +1941,7 @@
       ['訊息統計', '總共聊了幾則、高頻詞、搜尋訊息、收藏、詞雲。', ['entry', 'stats-function']],
       ['通話紀錄', '每通電話打了多久、哪些沒接。點一通會跳回聊天裡那一則。', ['entry', 'cx-calllog-entry']],
       ['懸浮音樂播放器', '在聊天畫面放歌。', ['entry', 'music-player-toggle']],
-      ['拍一拍', '點 😊 › 拍一拍。清單裡的動作點了直接送出；「自定義動作」可以自己打字，群聊裡還能選拍誰。名字直接打進去，例如「親了親仁彌的臉頰」；引號留空的話會自動填上你選的人。', null],
+      ['拍一拍', '點 😊 › 拍一拍。快捷動作就是你拍一拍庫裡的動作，點了直接送出，「你」會換成你拍的人。「自定義動作」只要打動作，例如「抱抱」會變成「乖寶 抱抱仁彌」；想指定位置就打「你」，例如「摸摸你的頭」會變成「乖寶 摸摸仁彌的頭」。群聊裡上面可以選拍誰。', null],
       ['視訊通話', '點輸入框左邊的 📹。電腦上右上角的按鈕可以縮小或隱藏通話視窗。通話功能的開關在 設定 › 聊天設定 › 通話功能。', ['card', 'chat-settings']]
     ] },
     { s: '我們倆', items: [
@@ -1934,6 +1994,8 @@
         var t = b.dataset.go, id = b.dataset.id;
         if (t === 'entry') goEntry(id); else if (t === 'btn') goBtn(id); else if (t === 'card') goCard(id);
         else if (t === 'fn' && id === 'clean') { closeAllModals(); setTimeout(clnOpen, 250); }
+        else if (t === 'fn' && id === 'home' && window.__cxHome) { closeAllModals(); setTimeout(window.__cxHome.open, 250); }
+        else if (t === 'fn' && id === 'garden' && window.__cxHome) { closeAllModals(); setTimeout(window.__cxHome.garden, 250); }
       });
     }
     hpM.body.innerHTML = '<input class="cx-in" id="cx-hp-q" type="search" placeholder="搜尋，例如：寫信、群聊、通話" autocomplete="off">' +
@@ -2266,6 +2328,43 @@
     });
   }
 
+  /* 群聊：他主動拍一拍時，隨機由一位成員來拍（不含「系統」、也不含字卡組被停用的角色） */
+  function pokeMembers() {
+    if (!groupOn()) return [];
+    var off = {}; (window.customReplyGroups || []).forEach(function (g) { if (g && g.disabled) off[g.name] = 1; });
+    return groupPeople().filter(function (p) { return p.name && p.name.indexOf('系統') < 0 && !off[p.name]; });
+  }
+  function pokePoolFor(name) {
+    var all = (typeof customPokes !== 'undefined' && customPokes) || [], gs = (window.customPokeGroups || []).filter(function (g) { return g && !g.disabled && Array.isArray(g.items) && g.items.length; });
+    var own = gs.find(function (g) { return g.name === name; });
+    if (own) { var o = own.items.filter(function (t) { return all.indexOf(t) >= 0; }); if (o.length) return o; }
+    var other = {}; gs.forEach(function (g) { if (g.name !== name && pokeMembers().some(function (p) { return p.name === g.name; })) g.items.forEach(function (t) { other[t] = 1; }); });
+    var pool = all.filter(function (t) { return t && !other[t]; });
+    return pool.length ? pool : all;
+  }
+  (function wrapPartnerPoke() {
+    var tries = 0;
+    (function install() {
+      var orig = window._triggerPartnerPoke;
+      if (typeof orig !== 'function') { if (++tries < 40) setTimeout(install, 500); return; }
+      if (orig.__cx) return;
+      var w = function () {
+        var ppl = pokeMembers();
+        if (ppl.length < 1) return orig.apply(this, arguments);
+        var who = ppl[Math.floor(Math.random() * ppl.length)].name, pool = pokePoolFor(who);
+        if (!pool.length) return orig.apply(this, arguments);
+        var act = pool[Math.floor(Math.random() * pool.length)];
+        try { if (typeof window._sanitizePokeTextForDisplay === 'function') act = window._sanitizePokeTextForDisplay(act); } catch (e) {}
+        var txt = who + ' ' + act;
+        try { if (typeof window._formatPartnerPokeText === 'function') txt = window._formatPartnerPokeText(txt); } catch (e) {}
+        addMessage({ id: Date.now(), text: txt, timestamp: new Date(), type: 'system' });
+        try { playSound('partner_poke'); } catch (e) {}
+        try { var ti = document.getElementById('typing-indicator-wrapper'); if (ti) ti.style.display = 'none'; } catch (e) {}
+      };
+      w.__cx = true; window._triggerPartnerPoke = w;
+    })();
+  })();
+
   /* 電腦版：橫向一排的按鈕（字卡分組等）可以用滑鼠滾輪或按住拖曳左右移動 */
   (function hScroll() {
     function rowOf(el) {
@@ -2323,6 +2422,13 @@
   try { envInit(); } catch (e) { console.warn('[cx] env fav', e); }
   try { envWhoInit(); pokeWhoInit(); } catch (e) { console.warn('[cx] group who', e); }
   load().then(function () { try { gcharInit(); } catch (e) { console.warn('[cx] gchar', e); } });
+  /* 給 home.js（小窩、花園）用的工具 */
+  window.__cxApi = {
+    X: function () { return X; }, load: load, save: save, makeModal: makeModal, toast: toast, esc: esc, pname: pname, myname: myname,
+    groupOn: groupOn, groupPeople: groupPeople, pokeMembers: pokeMembers, whoChips: whoChips, charGroup: charGroup, speakAs: speakAs,
+    partnerSays: partnerSays, sysSay: sysSay, iSay: iSay
+  };
+  (function loadHome() { if (document.getElementById('cx-home-js')) return; var sc = document.createElement('script'); sc.id = 'cx-home-js'; sc.src = 'home.js'; document.body.appendChild(sc); })();
   setTimeout(tick, 3000);
   setInterval(tick, 30000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') tick(); });
