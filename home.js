@@ -1355,14 +1355,34 @@
   }
   function bqPrice(b) { return Math.round(b.flowers.reduce(function (s2, k) { return s2 + (CROPS[k] ? CROPS[k].price : 0); }, 0) * (b.recipe ? 2 : 1.5)) + (b.recipe ? 10 : 5); }
   function bqCount(list) { var m = {}; list.forEach(function (k) { m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return CROPS[k].n + '×' + m[k]; }).join('、'); }
+  function bqKey(b) { return b.recipe ? 'r:' + b.recipe : 'c:' + b.flowers.join(',') + '|' + b.wrap + '|' + b.ribbon + '|' + (b.name || ''); }
+  function bqStore(g) {
+    g.bouquets = g.bouquets || []; g.bqSent = g.bqSent || {};
+    var keep = [];
+    g.bouquets.forEach(function (b) {
+      if (!b.to) { keep.push(b); return; }
+      var k = bqKey(b), r = g.bqSent[k] || (g.bqSent[k] = { n: 0, to: {}, sample: { flowers: b.flowers, wrap: b.wrap, ribbon: b.ribbon, recipe: b.recipe, name: b.name }, t: 0 });
+      r.n++; r.to[b.to] = (r.to[b.to] || 0) + 1; if ((b.sentAt || b.t) >= r.t) { r.t = b.sentAt || b.t; r.last = { to: b.to, reply: b.reply || '' }; }
+    });
+    g.bouquets = keep;
+    var groups = {}, order = [];
+    keep.forEach(function (b) { var k = bqKey(b); if (!groups[k]) { groups[k] = { k: k, list: [], sent: g.bqSent[k] || null, t: 0 }; order.push(k); } groups[k].list.push(b); groups[k].t = Math.max(groups[k].t, b.t); });
+    Object.keys(g.bqSent).forEach(function (k) { if (!groups[k]) { groups[k] = { k: k, list: [], sent: g.bqSent[k], t: 0 }; order.push(k); } groups[k].sent = g.bqSent[k]; groups[k].t = Math.max(groups[k].t, g.bqSent[k].t); });
+    return order.map(function (k) { var G0 = groups[k]; G0.b = G0.list[0] || G0.sent.sample; return G0; }).sort(function (a, b) { return b.t - a.t; });
+  }
+  function toList(r) { return Object.keys(r.to).map(function (w) { return esc(w) + ' ×' + r.to[w]; }).join('、'); }
   function bqHtml(g) {
-    g.bouquets = g.bouquets || [];
-    var h = '<div class="cx-g-sub"><button type="button" data-bv="recipe" class="' + (bq.view === 'recipe' ? 'on' : '') + '">花束配方</button><button type="button" data-bv="make" class="' + (bq.view === 'make' ? 'on' : '') + '">自己包</button><button type="button" data-bv="list" class="' + (bq.view === 'list' || bq.view === 'one' ? 'on' : '') + '">我的花束（' + g.bouquets.length + '）</button></div>';
+    var GR = bqStore(g), stock = g.bouquets.length;
+    var h = '<div class="cx-g-sub"><button type="button" data-bv="recipe" class="' + (bq.view === 'recipe' ? 'on' : '') + '">花束配方</button><button type="button" data-bv="make" class="' + (bq.view === 'make' ? 'on' : '') + '">自己包</button><button type="button" data-bv="list" class="' + (bq.view === 'list' || bq.view === 'one' ? 'on' : '') + '">我的花束（' + GR.length + '）</button></div>';
     if (bq.view === 'one' && bq.open) {
-      var b = g.bouquets.find(function (x) { return x.id === bq.open; });
-      if (b) return h + '<div class="cx-g-bq1"><div class="pv">' + bouquetSvg(b) + '</div><b>' + esc(b.name || '無名花束') + '</b><span class="cx-muted">' + bqCount(b.flowers) + '</span><span class="cx-muted">' + new Date(b.t).toLocaleDateString('zh-TW') + (b.to ? ' · 送給了 ' + esc(b.to) : ' · 還留在身邊') + '</span>' +
-        (b.reply ? '<p class="rp">' + esc(b.to) + '：「' + esc(b.reply) + '」</p>' : '') +
-        (b.to ? '' : whoRow('送給') + '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqsend="' + b.id + '"><i class="fas fa-gift"></i> 送出去</button><button type="button" class="cx-btn" data-bqsell="' + b.id + '">賣掉 🪙 ' + bqPrice(b) + '</button></div>') + '</div>';
+      var G1 = GR.filter(function (x) { return x.k === bq.open; })[0];
+      if (G1) {
+        var b = G1.b, own = G1.list.length, S = G1.sent, first = G1.list[0];
+        return h + '<div class="cx-g-bq1"><div class="pv">' + bouquetSvg(b) + '</div><b>' + esc(b.name || '無名花束') + '</b><span class="cx-muted">' + bqCount(b.flowers) + '</span>' +
+          '<div class="cx-bq-st"><span>收藏中 <b>×' + own + '</b></span><span>送出過 <b>×' + (S ? S.n : 0) + '</b></span></div>' +
+          (S ? '<div class="cx-bq-log"><div class="cx-g-pt">送禮紀錄</div><div>' + toList(S) + '</div>' + (S.last && S.last.reply ? '<p class="rp">' + esc(S.last.to) + '：「' + esc(S.last.reply) + '」</p>' : '') + '</div>' : '') +
+          (first ? whoRow('送給') + '<div class="cx-g-acts"><button type="button" class="cx-btn pri" data-bqsend="' + first.id + '"><i class="fas fa-gift"></i> 送一束</button><button type="button" class="cx-btn" data-bqsell="' + first.id + '">賣一束 🪙 ' + bqPrice(first) + '</button></div>' : '<p class="cx-muted" style="text-align:center">收藏的都送完了，再包一束吧。</p>') + '</div>';
+      }
       bq.view = 'list';
     }
     if (bq.view === 'recipe') {
@@ -1373,8 +1393,8 @@
       }).join('') + '</div>';
     }
     if (bq.view === 'list') {
-      if (!g.bouquets.length) return h + '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有包過花束。</p>';
-      return h + '<div class="cx-g-bqs">' + g.bouquets.slice().reverse().map(function (b) { return '<button type="button" class="cx-g-bqc" data-bqopen="' + b.id + '">' + bouquetSvg(b) + '<b>' + esc(b.name || '無名花束') + '</b><span class="cx-muted">' + (b.to ? '給 ' + esc(b.to) : '收藏中') + '</span></button>'; }).join('') + '</div>';
+      if (!GR.length) return h + '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有包過花束。</p>';
+      return h + '<div class="cx-g-bqs">' + GR.map(function (G2) { var own = G2.list.length, S = G2.sent; return '<button type="button" class="cx-g-bqc' + (own ? '' : ' gone') + '" data-bqopen="' + esc(G2.k) + '">' + bouquetSvg(G2.b) + '<b>' + esc(G2.b.name || '無名花束') + '</b><span class="cx-muted">' + (own ? '收藏 ×' + own : '收藏 0') + (S ? ' · 送出 ×' + S.n : '') + '</span></button>'; }).join('') + '</div>';
     }
     var flowers = ORDER.filter(function (k) { return CROPS[k].flower; });
     var used = {}; bq.sel.forEach(function (k) { used[k] = (used[k] || 0) + 1; });
@@ -1631,18 +1651,18 @@
       var sb2 = (g.bouquets || []).find(function (x) { return x.id === +b.dataset.bqsell; }); if (!sb2 || sb2.to) return;
       if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '確定賣掉？'; return; }
       var price = bqPrice(sb2); g.coins += price; tick(g, 'sell'); g.bouquets = g.bouquets.filter(function (x) { return x !== sb2; });
-      log(g, '💰 賣掉花束「' + (sb2.name || '無名花束') + '」+' + price); save(); toast('賣了 🪙 ' + price, 'success'); bq.view = 'list'; render(); return;
+      log(g, '💰 賣掉花束「' + (sb2.name || '無名花束') + '」+' + price); save(); toast('賣了 🪙 ' + price, 'success'); bq.view = 'one'; bq.open = bqKey(sb2); render(); return;
     }
-    if ((b = e.target.closest('[data-bqopen]'))) { bq.view = 'one'; bq.open = +b.dataset.bqopen; render(); return; }
+    if ((b = e.target.closest('[data-bqopen]'))) { bq.view = 'one'; bq.open = b.dataset.bqopen; render(); return; }
     if ((b = e.target.closest('[data-bqr]'))) {
       var rr = BQR.find(function (x) { return x.k === b.dataset.bqr; }); if (!rr) return;
       if (Object.keys(rr.need).some(function (k) { return (g.inv[k] || 0) < rr.need[k]; })) { toast('倉庫裡的花不夠', 'info'); return; }
       var fl = []; Object.keys(rr.need).forEach(function (k) { g.inv[k] -= rr.need[k]; for (var i = 0; i < rr.need[k]; i++) fl.push(k); });
       g.bouquets = g.bouquets || [];
       var rb = { id: Date.now(), flowers: fl, recipe: rr.k, wrap: 'kraft', ribbon: 'violet', name: rr.n, t: Date.now() };
-      g.bouquets.push(rb); if (g.bouquets.length > 60) g.bouquets.shift();
+      g.bouquets.push(rb); if (g.bouquets.length > 120) g.bouquets.shift();
       log(g, '💐 包了一束' + rr.n); tick(g, 'bouquet'); save();
-      bq.view = 'one'; bq.open = rb.id; toast('包好了！', 'success'); render(); return;
+      bq.view = 'one'; bq.open = bqKey(rb); toast('包好了！', 'success'); render(); return;
     }
     if ((b = e.target.closest('[data-bqmake]'))) {
       var need = {}; bq.sel.forEach(function (k) { need[k] = (need[k] || 0) + 1; });
@@ -1650,11 +1670,11 @@
       Object.keys(need).forEach(function (k) { g.inv[k] -= need[k]; });
       g.bouquets = g.bouquets || [];
       var nb = { id: Date.now(), flowers: bq.sel.slice(), wrap: bq.wrap, ribbon: bq.ribbon, name: (bq.name || '').trim(), t: Date.now() };
-      g.bouquets.push(nb); if (g.bouquets.length > 60) g.bouquets.shift();
+      g.bouquets.push(nb); if (g.bouquets.length > 120) g.bouquets.shift();
       tick(g, 'bouquet'); log(g, '💐 包了一束花' + (nb.name ? '「' + nb.name + '」' : '') + '（' + bqCount(nb.flowers) + '）'); save();
-      bq.sel = []; bq.name = ''; bq.view = 'one'; bq.open = nb.id; toast('包好了！', 'success'); render(); return;
+      bq.sel = []; bq.name = ''; bq.view = 'one'; bq.open = bqKey(nb); toast('包好了！', 'success'); render(); return;
     }
-    if ((b = e.target.closest('[data-bqsend]'))) { var sb = (g.bouquets || []).find(function (x) { return x.id === +b.dataset.bqsend; }); if (sb && !sb.to) { bqSend(g, sb); bq.view = 'one'; bq.open = sb.id; render(); } return; }
+    if ((b = e.target.closest('[data-bqsend]'))) { var sb = (g.bouquets || []).find(function (x) { return x.id === +b.dataset.bqsend; }); if (sb && !sb.to) { bqSend(g, sb); bq.view = 'one'; bq.open = bqKey(sb); save(); render(); } return; }
     if ((b = e.target.closest('.cx-who [data-who]'))) { giftTo = b.dataset.who; render(); return; }
     if ((b = e.target.closest('[data-area]'))) { area = b.dataset.area; sel = ''; render(); return; }
     if (gTab === 'field' && area === 'c' && penClick(e, g)) return;
@@ -2330,7 +2350,7 @@
     '.cx-g-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}.cx-g-pick button{position:relative;border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);border-radius:12px;padding:4px 2px 6px;font:inherit;font-size:12px;display:flex;flex-direction:column;align-items:center;cursor:pointer}.cx-g-pick svg{width:46px;height:44px;overflow:visible}.cx-g-pick small{color:var(--text-secondary);font-size:11px}.cx-g-pick button:disabled{opacity:.5}' +
     '.cx-g-pt a{color:var(--accent-color)}.cx-g-pick em{position:absolute;top:2px;right:2px;font-style:normal;font-size:11px;background:var(--accent-color);color:#fff;border-radius:99px;padding:0 6px;cursor:pointer}' +
     '.cx-g-bqr{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.cx-g-bqrc{border:1px solid var(--border-color);background:var(--secondary-bg);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;opacity:.85}.cx-g-bqrc.ok{opacity:1;border-color:var(--accent-color)}.cx-g-bqrc svg{width:100%;aspect-ratio:3/4}.cx-g-bqrc b{font-size:14px}.cx-g-bqrc .nd{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:11px}.cx-g-bqrc .nd span{padding:1px 6px;border-radius:8px;background:var(--primary-bg)}.cx-g-bqrc .nd .y{color:#4f8a35}.cx-g-bqrc .nd .n{color:var(--text-secondary)}.cx-g-bqrc .cx-btn{width:100%;justify-content:center}.cx-g-bq1 .pv svg,.cx-g-bqmk .pv svg{max-height:52vh}' +
-    '.cx-g-bqs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}.cx-g-bqc{border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);border-radius:14px;padding:6px;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-width:0}.cx-g-bqc svg{width:100%;aspect-ratio:3/4}.cx-g-bqc b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cx-g-bqc .cx-muted{font-size:11px}' +
+    '.cx-g-bqc.gone svg{opacity:.45}.cx-bq-st{display:flex;gap:18px;font-size:13px;color:var(--text-secondary)}.cx-bq-st b{color:var(--text-primary);font-size:15px}.cx-bq-log{width:100%;border-top:1px dashed var(--border-color);padding-top:8px;font-size:13px;text-align:center}.cx-bq-log .cx-g-pt{justify-content:center}.cx-g-bqs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}.cx-g-bqc{border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);border-radius:14px;padding:6px;font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-width:0}.cx-g-bqc svg{width:100%;aspect-ratio:3/4}.cx-g-bqc b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cx-g-bqc .cx-muted{font-size:11px}' +
     '.cx-g-bq1{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}.cx-g-bq1 .pv{width:min(240px,70%)}.cx-g-bq1 .rp{color:var(--accent-color);margin:4px 0;font-size:14px}.cx-g-bq1 .cx-who,.cx-g-bq1 .cx-g-acts{width:100%}' +
     '.cx-g-log div{font-size:13px;padding:6px 0;border-bottom:1px dashed var(--border-color)}.cx-g-tip{text-align:center}' +
     '@media (prefers-reduced-motion:reduce){.cx-h-sheet{transition:none}}';
