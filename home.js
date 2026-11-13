@@ -132,7 +132,7 @@
     return g;
   }
   var OUNLOCK = [0, 0, 80, 150, 220, 300];
-  var hybridMsg = '';
+  var hybridMsg = '', hybridKey = '';
   var WX_BLOCK = 2 * 3600e3;
   function weatherAt(t) { var b = Math.floor(t / WX_BLOCK), h = Math.sin(b * 12.9898 + 78.233) * 43758.5453; h -= Math.floor(h); return h < .24 ? 'rain' : h < .5 ? 'cloud' : 'sun'; }
   function wxLeft(t) { return WX_BLOCK - t % WX_BLOCK; }
@@ -925,6 +925,17 @@
   (function loadCropImg() { if (window.__cxCIMG || document.getElementById('cx-cimg-js')) return; var sc = document.createElement('script'); sc.id = 'cx-cimg-js'; sc.src = 'cropimg.js'; sc.onload = function () { try { if (gm && !gm.hidden) render(); } catch (e) {} }; document.body.appendChild(sc); })();
   function CI(k) { return (window.__cxCIMG || {})[k]; }
   /* 底部中心 (x,y)，給高 H 或寬 W */
+  /* 小驚喜：跳出 Q 版小人 */
+  function chibiOf(name) { name = String(name || ''); return /昶司/.test(name) ? 'cb_changsi' : /仁彌|仁弥/.test(name) ? 'cb_renmi' : ''; }
+  function surprise(who, artHtml, title, line) {
+    var cb = CI(who); if (!cb) return false;
+    var old = document.querySelector('.cx-sp'); if (old) old.remove();
+    var d = document.createElement('div'); d.className = 'cx-sp';
+    d.innerHTML = '<div class="card"><div class="row"><img class="cb" src="' + cb.src + '" alt="">' + (artHtml ? '<div class="art">' + artHtml + '</div>' : '') + '</div><b>' + esc(title) + '</b>' + (line ? '<p>' + esc(line) + '</p>' : '') + '<small>點一下關閉</small></div>';
+    d.addEventListener('click', function () { d.remove(); });
+    document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 6000);
+    return true;
+  }
   function ciAt(k, x, y, H, W, extra) { var m = CI(k); if (!m) return ''; var h = H || W * m.h / m.w, w = W || H * m.w / m.h; return '<image href="' + m.src + '" x="' + f(x - w / 2) + '" y="' + f(y - h) + '" width="' + f(w) + '" height="' + f(h) + '"' + (extra || '') + '/>'; }
   function DI(k) { return (window.__cxDIMG || {})[k]; }
   function FI(k) { return (window.__cxFIMG || {})[k]; }
@@ -1017,7 +1028,7 @@
     else h += logHtml(g);
     var oldSt = gm.body.querySelector('.cx-g-stage'), keepX = oldSt ? oldSt.scrollLeft : 0, keepKey = oldSt ? oldSt.dataset.k : '';
     gm.body.innerHTML = h; lastSig = sig(g);
-    if (hybridMsg) { var hm = hybridMsg; hybridMsg = ''; setTimeout(function () { toast(hm, 'success'); }, 900); }
+    if (hybridMsg) { var hm = hybridMsg, hk = hybridKey; hybridMsg = ''; hybridKey = ''; setTimeout(function () { var ci = CI(hk); if (!(ci && surprise('cb_me', '<img src="' + ci.src + '" alt="">', hm.replace('✨ ', ''), CROPS[hk] && CROPS[hk].lang ? '花語：' + CROPS[hk].lang : ''))) toast(hm, 'success'); }, 700); }
     var nst = gm.body.querySelector('.cx-g-stage');
     if (nst) { nst.dataset.k = gTab + area; if (landScroll) { nst.scrollLeft = (landScroll - 1) * nst.clientWidth; landScroll = null; } else if (keepKey === gTab + area) nst.scrollLeft = keepX; }
   }
@@ -1095,7 +1106,7 @@
   (function () { var SZ = { lamp: [34], mailbox: [27], bench: [0, 30], bunny: [22], pond: [0, 46, 9], swing: [34], windmill: [44], well: [32], arch: [42] };
     Object.keys(SZ).forEach(function (k) { var orig = DART[k], z = SZ[k]; DART[k] = function (x, y) { if (!CI(k)) return orig(x, y); return (k === 'pond' ? '' : '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="' + (z[1] ? z[1] * .42 : 9) + '" ry="3" fill="#00000012"/>') + ciAt(k, x, y + 2 + (z[2] || 0), z[0], z[1]); }; });
     var a2 = DART.arch2; DART.arch2 = function (a, b) { if (!CI('arch')) return a2(a, b); var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
-      return '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>' + ciAt('arch', mx, my + 6, 0, Math.abs(b[0] - a[0]) + 16); };
+      return '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>' + '<g transform="translate(' + f(2 * mx) + ' 0) scale(-1 1)">' + ciAt('arch', mx, my + 6, 0, Math.abs(b[0] - a[0]) + 16) + '</g>'; };
     var RING = { pink: ['flowerP', 17], lav: ['lavender', 18], hydra: ['hydrangea', 17], white: ['daisy', 15], yellow: ['marigold', 15] };
     Object.keys(RING).forEach(function (k) { var orig = DECOR[k], r = RING[k]; DECOR[k] = function (x, y, col) { if (!CI(r[0])) return orig(x, y, col); var key = k === 'hydra' && col === '#c3b0e6' ? 'pinkhydra' : r[0];
       return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="9" ry="3" fill="#00000012"/>' + ciAt(key, x - 5, y - 1, r[1] * .85) + ciAt(key, x + 5, y, r[1] * .9) + ciAt(key, x, y + 2, r[1]); }; });
@@ -1506,6 +1517,7 @@
     var reply = Math.random() < .55 && c.lang ? c.n + '的花語是「' + c.lang + '」……妳想跟我說的，我都收到了。' : pick(BQ_LINES);
     b.reply = reply;
     log(g, '💐 把花束「' + (b.name || '無名花束') + '」送給了 ' + to); save();
+    setTimeout(function () { var cw = chibiOf(to); surprise(cw || 'cb_me', bouquetSvg(b), cw ? to + '收到花了！' : '花束送出去了！', cw ? reply : ''); }, 300);
     var who = (to === A.pname() && !A.groupOn()) ? '你' : to;
     bouquetPng(b).then(function (img) {
       if (img && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: 'user', text: '', image: img, timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
@@ -1696,7 +1708,7 @@
       [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { var r1 = r0 + d[0], c1 = c0 + d[1]; if (r1 >= 0 && r1 < 3 && c1 >= 0 && c1 < 3) { var q = g.plots[isl * 9 + r1 * 3 + c1]; if (q && q.crop) nb.push(q.crop); } });
       Object.keys(CROPS).forEach(function (rk) { var rc = CROPS[rk]; if (rc.rare && rc.base === k && nb.indexOf(rc.pair) >= 0 && Math.random() < .3) {
         g.inv[rk] = (g.inv[rk] || 0) + 1; var first = !g.dex[rk]; var d2 = g.dex[rk] || (g.dex[rk] = { n: 0, first: Date.now() }); d2.n++;
-        log(g, '✨ ' + c.n + '和' + CROPS[rc.pair].n + '種在一起，長出了一朵' + rc.n + '！'); hybridMsg = (first ? '✨ 第一次長出' : '✨ 長出了') + rc.n + '！'; } });
+        log(g, '✨ ' + c.n + '和' + CROPS[rc.pair].n + '種在一起，長出了一朵' + rc.n + '！'); hybridMsg = (first ? '✨ 第一次長出' : '✨ 長出了') + rc.n + '！'; hybridKey = rk; } });
     }
     if (c.tree) { p.prog = c.grow * .5; p.at = Date.now(); p.readyAt = 0; p.bug = false; p.yieldLeft = c.yield; }
     else { p.crop = null; p.bug = false; p.by = ''; p.readyAt = 0; }
@@ -2322,7 +2334,7 @@
       var tb = e.target.closest('[data-task]');
       if (tb) {
         var g = G(); if (!g) return; var T = taskDay(g), w = tb.dataset.task, amt = 0;
-        if (w === 'bonus') { if (!T.bonus && T.list.every(function (t) { return t.got; })) { T.bonus = true; amt = 50; } }
+        if (w === 'bonus') { if (!T.bonus && T.list.every(function (t) { return t.got; })) { T.bonus = true; amt = 50; setTimeout(function () { surprise('cb_me', '', '今天的小任務全部完成！', '額外獎勵 🪙 50，明天也一起加油～'); }, 200); } }
         else { var t = T.list[+w]; if (t && !t.got && t.p >= t.n) { t.got = true; amt = t.r; } }
         if (amt) { g.coins += amt; log(g, '📋 完成小任務 +' + amt); save(); toast('領到 🪙 ' + amt, 'success'); hRender(); }
         return;
@@ -2428,6 +2440,7 @@
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
     '#cx-garden-modal .cx-body>*{flex-shrink:0}.cx-g-stage{border-radius:18px;overflow:hidden;border:1px solid #c9dfbf;background:#e2eed8}.cx-g-stage.pan{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;cursor:grab}.cx-g-stage.pan::-webkit-scrollbar{display:none}.cx-g-stage.pan .cx-scene{max-width:none}.cx-g-pan{text-align:center;font-size:11.5px;margin:-4px 0 0}.cx-g-decobtn{align-self:center;padding:5px 14px;font-size:12.5px}.cx-deco{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.cx-deco .it{border:1px solid var(--border-color);border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--primary-bg)}.cx-deco .it.on{border-color:var(--accent-color)}.cx-deco svg{width:56px;height:62px;overflow:visible}.cx-deco b{font-size:12.5px}.cx-deco .cx-btn{width:100%;justify-content:center;padding:4px 6px;font-size:11.5px}.cx-fence{display:flex;flex-wrap:wrap;gap:6px}.cx-fence button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:4px 10px 4px 6px;font:inherit;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer}.cx-fence button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-fence i{width:16px;height:16px;border-radius:50%;border:1px solid #7a6252}.cx-fence small{color:var(--text-secondary)}.cx-scene .cx-mill{animation:cxmill 6s linear infinite}@keyframes cxmill{to{transform:rotate(360deg)}}.cx-wx{font-size:12px;padding:6px 12px;border-radius:12px;background:#fff7dc;color:#8a6a2a;border:1px solid #f0dfa8}.cx-wx.rain{background:#e6eef8;color:#4f6a8a;border-color:#c6d6ea}.cx-wx.cloud{background:var(--secondary-bg);color:var(--text-secondary);border-color:var(--border-color)}.cx-scene .cx-rain{animation:cxrain .6s linear infinite}@keyframes cxrain{from{transform:translate(0,-10px)}to{transform:translate(-3px,10px)}}.cx-scene{display:block;width:100%;height:auto;-webkit-tap-highlight-color:transparent;user-select:none}' +
+    '.cx-sp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(70,50,70,.28);animation:cxspf .2s ease}.cx-sp .card{background:#fffaf4;color:#5a4a44;border-radius:22px;padding:16px 18px 12px;width:min(300px,86vw);text-align:center;box-shadow:0 12px 40px rgba(60,40,60,.25);display:flex;flex-direction:column;align-items:center;gap:6px;animation:cxspp .4s cubic-bezier(.2,1.5,.4,1)}.cx-sp .row{display:flex;align-items:flex-end;justify-content:center;gap:2px}.cx-sp .cb{height:128px;width:auto;animation:cxspb 1.6s ease-in-out infinite}.cx-sp .art{width:92px;height:120px;display:flex;align-items:flex-end;justify-content:center}.cx-sp .art img,.cx-sp .art svg{max-width:100%;max-height:100%}.cx-sp b{font-size:16px}.cx-sp p{margin:0;font-size:13.5px;line-height:1.55;color:#7a6a62}.cx-sp small{font-size:11px;color:#b3a59c}@keyframes cxspf{from{opacity:0}}@keyframes cxspp{from{transform:scale(.6);opacity:0}}@keyframes cxspb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
     '.cx-scene .pl,.cx-scene [data-ani],.cx-scene [data-prod]{cursor:pointer}.cx-g-pens{margin-top:-4px}.cx-g-pens button{font-size:11.5px;padding:6px 1px;white-space:nowrap}.cx-scene .bz{animation:cxbz 2.4s ease-in-out infinite}@keyframes cxbz{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(1px,-6px)}75%{transform:translate(-5px,-2px)}}.cx-scene .hen.slow .hw{animation-duration:7s}.cx-scene .hen.swim .hw{animation-duration:4.5s}.cx-scene .hen.slow .hw>g:last-child{animation:none}.cx-scene .hen.hive .hw{animation:none}.cx-scene .hen.hive .hw>g:last-child{animation:cxbz 2.4s ease-in-out infinite}.cx-scene .pl:active{opacity:.85}' +
     '.cx-scene .hen .hw{animation:cxhen var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}.cx-scene .hen.hun .hw{animation-duration:6s}' +
     '@keyframes cxhen{0%{transform:translate(-7px,-2px)}100%{transform:translate(7px,3px)}}' +
@@ -2447,7 +2460,7 @@
     '@media (prefers-reduced-motion:reduce){.cx-h-sheet{transition:none}}';
   document.head.appendChild(css);
 
-  window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G };
+  window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G, _sp: function (w, t, l) { return surprise(w, '', t, l); } };
   if (lsGet('cxHomeFirst') === '1') setTimeout(homeOpen, 1200);
   setInterval(function () { if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(function () { if (A.X()) simulate(true); }, 4000); });
