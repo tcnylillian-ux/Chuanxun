@@ -141,7 +141,7 @@
     var k = weatherAt(Date.now()), o = '';
     if (k === 'rain') { o += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#6d86a6" opacity=".12"/><g class="cx-rain">'; for (var i = 0; i < w / 7; i++) { var rx = x + (i * 37.3) % w, ry = y + (i * 53.7) % h; o += '<path d="M' + f(rx) + ' ' + f(ry) + ' l-2 7" stroke="#8fb0d6" stroke-width="1" stroke-linecap="round" opacity=".7"/>'; } o += '</g>'; }
     else if (k === 'cloud') o += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#8a9aa8" opacity=".08"/>';
-    return o;
+    return o ? '<g pointer-events="none" style="pointer-events:none">' + o + '</g>' : '';
   }
   function wxChip(now) {
     var k = weatherAt(now), m = Math.ceil(wxLeft(now) / 60e3), t = m >= 60 ? Math.floor(m / 60) + ' 小時' + (m % 60 ? ' ' + (m % 60) + ' 分' : '') : m + ' 分鐘';
@@ -932,7 +932,7 @@
     var old = document.querySelector('.cx-sp'); if (old) old.remove();
     var d = document.createElement('div'); d.className = 'cx-sp';
     d.innerHTML = '<div class="card"><div class="row"><img class="cb" src="' + cb.src + '" alt="">' + (artHtml ? '<div class="art">' + artHtml + '</div>' : '') + '</div><b>' + esc(title) + '</b>' + (line ? '<p>' + esc(line) + '</p>' : '') + '<small>點一下關閉</small></div>';
-    d.addEventListener('click', function () { d.remove(); });
+    ['click', 'touchend', 'pointerup'].forEach(function (ev) { d.addEventListener(ev, function (e) { e.stopPropagation(); if (d.parentNode) d.remove(); }); });
     document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.remove(); }, 6000);
     return true;
   }
@@ -1018,6 +1018,7 @@
     var g = G(); if (!g || !gm) return;
     var now = Date.now(); allPlots(g).forEach(function (p) { grow(p, now); if (ready(p) && !p.readyAt) p.readyAt = now; }); wxApply(g, now);
     tickAll(g, now);
+    var newCardsPre = cardSync(g);
     var tabs = [['field', '農場'], ['inv', '倉庫'], ['bq', '花束'], ['kit', '廚房'], ['dex', '圖鑑'], ['log', '紀錄']];
     var h = '<div class="cx-g-top">' + coinsHtml(g) + '<div class="cx-g-tabs">' + tabs.map(function (t) { return '<button type="button" data-gt="' + t[0] + '" class="' + (gTab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
     if (gTab === 'field') h += fieldHtml(g, now);
@@ -1025,6 +1026,7 @@
     else if (gTab === 'bq') h += bqHtml(g);
     else if (gTab === 'kit') h += kitchenHtml(g);
     else if (gTab === 'dex') h += dexHtml(g);
+    var newCards = newCardsPre; if (newCards.length) { save(); setTimeout(function () { toast('📖 收集到新卡片：' + newCards.length + ' 張，去圖鑑看看', 'success'); }, 1600); }
     else h += logHtml(g);
     var oldSt = gm.body.querySelector('.cx-g-stage'), keepX = oldSt ? oldSt.scrollLeft : 0, keepKey = oldSt ? oldSt.dataset.k : '';
     gm.body.innerHTML = h; lastSig = sig(g);
@@ -1437,10 +1439,58 @@
         '<button type="button" class="cx-btn pri" data-gift="' + k + '">送' + (ppl.length > 1 ? '' : '他') + '</button><button type="button" class="cx-btn" data-sell="' + k + '">賣一' + c.unit + '</button></div>';
     }).join('') + '<button type="button" class="cx-btn" data-ga="sellAll" style="margin-top:6px">全部賣掉</button>';
   }
+
+  /* ---------- 卡冊：特別時刻收成卡片 ---------- */
+  var BROS = [['昶司', 'cb_changsi'], ['仁彌', 'cb_renmi']];
+  function cardDefs() {
+    var L = [];
+    ORDER.forEach(function (k) { if (CROPS[k].rare) L.push({ id: 'r:' + k, cat: '稀有花', title: '第一次長出' + CROPS[k].n + '！', line: CROPS[k].lang ? '花語：' + CROPS[k].lang : '', imgs: ['cb_me', 'c:' + k] }); });
+    BROS.forEach(function (b) {
+      BQR.forEach(function (r) { L.push({ id: 'g:' + b[0] + ':' + r.k, cat: '送給' + b[0], title: '送給' + b[0] + '的' + r.n, imgs: ['cb_me', 'b:' + r.k, b[1]] }); });
+      L.push({ id: 'g:' + b[0] + ':diy', cat: '送給' + b[0], title: '送給' + b[0] + '親手包的花束', imgs: ['cb_me', 'bd', b[1]] });
+    });
+    RECIPES.filter(function (r) { return !r.out; }).forEach(function (r) { L.push({ id: 'd:' + r.k, cat: '料理', title: '第一次做出' + r.n + '！', imgs: ['cb_me', 'd:' + r.k] }); });
+    L.push({ id: 't:all', cat: '小任務', title: '第一次完成全部小任務！', line: '明天也一起加油～', imgs: ['cb_me'] });
+    return L;
+  }
+  function cardSync(g) {
+    try { bqStore(g); } catch (e) {}
+    var C = g.cards || (g.cards = {}), fresh = !g.cardsV, got = [];
+    function add(id, t, x) { if (C[id]) return; C[id] = { t: t || Date.now() }; if (x) C[id].x = x; if (!fresh) got.push(id); }
+    ORDER.forEach(function (k) { if (CROPS[k].rare && g.dex[k]) add('r:' + k, g.dex[k].first); });
+    Object.keys(g.dexDish || {}).forEach(function (k) { add('d:' + k, g.dexDish[k].first); });
+    Object.keys(g.bqSent || {}).forEach(function (key) { var r = g.bqSent[key]; Object.keys(r.to || {}).forEach(function (nm) {
+      var b = BROS.filter(function (x) { return chibiOf(nm) === x[1]; })[0]; if (!b) return;
+      var rk = r.sample && r.sample.recipe; add('g:' + b[0] + ':' + (rk || 'diy'), r.first || r.t, rk ? null : { flowers: r.sample.flowers, wrap: r.sample.wrap, ribbon: r.sample.ribbon }); }); });
+    g.cardsV = 1; return got;
+  }
+  function cardImg(k, x) {
+    if (k.indexOf('cb_') === 0 || k.indexOf('c:') === 0) { var m = CI(k.replace(/^c:/, '')); return m ? '<img src="' + m.src + '" alt="">' : ''; }
+    if (k.indexOf('b:') === 0) return bqArt(k.slice(2));
+    if (k === 'bd') return x ? bouquetSvg(x) : bqArt('roses');
+    if (k.indexOf('d:') === 0) return dishSvg(k.slice(2));
+    return '';
+  }
+  function cardHtml(d, rec, big) {
+    return '<div class="cx-cd' + (d.id.indexOf('g:') === 0 ? ' gift' : '') + (rec ? '' : ' no') + (big ? ' big' : '') + '"' + (big ? '' : ' data-card="' + d.id + '"') + '><div class="im">' + d.imgs.map(function (k) { return '<span class="' + (k.indexOf('cb_') === 0 ? 'p' : 'o') + '">' + cardImg(k, rec && rec.x) + '</span>'; }).join('') + '</div>' +
+      '<b>' + (rec ? esc(d.title) : '？？？') + '</b>' + (big && d.line ? '<p>' + esc(d.line) + '</p>' : '') + '<small>' + (rec ? (rec.pre ? '更新前就達成' : new Date(rec.t).toLocaleDateString('zh-TW')) : d.cat) + '</small></div>';
+  }
+  function cardsHtml(g) {
+    var C = g.cards || {}, defs = cardDefs(), n = defs.filter(function (d) { return C[d.id]; }).length, cats = [];
+    defs.forEach(function (d) { if (cats.indexOf(d.cat) < 0) cats.push(d.cat); });
+    return '<div class="cx-g-pt">卡冊 <span class="cx-muted">' + n + ' / ' + defs.length + '</span></div>' + cats.map(function (c) {
+      return '<div class="cx-cd-cat">' + c + '</div><div class="cx-cds">' + defs.filter(function (d) { return d.cat === c; }).map(function (d) { return cardHtml(d, C[d.id]); }).join('') + '</div>'; }).join('');
+  }
+  function cardOpen(g, id) {
+    var d = cardDefs().filter(function (x) { return x.id === id; })[0], rec = (g.cards || {})[id]; if (!d || !rec) return;
+    var old = document.querySelector('.cx-sp'); if (old) old.remove();
+    var el = document.createElement('div'); el.className = 'cx-sp'; el.innerHTML = '<div class="card">' + cardHtml(d, rec, true) + '<small>點一下關閉</small></div>';
+    setTimeout(function () { ['click', 'touchend', 'pointerup'].forEach(function (ev) { el.addEventListener(ev, function (e) { e.stopPropagation(); if (el.parentNode) el.remove(); }); }); }, 350); document.body.appendChild(el);
+  }
   function dexHtml(g) {
     var dd = g.dexDish || {};
     var rec = '<div class="cx-g-pt" style="margin-top:6px">食譜</div><div class="cx-g-dex">' + RECIPES.filter(function (r) { return !r.out; }).map(function (r) { var d = dd[r.k]; return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + dishSvg(r.k) + '<b>' + (d ? r.n : '？？？') + '</b><span class="cx-muted">' + (d ? '做過 ' + d.n + ' 次' : '還沒做過') + '</span></div>'; }).join('') + '</div>';
-    return '<div class="cx-g-pt">花與作物</div><div class="cx-g-dex">' + ORDER.map(function (k) {
+    return cardsHtml(g) + '<div class="cx-g-pt" style="margin-top:10px">花與作物</div><div class="cx-g-dex">' + ORDER.map(function (k) {
       var c = CROPS[k], d = g.dex[k];
       return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + plantSvg(k, 3) + '<b>' + (d ? c.n : '？？？') + '</b>' + (d && c.lang ? '<span class="lang">花語：' + c.lang + '</span>' : '') + '<span class="cx-muted">' + (d ? (c.rare ? '長出過 ' : '收成 ') + d.n + ' 次 · ' + (new Date(d.first).getMonth() + 1) + '/' + new Date(d.first).getDate() + ' 起' : c.rare ? '✨ 稀有色：把' + CROPS[c.base].n + '種在' + CROPS[c.pair].n + '旁邊，收成時有機會長出來' : dur(c.grow) + ' 長大') + '</span></div>';
     }).join('') + '</div>' + rec;
@@ -1461,7 +1511,7 @@
     g.bouquets.forEach(function (b) {
       if (!b.to) { keep.push(b); return; }
       var k = bqKey(b), r = g.bqSent[k] || (g.bqSent[k] = { n: 0, to: {}, sample: { flowers: b.flowers, wrap: b.wrap, ribbon: b.ribbon, recipe: b.recipe, name: b.name }, t: 0 });
-      r.n++; r.to[b.to] = (r.to[b.to] || 0) + 1; if ((b.sentAt || b.t) >= r.t) { r.t = b.sentAt || b.t; r.last = { to: b.to, reply: b.reply || '' }; }
+      r.n++; r.to[b.to] = (r.to[b.to] || 0) + 1; if (!r.first || (b.sentAt || b.t) < r.first) r.first = b.sentAt || b.t; if ((b.sentAt || b.t) >= r.t) { r.t = b.sentAt || b.t; r.last = { to: b.to, reply: b.reply || '' }; }
     });
     g.bouquets = keep;
     var groups = {}, order = [];
@@ -1777,6 +1827,7 @@
       tick(g, 'bouquet'); log(g, '💐 包了一束花' + (nb.name ? '「' + nb.name + '」' : '') + '（' + bqCount(nb.flowers) + '）'); save();
       bq.sel = []; bq.name = ''; bq.view = 'one'; bq.open = bqKey(nb); toast('包好了！', 'success'); render(); return;
     }
+    if ((b = e.target.closest('[data-card]'))) { cardOpen(g, b.dataset.card); return; }
     if ((b = e.target.closest('[data-bqsend]'))) { var sb = (g.bouquets || []).find(function (x) { return x.id === +b.dataset.bqsend; }); if (sb && !sb.to) { bqSend(g, sb); bq.view = 'one'; bq.open = bqKey(sb); save(); render(); } return; }
     if ((b = e.target.closest('.cx-who [data-who]'))) { giftTo = b.dataset.who; render(); return; }
     if ((b = e.target.closest('[data-area]'))) { area = b.dataset.area; sel = ''; render(); return; }
@@ -2347,7 +2398,7 @@
       var tb = e.target.closest('[data-task]');
       if (tb) {
         var g = G(); if (!g) return; var T = taskDay(g), w = tb.dataset.task, amt = 0;
-        if (w === 'bonus') { if (!T.bonus && T.list.every(function (t) { return t.got; })) { T.bonus = true; amt = 50; setTimeout(function () { surprise('cb_me', '', '今天的小任務全部完成！', '額外獎勵 🪙 50，明天也一起加油～'); }, 200); } }
+        if (w === 'bonus') { if (!T.bonus && T.list.every(function (t) { return t.got; })) { T.bonus = true; amt = 50; g.cards = g.cards || {}; if (!g.cards['t:all']) g.cards['t:all'] = { t: Date.now() }; setTimeout(function () { surprise('cb_me', '', '今天的小任務全部完成！', '額外獎勵 🪙 50，明天也一起加油～'); }, 200); } }
         else { var t = T.list[+w]; if (t && !t.got && t.p >= t.n) { t.got = true; amt = t.r; } }
         if (amt) { g.coins += amt; log(g, '📋 完成小任務 +' + amt); save(); toast('領到 🪙 ' + amt, 'success'); hRender(); }
         return;
@@ -2453,6 +2504,7 @@
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
     '#cx-garden-modal .cx-body>*{flex-shrink:0}.cx-g-stage{border-radius:18px;overflow:hidden;border:1px solid #c9dfbf;background:#e2eed8}.cx-g-stage.pan{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;cursor:grab}.cx-g-stage.pan::-webkit-scrollbar{display:none}.cx-g-stage.pan .cx-scene{max-width:none}.cx-g-pan{text-align:center;font-size:11.5px;margin:-4px 0 0}.cx-g-decobtn{align-self:center;padding:5px 14px;font-size:12.5px}.cx-deco{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.cx-deco .it{border:1px solid var(--border-color);border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--primary-bg)}.cx-deco .it.on{border-color:var(--accent-color)}.cx-deco svg{width:56px;height:62px;overflow:visible}.cx-deco b{font-size:12.5px}.cx-deco .cx-btn{width:100%;justify-content:center;padding:4px 6px;font-size:11.5px}.cx-fence{display:flex;flex-wrap:wrap;gap:6px}.cx-fence button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:4px 10px 4px 6px;font:inherit;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer}.cx-fence button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-fence i{width:16px;height:16px;border-radius:50%;border:1px solid #7a6252}.cx-fence small{color:var(--text-secondary)}.cx-scene .cx-mill{animation:cxmill 6s linear infinite}@keyframes cxmill{to{transform:rotate(360deg)}}.cx-wx{font-size:12px;padding:6px 12px;border-radius:12px;background:#fff7dc;color:#8a6a2a;border:1px solid #f0dfa8}.cx-wx.rain{background:#e6eef8;color:#4f6a8a;border-color:#c6d6ea}.cx-wx.cloud{background:var(--secondary-bg);color:var(--text-secondary);border-color:var(--border-color)}.cx-scene .cx-rain{animation:cxrain .6s linear infinite}@keyframes cxrain{from{transform:translate(0,-10px)}to{transform:translate(-3px,10px)}}.cx-scene{display:block;width:100%;height:auto;-webkit-tap-highlight-color:transparent;user-select:none}' +
+    '.cx-cd-cat{font-size:12.5px;color:var(--text-secondary);margin:8px 2px 4px}.cx-cds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.cx-cd{background:#fffaf4;border:1px solid #eadfce;border-radius:14px;padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;cursor:pointer;color:#5a4a44}.cx-cd .im{display:flex;align-items:flex-end;justify-content:center;height:58px;gap:0}.cx-cd.gift .im{background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 90%27%3E%3Cpath d=%27M50 86 C10 58 0 38 8 20 C16 4 40 2 50 22 C60 2 84 4 92 20 C100 38 90 58 50 86Z%27 fill=%27%23fdf1f3%27/%3E%3C/svg%3E") center 40%/auto 92% no-repeat}.cx-cd.no .im{background:none}.cx-cd .im span{display:flex;align-items:flex-end;justify-content:center;height:100%}.cx-cd .im span.p{width:34px}.cx-cd .im span.o{width:26px;height:80%}.cx-cd.gift .im span.p+span.o{margin-left:2px}.cx-cd.gift .im span.o+span.p{margin-left:-3px}.cx-cd:not(.gift) .im{gap:3px}.cx-cd:not(.gift) .im span.o{width:34px;height:100%}.cx-cd .im img,.cx-cd .im svg{max-width:100%;max-height:100%;height:auto}.cx-cd .im svg{height:100%}.cx-cd b{font-size:11px;line-height:1.3}.cx-cd small{font-size:10px;color:#b3a59c}.cx-cd.no{cursor:default}.cx-cd.no .im{filter:grayscale(1) brightness(1.6) contrast(.35);opacity:.45}.cx-cd.no b{color:#b3a59c}.cx-cd.big{border:0;background:none;cursor:default;gap:6px}.cx-cd.big .im{height:150px;gap:0;width:auto}.cx-cd.big .im span.p{width:92px}.cx-cd.big .im span.o{width:70px;height:72%}.cx-cd.big.gift .im span.p+span.o{margin-left:6px}.cx-cd.big.gift .im span.o+span.p{margin-left:-8px}.cx-cd.big:not(.gift) .im{gap:6px;width:auto}.cx-cd.big:not(.gift) .im span.o,.cx-cd.big:not(.gift) .im span.o:last-child{width:96px;height:100%}.cx-cd.big .im span.o:last-child{width:84px;height:78%}.cx-cd.big b{font-size:16px}.cx-cd.big p{margin:0;font-size:13.5px;color:#7a6a62}.cx-cd.big small{font-size:12px}' +
     '.cx-sp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(70,50,70,.28);animation:cxspf .2s ease}.cx-sp .card{background:#fffaf4;color:#5a4a44;border-radius:22px;padding:16px 18px 12px;width:min(300px,86vw);text-align:center;box-shadow:0 12px 40px rgba(60,40,60,.25);display:flex;flex-direction:column;align-items:center;gap:6px;animation:cxspp .4s cubic-bezier(.2,1.5,.4,1)}.cx-sp .row{display:flex;align-items:flex-end;justify-content:center;gap:2px}.cx-sp .cb{height:128px;width:auto;animation:cxspb 1.6s ease-in-out infinite}.cx-sp .art{width:92px;height:120px;display:flex;align-items:flex-end;justify-content:center}.cx-sp .art img,.cx-sp .art svg{max-width:100%;max-height:100%}.cx-sp b{font-size:16px}.cx-sp p{margin:0;font-size:13.5px;line-height:1.55;color:#7a6a62}.cx-sp small{font-size:11px;color:#b3a59c}@keyframes cxspf{from{opacity:0}}@keyframes cxspp{from{transform:scale(.6);opacity:0}}@keyframes cxspb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
     '.cx-scene .pl,.cx-scene [data-ani],.cx-scene [data-prod]{cursor:pointer}.cx-g-pens{margin-top:-4px}.cx-g-pens button{font-size:11.5px;padding:6px 1px;white-space:nowrap}.cx-scene .bz{animation:cxbz 2.4s ease-in-out infinite}@keyframes cxbz{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(1px,-6px)}75%{transform:translate(-5px,-2px)}}.cx-scene .hen.slow .hw{animation-duration:7s}.cx-scene .hen.swim .hw{animation-duration:4.5s}.cx-scene .hen.slow .hw>g:last-child{animation:none}.cx-scene .hen.hive .hw{animation:none}.cx-scene .hen.hive .hw>g:last-child{animation:cxbz 2.4s ease-in-out infinite}.cx-scene .pl:active{opacity:.85}' +
     '.cx-scene .hen .hw{animation:cxhen var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}.cx-scene .hen.hun .hw{animation-duration:6s}' +
