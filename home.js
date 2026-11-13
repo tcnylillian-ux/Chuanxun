@@ -487,8 +487,20 @@
   function bouquetArt(flowers, wrap, ribbon, hi) {
     var W = WRAPS[wrap] || WRAPS.kraft, R = RIBBONS[ribbon] || RIBBONS.violet, n = flowers.length, o = '';
     // 背後的包裝紙
-    o += '<path d="M28 70 L60 150 L92 70 Q60 58 28 70Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>';
-    // 花頭排成扇形：花越少越大、越靠近包裝紙
+    var IMGBQ = n && flowers.every(function (cr) { return CI(cr); });
+    o += IMGBQ ? '<path d="M16 58 L60 150 L104 58 Q60 40 16 58Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>' : ''; if (!IMGBQ) o += '<path d="M28 70 L60 150 L92 70 Q60 58 28 70Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>';
+    if (n && flowers.every(function (cr) { return CI(cr); })) {
+      // 用水彩花圖：每枝花從包裝紙裡的同一點往外呈扇形散開
+      var H0 = n <= 1 ? 104 : n <= 3 ? 100 : n <= 6 ? 96 : 92, spanA = n <= 1 ? 0 : Math.min(62, 22 + n * 6), ord = [];
+      for (var i = 0; i < n; i++) ord.push(i);
+      ord.sort(function (x, y) { return Math.abs(y - (n - 1) / 2) - Math.abs(x - (n - 1) / 2); }); // 外圈先畫，中間的在前面
+      ord.forEach(function (i) {
+        var cr = flowers[i], t = n <= 1 ? .5 : i / (n - 1), ang = -spanA / 2 + t * spanA, H = H0 * (i % 2 ? .9 : 1) * (/lotus|strawberry|hydra|peony|sunflower|rose|gardenia/.test(cr) ? .84 : 1);
+        var rad = ang * Math.PI / 180, hx = 60 + Math.sin(rad) * H * .8, hy = 122 - Math.cos(rad) * H * .8;
+        o += '<g data-slot="' + i + '">' + (hi === i ? '<circle cx="' + f(hx) + '" cy="' + f(hy) + '" r="13" fill="#fff6c8" fill-opacity=".7" stroke="#d6a744" stroke-width="1.2" stroke-dasharray="2 2"/>' : '') +
+          '<g transform="rotate(' + f(ang) + ' 60 122)">' + ciAt(cr, 60, 122, H) + '</g><circle cx="' + f(hx) + '" cy="' + f(hy) + '" r="12" fill="transparent"/></g>';
+      });
+    } else {
     var pos = [], rows = n <= 3 ? [n] : n <= 6 ? [Math.ceil(n / 2), Math.floor(n / 2)] : [Math.ceil(n / 3), Math.ceil(n / 3), n - 2 * Math.ceil(n / 3)];
     var base = rows.length === 1 ? 60 : rows.length === 2 ? 50 : 42, sc = n <= 2 ? 1.45 : n <= 3 ? 1.3 : n <= 6 ? 1.15 : 1.05, k = 0;
     rows.forEach(function (cnt, r) {
@@ -506,13 +518,16 @@
       else o += HEAD[cr] ? HEAD[cr](p[0], p[1], (cr === 'hydrangea' ? .95 : 1.05) * sc) : '';
       o += '</g>';
     });
+    }
     // 前面的包裝紙
+    if (IMGBQ) o += '<g filter="url(#cxwc)">';
     o += '<path d="M24 76 L60 152 L96 76 L82 84 L60 78 L38 84 Z" fill="' + W[1] + '" fill-opacity=".93" stroke="' + INK + '" stroke-width=".7"/>' +
       '<path d="M38 84 L60 152 M82 84 L60 152" stroke="' + W[2] + '" stroke-width="1" fill="none" opacity=".8"/>';
     // 緞帶
     o += '<path d="M50 118 Q60 114 70 118 L69 124 Q60 120 51 124Z" fill="' + R[1] + '" stroke="' + INK + '" stroke-width=".5"/>' +
       '<path d="M60 121 Q46 108 44 118 Q46 126 60 121Z M60 121 Q74 108 76 118 Q74 126 60 121Z" fill="' + R[1] + '" fill-opacity=".92" stroke="' + INK + '" stroke-width=".5"/>' +
       '<path d="M58 123 L52 138 M62 123 L68 138" stroke="' + R[1] + '" stroke-width="2.4" stroke-linecap="round"/>' + dot(60, 121, 2.2, R[1]);
+    if (IMGBQ) o += '</g>';
     return o;
   }
   function bouquetSvg(b, standalone) {
