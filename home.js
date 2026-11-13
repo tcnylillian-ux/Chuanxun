@@ -504,7 +504,7 @@
     return o;
   }
   function bouquetSvg(b, standalone) {
-    if (b.recipe) return BQX.svg(b.recipe, standalone);
+    if (b.recipe) return bqArt(b.recipe, standalone);
     var body = '<g>' + bouquetArt(b.flowers, b.wrap, b.ribbon, b.hi) + '</g>';
     if (!standalone) return '<svg viewBox="0 0 120 160" aria-hidden="true">' + body + '</svg>';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="360" height="480"><defs>' + WC_DEFS + '</defs><rect width="120" height="160" fill="#f7f1e6"/>' + body + '</svg>';
@@ -892,15 +892,30 @@
     }
     return { svg: svg };
   })();
+  /* 用圖片的花束（豆包畫的） */
+  (function loadBqImg() { if (window.__cxBQIMG || document.getElementById('cx-bqimg-js')) return; var sc = document.createElement('script'); sc.id = 'cx-bqimg-js'; sc.src = 'bqimg.js'; sc.onload = function () { try { if (gm && !gm.hidden) render(); } catch (e) {} }; document.body.appendChild(sc); })();
+  function bqArt(key, standalone) {
+    var im = (window.__cxBQIMG || {})[key]; if (!im) return BQX.svg(key, standalone);
+    var body = '<image href="' + im + '" x="0" y="0" width="300" height="400" preserveAspectRatio="xMidYMid meet"/>';
+    if (!standalone) return '<svg viewBox="0 0 300 400" aria-hidden="true">' + body + '</svg>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -20 330 440" width="360" height="480"><rect x="-15" y="-20" width="330" height="440" fill="#f7f1e6"/>' + body + '</svg>';
+  }
   var BQR = [
-    { k: 'tulip', n: '鬱金香花束', need: { tulip: 4 } },
-    { k: 'lily', n: '鈴蘭花束', need: { lilyvalley: 5 } },
-    { k: 'gerbera', n: '晴天花束', need: { marigold: 4, cornflower: 3 } },
-    { k: 'gyp', n: '滿天星花束', need: { gypso: 8 } },
-    { k: 'orange', n: '金盞花束', need: { marigold: 5 } },
+    { k: 'daisy', n: '雛菊花束', need: { daisy: 8 } },
     { k: 'lav', n: '薰衣草花束', need: { lavender: 6 } },
-    { k: 'purple', n: '春日花束', need: { tulip: 4, daisy: 2, cornflower: 1 } },
-    { k: 'roses', n: '玫瑰花束', need: { rose: 4, daisy: 2 } }
+    { k: 'gyp', n: '滿天星花束', need: { gypso: 8 } },
+    { k: 'tulip', n: '粉鬱金香花束', need: { tulip: 6 } },
+    { k: 'orange', n: '暖橘花束', need: { marigold: 4, rose: 2, tulip: 1 } },
+    { k: 'gerbera', n: '晴天花束', need: { marigold: 4, cornflower: 3 } },
+    { k: 'purple', n: '春日花束', need: { tulip: 3, daisy: 2, rose: 1, cornflower: 2 } },
+    { k: 'lily', n: '鈴蘭花束', need: { lilyvalley: 6 } },
+    { k: 'bluetulip', n: '藍調鬱金香', need: { tulip: 6, cornflower: 3, gypso: 2 } },
+    { k: 'redtulip', n: '紅鬱金香', need: { tulip: 9 } },
+    { k: 'hydra', n: '繡球花束', need: { hydrangea: 3, gypso: 3 } },
+    { k: 'sun', n: '向日葵花束', need: { sunflower: 1, peony: 2, rose: 1 } },
+    { k: 'peony', n: '牡丹花束', need: { peony: 6 } },
+    { k: 'cream', n: '奶油花束', need: { rose: 3, peony: 1, tulip: 2, gypso: 1 } },
+    { k: 'roses', n: '玫瑰花束', need: { rose: 4, tulip: 2, lavender: 1 } }
   ];
   /* ================= 花園畫面 ================= */
   var recentGift = [];
@@ -1006,7 +1021,7 @@
   };
   var DECOS = {
     lamp: ['小路燈', 40, [2.7, -.7], 'fa-lightbulb'], mailbox: ['信箱', 50, [2.74, .35], 'fa-envelope'], bench: ['長椅', 60, [1.4, 2.76], 'fa-chair'],
-    bunny: ['兔子石像', 80, [-.66, .45], 'fa-carrot'], pond: ['小水池', 100, [1.55, -.72], 'fa-water'], swing: ['鞦韆', 120, [-.66, 1.55], 'fa-child-reaching'],
+    bunny: ['兔子石像', 80, [-.66, .45], 'fa-carrot'], pond: ['小水池', 100, [1.35, -.6], 'fa-water'], swing: ['鞦韆', 120, [-.66, 1.55], 'fa-child-reaching'],
     windmill: ['小風車', 150, [-.66, -.66], 'fa-fan'], arch: ['玫瑰拱門', 200, [2.76, 1.6], 'fa-archway']
   };
   var FENCES = { white: ['奶白', 0, '#fffaf2'], wood: ['原木', 60, '#e2c29a'], pink: ['粉紅', 80, '#f7cdd7'], mint: ['薄荷', 80, '#cfe9d7'], lilac: ['淡紫', 80, '#ddd1f2'], sky: ['天藍', 80, '#cfe2f6'] };
@@ -1016,18 +1031,32 @@
     mailbox: function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="6" ry="2.4" fill="#00000016"/><rect x="' + f(x - 1) + '" y="' + f(y - 13) + '" width="2" height="13" fill="#8a6a52"/><path d="M' + P2(x - 6, y - 13) + ' v-6 q0 -4 6 -4 q6 0 6 4 v6z" fill="#f2a0b4" stroke="' + OL + '" stroke-width=".8"/><path d="M' + P2(x + 6, y - 19) + ' v-6 h4 v3 h-4" fill="#e65a5a" stroke="' + OL + '" stroke-width=".6"/><rect x="' + f(x - 3) + '" y="' + f(y - 18) + '" width="6" height="1.6" rx=".8" fill="#fff"/>'; },
     bench: function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="14" ry="3.4" fill="#00000016"/><path d="M' + P2(x - 11, y) + ' v-6 M' + P2(x + 11, y - 2) + ' v-6" stroke="#7a5a44" stroke-width="2"/>' + poly([[x - 13, y - 6], [x + 13, y - 9], [x + 13, y - 11], [x - 13, y - 8]], '#d9a56a', OL, .8) + poly([[x - 13, y - 9], [x + 13, y - 12], [x + 13, y - 20], [x - 13, y - 17]], '#e4b47c', OL, .8) + '<path d="M' + P2(x - 12, y - 13) + ' L' + P2(x + 12, y - 16) + '" stroke="#c48e52" stroke-width=".8"/>'; },
     bunny: function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="9" ry="3" fill="#00000016"/>' + poly([[x - 7, y], [x + 7, y], [x + 7, y - 5], [x - 7, y - 5]], '#e8e2d8', OL, .7) + '<g transform="translate(' + P2(x - 1, y - 5) + ')">' + rabbitArt(false, 1, 2).replace(/#f4ecdf/g, '#dcd6cc').replace(/#f6b6c4/g, '#c9c2b6') + '</g>'; },
-    pond: function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y - 2) + '" rx="16" ry="7" fill="#a9d7ef" stroke="' + OL + '" stroke-width=".9"/><ellipse cx="' + f(x - 2) + '" cy="' + f(y - 3) + '" rx="11" ry="4.4" fill="#c4e6f6"/><ellipse cx="' + f(x + 6) + '" cy="' + f(y - 1) + '" rx="4" ry="1.8" fill="#8fc178" stroke="' + OL + '" stroke-width=".5"/><circle cx="' + f(x + 6) + '" cy="' + f(y - 2.4) + '" r="1.4" fill="#f3b6c4"/>' + [[-15, -1], [13, -6], [-10, 3.6], [8, 4]].map(function (q) { return '<ellipse cx="' + f(x + q[0]) + '" cy="' + f(y - 2 + q[1]) + '" rx="2.6" ry="1.6" fill="#ece6da" stroke="#c9c1b2" stroke-width=".5"/>'; }).join(''); },
+    pond: function (x, y) { return '<g transform="rotate(-26.6 ' + f(x) + ' ' + f(y) + ')"><ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="19" ry="5" fill="#a9d7ef" stroke="' + OL + '" stroke-width=".9"/><ellipse cx="' + f(x - 2) + '" cy="' + f(y - .8) + '" rx="13" ry="2.8" fill="#c4e6f6"/><ellipse cx="' + f(x + 9) + '" cy="' + f(y + .6) + '" rx="3.4" ry="1.5" fill="#8fc178" stroke="' + OL + '" stroke-width=".5"/><circle cx="' + f(x + 9) + '" cy="' + f(y - .4) + '" r="1.2" fill="#f3b6c4"/>' + [[-19, 1], [18, -1.6], [-6, 5.4], [8, -5.4]].map(function (q) { return '<ellipse cx="' + f(x + q[0]) + '" cy="' + f(y + q[1]) + '" rx="2.4" ry="1.4" fill="#ece6da" stroke="#c9c1b2" stroke-width=".5"/>'; }).join('') + '</g>'; },
     swing: function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="15" ry="3.4" fill="#00000016"/><path d="M' + P2(x - 13, y) + ' L' + P2(x - 10, y - 28) + ' L' + P2(x - 7, y) + ' M' + P2(x + 7, y) + ' L' + P2(x + 10, y - 28) + ' L' + P2(x + 13, y) + '" stroke="#8a6a52" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M' + P2(x - 12, y - 28) + ' H' + f(x + 12) + '" stroke="#7a5a44" stroke-width="2.6" stroke-linecap="round"/><path d="M' + P2(x - 5, y - 28) + ' V' + f(y - 9) + ' M' + P2(x + 5, y - 28) + ' V' + f(y - 9) + '" stroke="#b9a58a" stroke-width=".8"/><rect x="' + f(x - 7) + '" y="' + f(y - 10) + '" width="14" height="3" rx="1.2" fill="#f2a0b4" stroke="' + OL + '" stroke-width=".7"/><path d="M' + P2(x - 10, y - 27) + ' q4 3 8 0 M' + P2(x + 2, y - 27) + ' q4 3 8 0" stroke="#8fc178" stroke-width="1.4" fill="none"/>'; },
     windmill: function (x, y) { var o = '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="11" ry="3.4" fill="#00000016"/>' + poly([[x - 8, y], [x + 8, y], [x + 5, y - 26], [x - 5, y - 26]], '#f6eedf', OL, .9) + poly([[x - 7, y - 26], [x + 7, y - 26], [x, y - 34]], '#d97a63', OL, .9) + '<rect x="' + f(x - 2.4) + '" y="' + f(y - 8) + '" width="4.8" height="8" rx="2" fill="#8a6a52"/><g class="cx-mill" style="transform-origin:' + f(x) + 'px ' + f(y - 24) + 'px">';
       for (var i = 0; i < 4; i++) o += '<g transform="rotate(' + (i * 90 + 20) + ' ' + f(x) + ' ' + f(y - 24) + ')">' + poly([[x - 1, y - 24], [x + 1, y - 24], [x + 3.4, y - 40], [x - 2, y - 40]], '#fffaf2', OL, .7) + '</g>';
       return o + '</g><circle cx="' + f(x) + '" cy="' + f(y - 24) + '" r="1.8" fill="#7a5a44"/>'; },
+    arch2: function (a, b) {
+      var H = 30, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, o = '';
+      o += '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>';
+      var arc = 'M' + P2(a[0], a[1]) + ' L' + P2(a[0], a[1] - H) + ' Q' + P2(mx, my - H - 16) + ' ' + P2(b[0], b[1] - H) + ' L' + P2(b[0], b[1]);
+      o += '<path d="' + arc + '" stroke="' + OL + '" stroke-width="4.6" fill="none" stroke-linejoin="round"/><path d="' + arc + '" stroke="#fffaf2" stroke-width="2.8" fill="none" stroke-linejoin="round"/>';
+      var pts = [];
+      for (var i = 0; i <= 10; i++) { var t = i / 10, x, y;
+        if (t < .25) { x = a[0]; y = a[1] - H * (t / .25) * .9 - 3; } else if (t > .75) { x = b[0]; y = b[1] - H * ((1 - t) / .25) * .9 - 3; }
+        else { var u = (t - .25) / .5; x = (1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * mx + u * u * b[0]; y = (1 - u) * (1 - u) * (a[1] - H) + 2 * (1 - u) * u * (my - H - 16) + u * u * (b[1] - H); }
+        pts.push([x, y]); }
+      pts.forEach(function (q, i) { o += '<circle cx="' + f(q[0] + (i % 2 ? 2.2 : -2.2)) + '" cy="' + f(q[1] + 1.6) + '" r="2.4" fill="#8fc178" stroke="' + OL + '" stroke-width=".4"/>'; });
+      pts.forEach(function (q, i) { if (i % 3 !== 1) o += '<circle cx="' + f(q[0]) + '" cy="' + f(q[1]) + '" r="2.4" fill="' + (i % 2 ? '#f2a0b4' : '#e9707f') + '" stroke="' + OL + '" stroke-width=".5"/><circle cx="' + f(q[0] - .6) + '" cy="' + f(q[1] - .6) + '" r=".7" fill="#fff" opacity=".7"/>'; });
+      return o;
+    },
     arch: function (x, y) { var o = '<path d="M' + P2(x - 12, y) + ' V' + f(y - 22) + ' Q' + P2(x, y - 38) + ' ' + P2(x + 12, y - 22) + ' V' + f(y) + '" stroke="#fffaf2" stroke-width="3.4" fill="none"/><path d="M' + P2(x - 12, y) + ' V' + f(y - 22) + ' Q' + P2(x, y - 38) + ' ' + P2(x + 12, y - 22) + ' V' + f(y) + '" stroke="' + OL + '" stroke-width=".8" fill="none"/>';
       [[-12, -6], [-12, -16], [-10, -26], [-4, -31], [4, -31], [10, -26], [12, -16], [12, -6], [0, -32]].forEach(function (q, i) { o += '<circle cx="' + f(x + q[0] + (i % 2 ? 2 : -2)) + '" cy="' + f(y + q[1] + 2) + '" r="2.4" fill="#8fc178" stroke="' + OL + '" stroke-width=".4"/><circle cx="' + f(x + q[0]) + '" cy="' + f(y + q[1]) + '" r="2.3" fill="' + (i % 3 ? '#f2a0b4' : '#e9707f') + '" stroke="' + OL + '" stroke-width=".5"/>'; });
       return o; }
   };
   function decoItems(g, iso) {
     var D = decoG(g), out = [];
-    Object.keys(DECOS).forEach(function (k) { if (!D.on[k]) return; var sp = DECOS[k][2], q = iso(sp[0], sp[1]); out.push({ z: sp[0] + sp[1], front: sp[0] > 2.6 || sp[1] > 2.6, s: DART[k](q[0], q[1]) }); });
+    Object.keys(DECOS).forEach(function (k) { if (!D.on[k] || k === 'arch') return; var sp = DECOS[k][2], q = iso(sp[0], sp[1]); out.push({ z: k === 'pond' ? -5 : sp[0] + sp[1], front: sp[0] > 2.6 || sp[1] > 2.6, s: DART[k](q[0], q[1]) }); });
     return out;
   }
   function decoFree(g, list) { var D = decoG(g); return list.filter(function (d) { return !Object.keys(DECOS).some(function (k) { var sp = DECOS[k][2]; return D.on[k] && Math.abs(sp[0] - d[0]) < .75 && Math.abs(sp[1] - d[1]) < .75; }); }); }
@@ -1087,7 +1116,10 @@
               (!isG && !p.open && OUNLOCK[i] && arr.slice(0, i).every(function (q) { return q.open; }) ? '<text x="' + f(cen[0]) + '" y="' + f(cen[1] + 14) + '" text-anchor="middle" font-size="8" fill="#6b5a48">🪙' + OUNLOCK[i] + '</text>' : '') + '</g>' });
           })(k * per + j, j);
           its.sort(function (a, b) { return a.z - b.z; }).forEach(function (it) { o += it.s; });
-          o += fences(iso, R, C, m, 'front') + (k === 0 ? dfront : '');
+          if (isG && k === 0 && decoG(g).on.arch) {
+            var kk = m - .3, fl = iso(R - 1 + kk, -kk), fb = iso(R - 1 + kk, C - 1 + kk), frt = iso(-kk, C - 1 + kk), g1 = iso(R - 1 + kk, 1.15), g2 = iso(R - 1 + kk, 1.95);
+            o += fenceLine(fl, g1, 4) + fenceLine(g2, fb, 2) + fenceLine(fb, frt, Math.round((R - 1 + 2 * kk) * 2.2)) + DART.arch2(g1, g2) + dfront;
+          } else o += fences(iso, R, C, m, 'front') + (k === 0 ? dfront : '');
         }
         o += '</g>';
         if (sale) { var cq = iso((R - 1) / 2, 1); o += '<g data-buyland="' + area + '" class="pl" transform="translate(' + P2(cq[0], cq[1] - 4) + ')"><rect x="-54" y="-17" width="108" height="32" rx="9" fill="#fffaf2" stroke="' + OL + '" stroke-width="1"/><text x="0" y="-3" text-anchor="middle" font-size="10" fill="#5f4d40">買下這塊地</text><text x="0" y="10" text-anchor="middle" font-size="9" fill="#a07a2a">🪙 ' + LAND[area][N] + '</text></g>'; }
@@ -1290,7 +1322,7 @@
     var D = decoG(g);
     return '<div class="cx-g-panel"><div class="cx-g-pt">佈置花園<span class="cx-muted">　買過的東西可以隨時擺出來或收起來</span></div><div class="cx-deco">' + Object.keys(DECOS).map(function (k) {
       var d = DECOS[k], own = D.own[k], on = D.on[k];
-      return '<div class="it' + (on ? ' on' : '') + '"><svg viewBox="-22 -44 44 50" aria-hidden="true">' + DART[k](0, 0) + '</svg><b>' + d[0] + '</b>' +
+      return '<div class="it' + (on ? ' on' : '') + '"><svg viewBox="-22 -44 44 50" aria-hidden="true">' + (k === 'arch' ? DART.arch2([-12, -4], [12, 8]) : DART[k](0, 0)) + '</svg><b>' + d[0] + '</b>' +
         (own ? '<button type="button" class="cx-btn' + (on ? '' : ' pri') + '" data-deco="' + k + '">' + (on ? '收起來' : '擺出來') + '</button>' : '<button type="button" class="cx-btn" data-deco="' + k + '"' + (g.coins < d[1] ? ' disabled' : '') + '>買 🪙' + d[1] + '</button>') + '</div>';
     }).join('') + '</div><div class="cx-g-pt" style="margin-top:8px">圍籬顏色</div><div class="cx-fence">' + Object.keys(FENCES).map(function (k) {
       var fc = FENCES[k], own = D.fown[k];
@@ -1388,7 +1420,7 @@
     if (bq.view === 'recipe') {
       return h + '<p class="cx-muted" style="margin:0 0 8px">花收齊了就能直接包好，比自己包的賣得更貴。</p><div class="cx-g-bqr">' + BQR.map(function (r) {
         var ok = Object.keys(r.need).every(function (k) { return (g.inv[k] || 0) >= r.need[k]; });
-        return '<div class="cx-g-bqrc' + (ok ? ' ok' : '') + '">' + BQX.svg(r.k) + '<b>' + r.n + '</b><div class="nd">' + Object.keys(r.need).map(function (k) { var have = g.inv[k] || 0; return '<span class="' + (have >= r.need[k] ? 'y' : 'n') + '">' + CROPS[k].n + ' ' + Math.min(have, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div>' +
+        return '<div class="cx-g-bqrc' + (ok ? ' ok' : '') + '">' + bqArt(r.k) + '<b>' + r.n + '</b><div class="nd">' + Object.keys(r.need).map(function (k) { var have = g.inv[k] || 0; return '<span class="' + (have >= r.need[k] ? 'y' : 'n') + '">' + CROPS[k].n + ' ' + Math.min(have, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div>' +
           '<button type="button" class="cx-btn' + (ok ? ' pri' : '') + '" data-bqr="' + r.k + '"' + (ok ? '' : ' disabled') + '><i class="fas fa-ribbon"></i> 包起來</button></div>';
       }).join('') + '</div>';
     }
