@@ -25,12 +25,12 @@
     cornflower: { n: '矢車菊', cost: 6,  grow: 100e3,  yield: 3, price: 9,  col: '#8fb5ee', unit: '朵', flower: 1, lang: '遇見幸福' },
     lilyvalley: { n: '鈴蘭',   cost: 9,  grow: 200e3,  yield: 3, price: 14, col: '#f4f7ea', unit: '枝', flower: 1, lang: '幸福歸來' },
     rose:       { n: '玫瑰',   cost: 25, grow: 1440e3, yield: 3, price: 35, col: '#d97a8f', unit: '朵', flower: 1, lang: '熱烈的愛' },
-    bluerose:   { n: '藍玫瑰',   rare: 1, base: 'rose',      pair: 'cornflower', grow: 1440e3, yield: 1, price: 90, col: '#7fa6e6', unit: '朵', flower: 1, lang: '奇蹟，不可能的事也會實現' },
-    goldrose:   { n: '金玫瑰',   rare: 1, base: 'rose',      pair: 'sunflower',  grow: 1440e3, yield: 1, price: 90, col: '#f2c45a', unit: '朵', flower: 1, lang: '永恆不變的愛' },
-    blacktulip: { n: '黑鬱金香', rare: 1, base: 'tulip',     pair: 'lavender',   grow: 90e3,   yield: 1, price: 60, col: '#5a4566', unit: '朵', flower: 1, lang: '神秘、獨一無二的愛' },
-    pinkhydra:  { n: '粉繡球',   rare: 1, base: 'hydrangea', pair: 'peony',      grow: 300e3,  yield: 1, price: 70, col: '#f2a7c3', unit: '朵', flower: 1, lang: '浪漫的團聚' },
-    whitelav:   { n: '白薰衣草', rare: 1, base: 'lavender',  pair: 'gypso',      grow: 30e3,   yield: 1, price: 40, col: '#f3eef9', unit: '束', flower: 1, lang: '純白的等待' },
-    pinkdaisy:  { n: '粉雛菊',   rare: 1, base: 'daisy',     pair: 'tulip',      grow: 45e3,   yield: 1, price: 40, col: '#f6b9c8', unit: '朵', flower: 1, lang: '天真又藏不住的喜歡' },
+    bluerose:   { n: '藍玫瑰',   rare: 1, cost: 45, base: 'rose',      pair: 'cornflower', grow: 1440e3, yield: 1, price: 90, col: '#7fa6e6', unit: '朵', flower: 1, lang: '奇蹟，不可能的事也會實現' },
+    goldrose:   { n: '金玫瑰',   rare: 1, cost: 45, base: 'rose',      pair: 'sunflower',  grow: 1440e3, yield: 1, price: 90, col: '#f2c45a', unit: '朵', flower: 1, lang: '永恆不變的愛' },
+    blacktulip: { n: '黑鬱金香', rare: 1, cost: 30, base: 'tulip',     pair: 'lavender',   grow: 90e3,   yield: 1, price: 60, col: '#5a4566', unit: '朵', flower: 1, lang: '神秘、獨一無二的愛' },
+    pinkhydra:  { n: '粉繡球',   rare: 1, cost: 35, base: 'hydrangea', pair: 'peony',      grow: 300e3,  yield: 1, price: 70, col: '#f2a7c3', unit: '朵', flower: 1, lang: '浪漫的團聚' },
+    whitelav:   { n: '白薰衣草', rare: 1, cost: 20, base: 'lavender',  pair: 'gypso',      grow: 30e3,   yield: 1, price: 40, col: '#f3eef9', unit: '束', flower: 1, lang: '純白的等待' },
+    pinkdaisy:  { n: '粉雛菊',   rare: 1, cost: 20, base: 'daisy',     pair: 'tulip',      grow: 45e3,   yield: 1, price: 40, col: '#f6b9c8', unit: '朵', flower: 1, lang: '天真又藏不住的喜歡' },
     carrot:     { n: '胡蘿蔔', cost: 3,  grow: 60e3,   yield: 3, price: 4,  col: '#f08a3c', unit: '根' },
     wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
     blueberry:  { n: '藍莓',   seed: '藍莓叢', cost: 15, grow: 180e3, yield: 5, price: 5,  col: '#6f7fc0', unit: '顆', tree: 1 },
@@ -1401,11 +1401,11 @@
     if (sel === '*all') {
       var empt = (area === 'o' ? g.orchard : g.plots).filter(function (q) { return q.open && !q.crop; }).length;
       if (!empt) { sel = ''; } else {
-        var sl = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && !CROPS[k].rare; });
+        var sl = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]); });
         if (g.lastSeed && sl.indexOf(g.lastSeed) > 0) { sl.splice(sl.indexOf(g.lastSeed), 1); sl.unshift(g.lastSeed); }
         return '<div class="cx-g-panel"><div class="cx-g-pt">' + empt + ' 格空地全部種什麼？<span class="cx-muted">　錢不夠就種到能種的為止，種好會順便澆水</span></div><div class="seeds">' + sl.map(function (k) {
           var c = CROPS[k], can = Math.min(empt, Math.floor(g.coins / c.cost));
-          return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (can < 1 ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.seed || c.n) + (k === g.lastSeed ? ' <small class="cx-muted">上次種的</small>' : '') + '</span><span class="cx-muted">' + dur(c.grow) + (c.tree ? ' 結果' : ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost * Math.max(1, can) + (can < empt && can > 0 ? '（種 ' + can + ' 格）' : can > 1 ? '（' + can + ' 格）' : '') + '</span></button>';
+          return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (can < 1 ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.rare ? '✨' : '') + (c.seed || c.n) + (k === g.lastSeed ? ' <small class="cx-muted">上次種的</small>' : '') + '</span><span class="cx-muted">' + dur(c.grow) + (c.tree ? ' 結果' : ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost * Math.max(1, can) + (can < empt && can > 0 ? '（種 ' + can + ' 格）' : can > 1 ? '（' + can + ' 格）' : '') + '</span></button>';
         }).join('') + '</div></div>';
       }
     }
@@ -1413,10 +1413,10 @@
     if (!p) return '<p class="cx-muted cx-g-tip">' + (area === 'g' ? '點空地種花或作物' : '點空地種果樹，種一次可以一直收') + '；乾掉的土澆水會長得比較快。你不在的時候，' + esc(helpers().join('、')) + ' 也會幫忙照顧。</p>';
     if (!p.open) return '';
     if (!p.crop) {
-      var list = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && !CROPS[k].rare; });
+      var list = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]); });
       return '<div class="cx-g-panel"><div class="cx-g-pt">要種什麼？</div><div class="seeds">' + list.map(function (k) {
         var c = CROPS[k];
-        return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (g.coins < c.cost ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.seed || c.n) + '</span><span class="cx-muted">' + (c.tree ? dur(c.grow) + ' 結果，之後每 ' + dur(c.grow / 2) + ' 再收' : dur(c.grow) + ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost + '</span></button>';
+        return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (g.coins < c.cost ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.rare ? '✨' : '') + (c.seed || c.n) + '</span><span class="cx-muted">' + (c.tree ? dur(c.grow) + ' 結果，之後每 ' + dur(c.grow / 2) + ' 再收' : dur(c.grow) + ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost + '</span></button>';
       }).join('') + '</div></div>';
     }
     var c2 = CROPS[p.crop], wet = (p.wetUntil || 0) > now;
@@ -2035,7 +2035,20 @@
     function drawBg(t) {
       var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, C['--sky-top']); g.addColorStop(1, C['--sky-bot']);
       ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      // lavender row at the bottom
+      // lavender row at the bottom（有水彩圖就用圖）
+      var lv = CI('lavender');
+      if (lv) {
+        if (!drawBg.im || drawBg.src !== lv.src) { drawBg.im = new Image(); drawBg.im.src = lv.src; drawBg.src = lv.src; }
+        var im = drawBg.im;
+        if (im.complete && im.naturalWidth) {
+          var m = Math.ceil(W / 24) + 2;
+          for (var r = 1; r >= 0; r--) for (var j = 0; j < m; j++) {
+            var seed = (j * 53 + r * 29) % 17, hh = (r ? 74 : 58) + seed * 1.3, ww = hh * im.naturalWidth / im.naturalHeight, bx = j * 24 + (r ? 12 : 0) - 10 + (seed % 6), sw = Math.sin(t * 1.3 + j * .8 + r) * .045;
+            ctx.save(); ctx.globalAlpha = r ? .8 : 1; ctx.translate(bx, H + 6); ctx.rotate(sw + (seed % 3 - 1) * .06); ctx.drawImage(im, -ww / 2, -hh, ww, hh); ctx.restore();
+          }
+          return;
+        }
+      }
       var n = Math.ceil(W / 14);
       for (var i = 0; i < n; i++) {
         var x = i * 14 + 6, h = 22 + ((i * 37) % 13), sway = Math.sin(t * 1.4 + i * .7) * 2;
@@ -2460,7 +2473,7 @@
     '@media (prefers-reduced-motion:reduce){.cx-h-sheet{transition:none}}';
   document.head.appendChild(css);
 
-  window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G, _sp: function (w, t, l) { return surprise(w, '', t, l); } };
+  window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G, _moyu: function () { launch('moyu'); }, _sp: function (w, t, l) { return surprise(w, '', t, l); } };
   if (lsGet('cxHomeFirst') === '1') setTimeout(homeOpen, 1200);
   setInterval(function () { if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(function () { if (A.X()) simulate(true); }, 4000); });
