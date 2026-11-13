@@ -1026,8 +1026,8 @@
     else if (gTab === 'bq') h += bqHtml(g);
     else if (gTab === 'kit') h += kitchenHtml(g);
     else if (gTab === 'dex') h += dexHtml(g);
-    var newCards = newCardsPre; if (newCards.length) { save(); setTimeout(function () { toast('📖 收集到新卡片：' + newCards.length + ' 張，去圖鑑看看', 'success'); }, 1600); }
     else h += logHtml(g);
+    var newCards = newCardsPre; if (newCards.length) { save(); setTimeout(function () { toast('📖 收集到新卡片：' + newCards.length + ' 張，去圖鑑看看', 'success'); }, 1600); }
     var oldSt = gm.body.querySelector('.cx-g-stage'), keepX = oldSt ? oldSt.scrollLeft : 0, keepKey = oldSt ? oldSt.dataset.k : '';
     gm.body.innerHTML = h; lastSig = sig(g);
     if (hybridMsg) { var hm = hybridMsg, hk = hybridKey; hybridMsg = ''; hybridKey = ''; setTimeout(function () { var ci = CI(hk); if (!(ci && surprise('cb_me', '<img src="' + ci.src + '" alt="">', hm.replace('✨ ', ''), CROPS[hk] && CROPS[hk].lang ? '花語：' + CROPS[hk].lang : ''))) toast(hm, 'success'); }, 700); }
