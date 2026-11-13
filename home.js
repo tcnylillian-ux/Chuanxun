@@ -2296,7 +2296,18 @@
   function launch(id) {
     if (id === 'garden') { A.load().then(function () { gOpen(true); }); return; }
     if (id === 'moyu') { A.load().then(moyuOpen); return; }
+    fromHome = true; wrapShow();
     var el = document.getElementById(id); if (el) el.click();
+  }
+  /* 從小窩點進去的功能，按「返回」直接回小窩，不要先跳到高階功能 */
+  var fromHome = false, showWrapped = false;
+  function wrapShow() {
+    if (showWrapped || typeof window.showModal !== 'function') return; showWrapped = true;
+    var orig = window.showModal;
+    window.showModal = function (el) {
+      if (fromHome && el && el.id === 'advanced-modal' && home && !home.hidden) { fromHome = false; return; }
+      return orig.apply(this, arguments);
+    };
   }
   /* 拖曳 */
   var drag = null, press = null;
@@ -2405,14 +2416,14 @@
       }
       var fb = e.target.closest('[data-folder]'); if (fb) { openFolder = +fb.dataset.folder; foldRender(); return; }
       var b = e.target.closest('[data-app]'); if (!b || editing) return;
-      launch(b.dataset.app);
+      fromHome = false; launch(b.dataset.app);
     });
   }
   function homeOpen() {
     if (!home) homeBuild();
     A.load().then(function () { simulate(true); editing = false; openFolder = -1; hRender(); home.hidden = false; requestAnimationFrame(function () { home.classList.add('on'); }); });
   }
-  function homeClose() { if (!home) return; home.classList.remove('on'); setTimeout(function () { home.hidden = true; }, 220); }
+  function homeClose() { fromHome = false; if (!home) return; home.classList.remove('on'); setTimeout(function () { home.hidden = true; }, 220); }
 
   /* 上方按鈕 */
   (function headerBtn() {
