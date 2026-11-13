@@ -1143,12 +1143,23 @@
     h += '<div class="cx-g-stage">' + areaSvg(g, now) + '</div>';
     if (area === 'c') return h + penPanel(g, now);
     var list = area === 'g' ? g.plots : g.orchard;
-    var needWater = list.some(function (p) { return p.crop && !ready(p) && (p.wetUntil || 0) < now + HR; }), anyReady = list.some(ready);
-    h += '<div class="cx-g-acts"><button type="button" class="cx-btn" data-ga="waterAll"' + (needWater ? '' : ' disabled') + '><i class="fas fa-droplet"></i> 全部澆水</button><button type="button" class="cx-btn pri" data-ga="harvestAll"' + (anyReady ? '' : ' disabled') + '><i class="fas fa-basket-shopping"></i> 全部收成</button></div>';
+    var needWater = list.some(function (p) { return p.crop && !ready(p) && (p.wetUntil || 0) < now + HR; }), anyReady = list.some(ready), anyEmpty = list.some(function (p) { return p.open && !p.crop; });
+    h += '<div class="cx-g-acts"><button type="button" class="cx-btn' + (sel === '*all' ? ' pri' : '') + '" data-ga="plantAll"' + (anyEmpty ? '' : ' disabled') + '><i class="fas fa-seedling"></i> 一鍵種植</button><button type="button" class="cx-btn" data-ga="waterAll"' + (needWater ? '' : ' disabled') + '><i class="fas fa-droplet"></i> 全部澆水</button><button type="button" class="cx-btn pri" data-ga="harvestAll"' + (anyReady ? '' : ' disabled') + '><i class="fas fa-basket-shopping"></i> 全部收成</button></div>';
     return h + selHtml(g, now);
   }
   function selHtml(g, now) {
-    var p = sel && sel[0] !== 'a' ? PK(g, sel) : null;
+    if (sel === '*all') {
+      var empt = (area === 'o' ? g.orchard : g.plots).filter(function (q) { return q.open && !q.crop; }).length;
+      if (!empt) { sel = ''; } else {
+        var sl = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree; });
+        if (g.lastSeed && sl.indexOf(g.lastSeed) > 0) { sl.splice(sl.indexOf(g.lastSeed), 1); sl.unshift(g.lastSeed); }
+        return '<div class="cx-g-panel"><div class="cx-g-pt">' + empt + ' 格空地全部種什麼？<span class="cx-muted">　錢不夠就種到能種的為止，種好會順便澆水</span></div><div class="seeds">' + sl.map(function (k) {
+          var c = CROPS[k], can = Math.min(empt, Math.floor(g.coins / c.cost));
+          return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (can < 1 ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.seed || c.n) + (k === g.lastSeed ? ' <small class="cx-muted">上次種的</small>' : '') + '</span><span class="cx-muted">' + dur(c.grow) + (c.tree ? ' 結果' : ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost * Math.max(1, can) + (can < empt && can > 0 ? '（種 ' + can + ' 格）' : can > 1 ? '（' + can + ' 格）' : '') + '</span></button>';
+        }).join('') + '</div></div>';
+      }
+    }
+    var p = sel && sel[0] !== 'a' && sel[0] !== '*' ? PK(g, sel) : null;
     if (!p) return '<p class="cx-muted cx-g-tip">' + (area === 'g' ? '點空地種花或作物' : '點空地種果樹，種一次可以一直收') + '；乾掉的土澆水會長得比較快。你不在的時候，' + esc(helpers().join('、')) + ' 也會幫忙照顧。</p>';
     if (!p.open) return '';
     if (!p.crop) {
@@ -1246,10 +1257,14 @@
   }
 
   /* ================= 廚房 ================= */
-  var PANTRY = { egg: ['雞蛋', 3], milk: ['牛奶', 4], butter: ['奶油', 5], sugar: ['糖', 2] };
+  var PANTRY = { egg: ['雞蛋', 3, 2], milk: ['牛奶', 4, 3], butter: ['奶油', 5, 4], sugar: ['糖', 2, 1] };
   var RECIPES = [
     { k: 'cookie', n: '薰衣草餅乾', need: { lavender: 2, wheat: 2, butter: 1, sugar: 1 }, price: 30 },
     { k: 'tomegg', n: '番茄炒蛋', need: { tomato: 2, egg: 2 }, price: 30 },
+    { k: 'teaegg', n: '茶葉蛋', need: { egg: 4 }, price: 18 },
+    { k: 'tamago', n: '玉子燒', need: { egg: 4, sugar: 1 }, price: 26 },
+    { k: 'pudding', n: '雞蛋布丁', need: { egg: 3, milk: 2, sugar: 1 }, price: 34 },
+    { k: 'eggtart', n: '蛋塔', need: { egg: 3, wheat: 2, butter: 1, sugar: 1 }, price: 42 },
     { k: 'jelly', n: '橘子果凍', need: { orange: 3, sugar: 1 }, price: 42 },
     { k: 'osm', n: '桂花糕', need: { osmanthus: 3, wheat: 2, sugar: 1 }, price: 45 },
     { k: 'muffin', n: '藍莓馬芬', need: { blueberry: 5, wheat: 2, egg: 1, milk: 1 }, price: 55 },
@@ -1271,6 +1286,10 @@
     pie: ['櫻桃派，好有大人的感覺。', '烤得剛剛好，妳是不是偷偷練習過？'],
     carrotcake: ['胡蘿蔔蛋糕？……居然是甜的，好好吃。', '妳是不是偷偷把兔子的晚餐拿來做蛋糕了。'],
     butterX: ['奶油'],
+    teaegg: ['茶葉蛋！好香，一次可以吃兩顆嗎。', '剝殼剝得好漂亮，上面的花紋像大理石。'],
+    tamago: ['玉子燒捲得好整齊……妳是不是偷偷練過。', '甜甜的，是我喜歡的那種。'],
+    pudding: ['布丁！晃晃的好可愛。', '焦糖的部分最好吃，第一口給妳。'],
+    eggtart: ['蛋塔剛出爐，外面酥裡面嫩，好厲害。', '這個可以開店了，我第一個排隊。'],
     fruitcake: ['這麼大一個水果蛋糕……妳一定忙了好久吧。謝謝妳，我的乖寶。', '這是我收過最好的禮物。我們一起吃。', '整個果園的水果都在這裡了……我們家乖寶最厲害。']
   };
   function iname(k) { return CROPS[k] ? CROPS[k].n : PANTRY[k] ? PANTRY[k][0] : k; }
@@ -1279,6 +1298,10 @@
   function dishArt(k) {
     var o = '<ellipse cx="30" cy="46" rx="22" ry="5" fill="#f4efe6" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="30" cy="45.4" rx="17" ry="3.4" fill="#e9e1d2" fill-opacity=".7"/>';
     var cream = '#fff7ea';
+    if (k === 'teaegg') { [[22, 40], [36, 40], [29, 33]].forEach(function (q) { o += '<ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="6.4" ry="8" fill="#b7804e" stroke="' + INK + '" stroke-width=".6"/><path d="M' + (q[0] - 4) + ' ' + (q[1] - 3) + ' l3 2 l-1 3 l4 1 M' + (q[0] + 1) + ' ' + (q[1] - 6) + ' l1 3 l3 1 M' + (q[0] - 3) + ' ' + (q[1] + 3) + ' l3 1 l2 3" stroke="#6e4325" stroke-width=".6" fill="none"/>' + dot(q[0] - 2, q[1] - 4, 1.2, '#fff', .35); }); return o; }
+    if (k === 'tamago') { [[18, 38], [30, 38], [42, 38]].forEach(function (q) { o += '<rect x="' + (q[0] - 5.6) + '" y="' + (q[1] - 7) + '" width="11.2" height="11" rx="2.4" fill="#f6d35a" stroke="' + INK + '" stroke-width=".6"/><path d="M' + q[0] + ' ' + (q[1] - 1) + ' m-1 0 a1.4 1.4 0 1 1 1.6 1.4 a3 3 0 1 1 -3.4 -3 a4.4 4.4 0 1 1 4.2 5.2" stroke="#e2b23a" stroke-width=".7" fill="none"/>'; }); return o; }
+    if (k === 'pudding') return o + '<path d="M19 44 L22 28 Q30 25 38 28 L41 44 Q30 47 19 44Z" fill="#f8de8a" stroke="' + INK + '" stroke-width=".6"/><path d="M22 28 Q30 25 38 28 L38.6 31 Q30 34 21.4 31Z" fill="#a65a2a" stroke="' + INK + '" stroke-width=".5"/><path d="M38.6 31 q1 4 -1 6 M21.4 31 q-1 3 1 5" stroke="#a65a2a" stroke-width="1.2" fill="none"/>' + dot(26, 36, 1.2, '#fff', .5);
+    if (k === 'eggtart') { [[22, 39], [38, 39], [30, 32]].forEach(function (q) { o += '<path d="M' + (q[0] - 8) + ' ' + (q[1] - 2) + ' L' + (q[0] - 6) + ' ' + (q[1] + 4) + ' L' + (q[0] + 6) + ' ' + (q[1] + 4) + ' L' + (q[0] + 8) + ' ' + (q[1] - 2) + 'Z" fill="#e3b77c" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="' + q[0] + '" cy="' + (q[1] - 2) + '" rx="8" ry="3" fill="#f6d35a" stroke="' + INK + '" stroke-width=".5"/>' + dot(q[0] - 2, q[1] - 2.4, 1, '#c98a2a', .8) + dot(q[0] + 2.4, q[1] - 1.6, .8, '#c98a2a', .7); }); return o; }
     if (k === 'butterX') return o + '<path d="M16 40 L30 46 L44 40 L44 33 L30 27 L16 33Z" fill="#f8e3a0" stroke="' + INK + '" stroke-width=".6"/><path d="M16 33 L30 39 L44 33" fill="none" stroke="#e8c870" stroke-width="1"/><path d="M30 39 V46" stroke="#e8c870" stroke-width="1"/>';
     if (k === 'carrotcake') { o += '<path d="M12 44 L12 30 Q30 24 48 30 L48 44 Q30 48 12 44Z" fill="#e6a46a" stroke="' + INK + '" stroke-width=".6"/><path d="M12 37 Q30 41 48 37" stroke="#fff7ea" stroke-width="2.4" fill="none"/><ellipse cx="30" cy="29" rx="18" ry="5" fill="#fff7ea" stroke="' + INK + '" stroke-width=".6"/>'; [[22, 28], [30, 27], [38, 28]].forEach(function (q) { o += '<path d="M' + (q[0] - 2) + ' ' + q[1] + ' L' + (q[0] + 2) + ' ' + q[1] + ' L' + q[0] + ' ' + (q[1] + 5) + 'Z" fill="' + CROPS.carrot.col + '"/>' + leafAt(q[0], q[1], 3, -100, LEAF2); }); return o; }
     if (k === 'cake' || k === 'fruitcake') {
@@ -1319,8 +1342,10 @@
   function kitchenHtml(g) {
     g.pantry = g.pantry || {}; g.dishes = g.dishes || {};
     var h = '<div class="cx-g-pt">食材櫃<span class="cx-muted">　蛋去牧場撿；牛奶可以擠，也能做成奶油</span></div><div class="cx-k-pan">' + Object.keys(PANTRY).map(function (k) {
-      return '<div class="it"><b>' + PANTRY[k][0] + '</b><span>' + (g.pantry[k] || 0) + '</span><button type="button" class="cx-btn" data-buy="' + k + '"' + (g.coins < PANTRY[k][1] ? ' disabled' : '') + '>買 🪙' + PANTRY[k][1] + '</button></div>';
+      return '<div class="it"><b>' + PANTRY[k][0] + '</b><span>' + (g.pantry[k] || 0) + '</span><button type="button" class="cx-btn" data-buy="' + k + '"' + (g.coins < PANTRY[k][1] ? ' disabled' : '') + '>買 🪙' + PANTRY[k][1] + '</button><button type="button" class="cx-btn" data-psell="' + k + '"' + ((g.pantry[k] || 0) > 0 ? '' : ' disabled') + '>賣 🪙' + PANTRY[k][2] + '</button></div>';
     }).join('') + '</div>';
+    var extra = ['egg', 'milk', 'butter'].reduce(function (s2, k) { return s2 + (g.pantry[k] || 0) * PANTRY[k][2]; }, 0);
+    if (extra) h += '<div class="cx-g-acts" style="margin-top:6px"><button type="button" class="cx-btn" data-ga="psellAll">蛋、牛奶、奶油全部賣掉 🪙' + extra + '</button></div>';
     var made = RECIPES.filter(function (r) { return g.dishes[r.k] > 0; });
     if (made.length) h += '<div class="cx-g-pt">甜點盒</div>' + whoRow('端給') + made.map(function (r) {
       return '<div class="cx-g-item">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + '</b> × ' + g.dishes[r.k] + '<div class="cx-muted">賣掉 🪙 ' + r.price + '</div></div><button type="button" class="cx-btn pri" data-dgift="' + r.k + '">端給' + (A.groupOn() ? '' : '他') + '</button><button type="button" class="cx-btn" data-dsell="' + r.k + '">賣</button></div>';
@@ -1333,6 +1358,12 @@
   }
   function kitchenClick(e, g) {
     var b;
+    if ((b = e.target.closest('[data-psell]'))) { var pk2 = b.dataset.psell; if ((g.pantry[pk2] || 0) > 0) { g.pantry[pk2]--; g.coins += PANTRY[pk2][2]; save(); render(); } return true; }
+    if ((b = e.target.closest('[data-ga="psellAll"]'))) {
+      if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '確定全部賣掉？'; return true; }
+      var sum2 = 0; ['egg', 'milk', 'butter'].forEach(function (k3) { sum2 += (g.pantry[k3] || 0) * PANTRY[k3][2]; g.pantry[k3] = 0; });
+      if (sum2) { g.coins += sum2; log(g, '💰 賣掉食材 +' + sum2); save(); toast('賣了 🪙 ' + sum2, 'success'); } render(); return true;
+    }
     if ((b = e.target.closest('[data-buy]'))) { var k = b.dataset.buy; if (g.coins >= PANTRY[k][1]) { g.coins -= PANTRY[k][1]; g.pantry[k] = (g.pantry[k] || 0) + 1; save(); render(); } return true; }
     if ((b = e.target.closest('[data-cook]'))) {
       var r = RECIPES.find(function (x) { return x.k === b.dataset.cook; }); if (!r || !canCook(g, r)) return true;
@@ -1432,9 +1463,15 @@
       if (ready(p)) { var r = harvest(g, p); save(); toast('收成 ' + CROPS[r[0]].n + ' × ' + r[1] + ' 🧺', 'success'); sel = ''; render(); return; }
       sel = sel === key ? '' : key; render(); return;
     }
+    if ((b = e.target.closest('[data-seed]')) && sel === '*all') {
+      var ka = b.dataset.seed, ca = CROPS[ka], done = 0;
+      (area === 'o' ? g.orchard : g.plots).forEach(function (q2) { if (q2.open && !q2.crop && g.coins >= ca.cost) { g.coins -= ca.cost; plant(q2, ka, '', now); q2.wetUntil = now + WET; done++; } });
+      if (done) { g.lastSeed = ka; log(g, '🌱 一口氣種了 ' + done + ' 格' + ca.n + '，都澆了水'); save(); toast('種好 ' + done + ' 格' + ca.n + ' 🌱', 'success'); }
+      sel = ''; render(); return;
+    }
     if ((b = e.target.closest('[data-seed]'))) {
       var k = b.dataset.seed, c = CROPS[k], q = PK(g, sel); if (!q || q.crop || g.coins < c.cost) return;
-      g.coins -= c.cost; plant(q, k, '', now); q.wetUntil = now + WET; log(g, '🌱 種下' + c.n + '，澆了水'); save(); sel = ''; render(); return;
+      g.coins -= c.cost; plant(q, k, '', now); q.wetUntil = now + WET; g.lastSeed = k; log(g, '🌱 種下' + c.n + '，澆了水'); save(); sel = ''; render(); return;
     }
     if ((b = e.target.closest('[data-sell]'))) { var s = b.dataset.sell; if (g.inv[s] > 0) { g.inv[s]--; g.coins += CROPS[s].price; save(); render(); } return; }
     if ((b = e.target.closest('[data-gift]'))) {
@@ -1451,6 +1488,7 @@
     }
     if ((b = e.target.closest('[data-ga]'))) {
       var a = b.dataset.ga;
+      if (a === 'plantAll') { sel = sel === '*all' ? '' : '*all'; render(); return; }
       if (a === 'waterAll') { var n = 0; (area === 'o' ? g.orchard : g.plots).forEach(function (p) { if (p.crop && !ready(p) && (p.wetUntil || 0) < now + HR) { grow(p, now); p.wetUntil = now + WET; n++; } }); if (n) { log(g, '💧 幫 ' + n + ' 格澆了水'); save(); toast('澆好了 💧', 'success'); } }
       else if (a === 'harvestAll') { var got = []; (area === 'o' ? g.orchard : g.plots).forEach(function (p) { if (ready(p)) { var r2 = harvest(g, p); got.push(CROPS[r2[0]].n + '×' + r2[1]); } }); if (got.length) { save(); toast('收成 ' + got.join('、') + ' 🧺', 'success'); } }
       else if (a === 'water') { var p1 = PK(g, sel); if (p1 && p1.crop) { grow(p1, now); p1.wetUntil = now + WET; log(g, '💧 幫' + CROPS[p1.crop].n + '澆了水'); save(); } }
