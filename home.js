@@ -2301,41 +2301,24 @@
   }
 
   /* ================= 小家 ================= */
-  var hz = null, hzRoom = 'living', hzOver = {}, hzSay = {};
+  var hz = null, hzRoom = 'living', hzOver = {}, hzSay = {}, hzPos = {}, hzWalk = {};
   var HZ_ROOMS = [['living', '客廳', 'r_living'], ['bed', '臥室', 'r_bed'], ['closet', '衣物間', 'r_closet'], ['cs', '昶司的書房', 'r_cs'], ['rm', '仁彌的房間', 'r_rm']];
   var HZ_PPL = [['me', null, 'cb_me'], ['cs', '昶司', 'cb_changsi'], ['rm', '仁彌', 'cb_renmi']];
-  /* 每個房間地板上的位置：[x%, y%]（腳底） */
+  var HZ_POSE = { me: { sit: 'me_sit', walk: 'me_walk', sleep: 'me_sleep' }, cs: { sit: 'cs_sit', walk: 'cs_walk', sleep: 'cs_sleep', work: 'cs_work' }, rm: { sit: 'rm_sit', walk: 'rm_walk', sleep: 'rm_sleep' } };
+  /* 每個房間的位置：[x%, y%]（腳底／坐的地方） */
   var HZ_SPOT = {
-    living: { p: [[24, 86], [48, 95], [74, 86]], sofa: [31, 60], sofa2: [24, 59], sofa3: [38, 61], rug: [53, 68], corner: [87, 72] },
-    bed: { p: [[40, 90], [59, 93], [79, 86]], top: [60, 58], top2: [46, 55], catbed: [27, 77], rug: [81, 74] },
-    closet: { p: [[44, 86], [62, 89]], floor: [68, 80], stool: [52, 74] },
-    cs: { p: [[60, 88]], floor: [82, 86], chair: [80, 70] },
-    rm: { p: [[63, 86]], bean: [38, 68], rug: [62, 80] }
+    living: { stand: [[24, 86], [48, 95], [74, 86], [62, 70]], seat: [[23, 64], [32, 60], [41, 56]], rug: [53, 68], corner: [87, 72] },
+    bed: { stand: [[40, 90], [59, 93], [79, 86]], pillow: [[28, 58], [41, 50], [54, 42]], feet: [[66, 66], [57, 71]], top: [60, 58], catbed: [27, 77], rug: [81, 74] },
+    closet: { stand: [[44, 86], [62, 89]], floor: [68, 80], stool: [52, 74] },
+    cs: { stand: [[60, 88], [42, 92]], chair: [52, 63], floor: [82, 86], arm: [80, 70] },
+    rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
-  var HZ_H = { fd_lie: 12, fd_blanket: 12, fd_stretch: 15, fd_belly: 12, fd_bed: 15, fd_sleep: 11, fd_eat: 13, an_sleep: 11, an_side: 11, an_belly: 12, an_stretch: 15, an_sit: 17, an_box: 15 };
+  var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
+  var HZ_BAD = { sad: 1, tired: 1, angry: 1, lonely: 1, cute: 1 };
   function HI(k) { return (window.__cxHIMG || {})[k]; }
   function hzMode() { var m = 'auto'; try { m = localStorage.getItem('cxHouseMode') || 'auto'; } catch (e) {} return m; }
   function hzNight() { var m = hzMode(); if (m === 'day') return false; if (m === 'night') return true; var h = new Date().getHours(); return h >= 21 || h < 7; }
   function hzRand(seed) { var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); }
-  /* 這段時間大家在哪裡（每 20 分鐘換一次） */
-  function hzScene() {
-    var blk = Math.floor(Date.now() / 12e5), r = function (i) { return hzRand(blk * 7 + i); }, S = { ppl: {}, cats: {} }, night = hzNight();
-    if (night) {
-      S.ppl = { me: ['bed', 1], cs: ['bed', 0], rm: ['bed', 2] };
-      if (r(1) < .35) { S.cats.fd = ['bed', 'top2', 'fd_sleep']; S.cats.an = ['bed', 'top', 'an_sleep']; S.together = 1; }
-      else { S.cats.fd = ['bed', 'top', 'fd_sleep']; S.cats.an = ['bed', 'catbed', 'an_sleep']; }
-      return S;
-    }
-    S.ppl.me = ['living', 1];
-    S.ppl.cs = r(2) < .5 ? ['cs', 0] : ['living', 0];
-    S.ppl.rm = r(3) < .5 ? ['rm', 0] : ['living', 2];
-    if (r(4) < .15) { S.cats.fd = ['living', 'sofa2', 'fd_sleep']; S.cats.an = ['living', 'sofa3', 'an_sleep']; S.together = 1; return S; }
-    var FD = [['living', 'sofa', 'fd_lie'], ['living', 'rug', 'fd_blanket'], ['living', 'corner', 'fd_stretch'], ['bed', 'top', 'fd_belly'], ['bed', 'catbed', 'fd_bed'], ['rm', 'bean', 'fd_sleep'], ['closet', 'floor', 'fd_lie']];
-    var AN = [['living', 'corner', 'an_box'], ['living', 'rug', 'an_sit'], ['bed', 'rug', 'an_side'], ['cs', 'floor', 'an_sit'], ['closet', 'stool', 'an_stretch'], ['rm', 'rug', 'an_belly'], ['cs', 'chair', 'an_box']];
-    S.cats.fd = FD[Math.floor(r(5) * FD.length)];
-    var a = AN[Math.floor(r(6) * AN.length)]; if (a[0] === S.cats.fd[0] && a[1] === S.cats.fd[1]) a = AN[(AN.indexOf(a) + 1) % AN.length];
-    S.cats.an = a; return S;
-  }
   function hzCards() {
     var pool = (typeof customReplies !== 'undefined' && Array.isArray(customReplies)) ? customReplies : [];
     try { var off = JSON.parse(localStorage.getItem('disabledReplyItems') || '[]'); pool = pool.filter(function (x) { return off.indexOf(x) < 0; }); } catch (e) {}
@@ -2351,32 +2334,100 @@
     fd: { pet: ['呼嚕呼嚕……', '喵～（蹭蹭你的手）', '（翻肚子給你摸）', '喵嗚～再摸一下'], wand: ['喵！（撲過去）', '（屁股扭扭，準備撲）', '喵喵喵！'], treat: ['喵～！（吃得好香）', '（叼走小魚乾，開心地瞇眼）'], food: ['（埋頭苦吃）', '喵～好好吃'] },
     an: { pet: ['哼。', '……（假裝沒看到）', '（不情願地讓你摸了一下）', '……（偷偷蹭了你一下）'], wand: ['……（看了一眼，沒動）', '哼。（尾巴甩了一下）', '（忍不住伸爪子撥了一下）'], treat: ['……（叼走了，沒說謝謝）', '（吃完又看著你，還要）'], food: ['（慢條斯理地吃）', '哼，勉強好吃。'] }
   };
-  function hzActors(S) {
-    var out = [], R = hzRoom, now = Date.now();
-    HZ_PPL.forEach(function (p, i) { var w = S.ppl[p[0]]; if (!w || w[0] !== R) return; var sp = HZ_SPOT[R].p[Math.min(w[1], HZ_SPOT[R].p.length - 1)]; out.push({ id: 'p:' + p[0], img: p[2], ci: 1, x: sp[0], y: sp[1], h: 27, name: p[1] }); });
-    ['fd', 'an'].forEach(function (c) {
-      var w = S.cats[c]; if (!w || w[0] !== R) return; var sp = HZ_SPOT[R][w[1]], pose = w[2], ov = hzOver[c];
-      if (ov && ov.until > now) pose = ov.pose;
-      out.push({ id: 'c:' + c, img: pose, x: sp[0], y: sp[1], h: HZ_H[pose] || 12, cat: c });
-    });
-    return out.sort(function (a, b) { return a.y - b.y; });
+  function hzHearts(id) {
+    var el = hz && hz.body.querySelector('[data-hza="' + id + '"]'); if (!el) return;
+    for (var i = 0; i < 4; i++) { var s = document.createElement('span'); s.className = 'hz-heart'; s.textContent = '♥'; s.style.left = (30 + Math.random() * 40) + '%'; s.style.animationDelay = (i * .15) + 's'; el.appendChild(s); setTimeout(function (n) { n.remove(); }.bind(null, s), 1600); }
   }
+
+  function hzBlock() { return Math.floor(Date.now() / 12e5); }
+  function hzMood() {
+    var md = window.moodData || {}, d = new Date(), ks = [];
+    for (var i = 0; i < 2; i++) { var t = new Date(d - i * 864e5), k = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); ks.push(k); }
+    for (var j = 0; j < ks.length; j++) if (md[ks[j]] && md[ks[j]].user) return md[ks[j]].user;
+    return '';
+  }
+  function hzPeriod() {
+    try { var P = (A.X() || {}).period; if (!P || !Array.isArray(P.list)) return false; var t = new Date(); t.setHours(0, 0, 0, 0);
+      return P.list.some(function (p) { if (!p || !p.start) return false; var q = p.start.split('-'), s0 = new Date(+q[0], +q[1] - 1, +q[2]), e0 = p.end ? new Date(+p.end.split('-')[0], +p.end.split('-')[1] - 1, +p.end.split('-')[2]) : new Date(s0.getTime() + ((P.len || 5) - 1) * 864e5); return t >= s0 && t <= e0; });
+    } catch (e) { return false; }
+  }
+  function hzAnniv() {
+    var list = (typeof anniversaries !== 'undefined' && Array.isArray(anniversaries)) ? anniversaries : [], t = new Date(), out = '';
+    list.forEach(function (a) { if (!a || !a.date) return; var p = String(a.date).split('-'); if (+p[1] === t.getMonth() + 1 && +p[2] === t.getDate()) out = a.name || '重要的日子'; });
+    return out;
+  }
+  /* 這段時間大家在哪裡、在做什麼（每 20 分鐘換一次） */
+  function hzScene() {
+    var blk = hzBlock(), r = function (i) { return hzRand(blk * 7 + i); }, S = { ppl: {}, cats: {} }, night = hzNight(), sad = HZ_BAD[hzMood()];
+    if (night) {
+      var B = HZ_SPOT.bed;
+      S.ppl = { cs: { room: 'bed', kind: 'sleep', at: B.pillow[0] }, me: { room: 'bed', kind: 'sleep', at: B.pillow[1] }, rm: { room: 'bed', kind: 'sleep', at: B.pillow[2] } };
+      if (r(1) < .4 || sad) { S.cats.fd = ['bed', B.feet[0], 'fd_sleep']; S.cats.an = ['bed', B.feet[1], 'an_sleep']; S.together = 1; }
+      else { S.cats.fd = ['bed', B.feet[0], 'fd_sleep']; S.cats.an = ['bed', B.catbed, 'an_sleep']; }
+      return S;
+    }
+    var L = HZ_SPOT.living, used = {}, st = 0;
+    function seat(i) { used[i] = 1; return L.seat[i]; }
+    S.ppl.me = r(2) < .7 ? { room: 'living', kind: 'sit', at: seat(1) } : { room: 'living', kind: 'stand', at: L.stand[st++] };
+    var c = r(3); S.ppl.cs = c < .45 ? { room: 'cs', kind: 'work', at: HZ_SPOT.cs.chair } : c < .75 ? { room: 'living', kind: 'sit', at: seat(0) } : { room: 'living', kind: 'stand', at: L.stand[st++] };
+    var m = r(4); S.ppl.rm = m < .4 ? { room: 'rm', kind: 'sit', at: HZ_SPOT.rm.bean } : m < .7 ? { room: 'living', kind: 'sit', at: seat(2) } : { room: 'living', kind: 'stand', at: L.stand[st++] };
+    var free = [0, 1, 2].filter(function (i) { return !used[i]; }), sofa = free.length ? L.seat[free[0]] : L.rug;
+    if (sad) { var me = S.ppl.me; S.cats.fd = [me.room, [me.at[0] + 7, me.at[1] + 6], 'fd_belly']; S.cats.an = [me.room, [me.at[0] - 8, me.at[1] + 8], 'an_sit']; S.clingy = 1; return S; }
+    if (r(5) < .15) { S.cats.fd = ['living', L.rug, 'fd_sleep']; S.cats.an = ['living', [L.rug[0] + 7, L.rug[1] + 2], 'an_sleep']; S.together = 1; return S; }
+    var FD = [['living', sofa, 'fd_lie'], ['living', L.rug, 'fd_blanket'], ['living', L.corner, 'fd_stretch'], ['bed', HZ_SPOT.bed.top, 'fd_belly'], ['bed', HZ_SPOT.bed.catbed, 'fd_bed'], ['closet', HZ_SPOT.closet.floor, 'fd_lie'], ['rm', HZ_SPOT.rm.rug, 'fd_sleep']];
+    var AN = [['living', L.corner, 'an_box'], ['living', L.rug, 'an_sit'], ['bed', HZ_SPOT.bed.rug, 'an_side'], ['cs', HZ_SPOT.cs.floor, 'an_sit'], ['closet', HZ_SPOT.closet.stool, 'an_stretch'], ['rm', HZ_SPOT.rm.rug, 'an_belly'], ['cs', HZ_SPOT.cs.arm, 'an_box']];
+    S.cats.fd = FD[Math.floor(r(6) * FD.length)];
+    var ai = Math.floor(r(7) * AN.length), a = AN[ai]; if (a[0] === S.cats.fd[0] && a[1] === S.cats.fd[1]) a = AN[(ai + 1) % AN.length];
+    S.cats.an = a; return S;
+  }
+  function hzActors(S) {
+    var out = [], R = hzRoom, now = Date.now(), blk = hzBlock();
+    HZ_PPL.forEach(function (p) {
+      var w = S.ppl[p[0]]; if (!w || w.room !== R) return; var id = 'p:' + p[0], kind = w.kind, at = w.at, pz = hzPos[id];
+      if (kind === 'stand' && pz && pz.blk === blk) at = pz.at;
+      var wk = hzWalk[id], img = p[2], ci = 1, h = 27, flip = 0;
+      if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? 16 : kind === 'work' ? 24 : 18; }
+      if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 27; flip = wk.to[0] < wk.from[0]; at = wk.from; }
+      out.push({ id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: kind === 'sleep' ? '' : p[1], flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
+    });
+    ['fd', 'an'].forEach(function (c) {
+      var w = S.cats[c]; if (!w || w[0] !== R) return; var sp = w[1], pose = w[2], ov = hzOver[c];
+      if (ov && ov.until > now) pose = ov.pose;
+      out.push({ id: 'c:' + c, img: pose, x: sp[0], y: sp[1], h: HZ_H[pose] || 11, cat: c });
+    });
+    return out.sort(function (a, b) { return (a.sleep ? -1 : 0) - (b.sleep ? -1 : 0) || a.y - b.y; });
+  }
+  var HZ_LINKS = {
+    living: [['envelope-function', '✉️', '寫信'], ['anniversary-function', '📅', '重要日'], ['mood-function', '😊', '心晴手帳']],
+    bed: [['cx-diary-entry', '📖', '床頭的日記'], ['cx-comp-entry', '🎧', '陪伴入睡'], ['cx-period-entry', '🌊', '潮汐']],
+    cs: [['cx-pomo-entry', '⏰', '一起專心（番茄鐘）']],
+    rm: [['cx-comp-entry', '🎵', '陪伴']],
+    closet: []
+  };
   function hzRender() {
     if (!hz) return;
     var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]);
-    var cnt = {}; Object.keys(S.ppl).forEach(function (k) { cnt[S.ppl[k][0]] = (cnt[S.ppl[k][0]] || 0) + 1; }); Object.keys(S.cats).forEach(function (k) { cnt[S.cats[k][0]] = (cnt[S.cats[k][0]] || 0) + 1; });
+    var cnt = {}; Object.keys(S.ppl).forEach(function (k) { cnt[S.ppl[k].room] = (cnt[S.ppl[k].room] || 0) + 1; }); Object.keys(S.cats).forEach(function (k) { cnt[S.cats[k][0]] = (cnt[S.cats[k][0]] || 0) + 1; });
     var mode = hzMode(), h = '<div class="hz-top"><div class="hz-tabs">' + HZ_ROOMS.map(function (r) { return '<button type="button" data-hzr="' + r[0] + '" class="' + (r[0] === hzRoom ? 'on' : '') + '">' + r[1] + (cnt[r[0]] ? '<i>' + cnt[r[0]] + '</i>' : '') + '</button>'; }).join('') + '</div>' +
       '<div class="hz-mode">' + [['auto', '自動'], ['day', '白天'], ['night', '晚上']].map(function (m) { return '<button type="button" data-hzm="' + m[0] + '" class="' + (mode === m[0] ? 'on' : '') + '">' + (m[0] === 'day' ? '☀️ ' : m[0] === 'night' ? '🌙 ' : '') + m[1] + '</button>'; }).join('') + '</div></div>';
     if (!ri) { hz.body.innerHTML = h + '<p class="cx-muted" style="text-align:center;padding:40px 0">家裡的東西搬進來中…</p>'; return; }
-    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">';
+    var anv = hzAnniv();
+    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : '');
     hzActors(S).forEach(function (a) {
       var im = a.ci ? CI(a.img) : HI(a.img); if (!im) return;
-      h += '<button type="button" class="hz-a' + (a.cat ? ' cat' : '') + (hzOver[a.cat] && hzOver[a.cat].until > Date.now() ? ' bounce' : '') + '" data-hza="' + a.id + '" style="left:' + a.x + '%;top:' + a.y + '%;height:' + a.h + '%"><img src="' + im.src + '" alt="">' +
-        (a.name ? '<span class="nm">' + a.name + '</span>' : '') + (hzSay[a.id] && hzSay[a.id].until > Date.now() ? '<span class="say">' + esc(hzSay[a.id].t) + '</span>' : '') + '</button>';
+      h += '<button type="button" class="hz-a' + (a.cat ? ' cat' : '') + (a.sleep ? ' zz' : '') + (a.walk ? ' walking' : '') + (hzOver[a.cat] && hzOver[a.cat].until > Date.now() ? ' bounce' : '') + '" data-hza="' + a.id + '" style="left:' + a.x + '%;top:' + a.y + '%;height:' + a.h + '%' + (a.walk ? ';transition:left ' + a.walk.dur + 'ms linear,top ' + a.walk.dur + 'ms linear' : '') + '"' + (a.walk ? ' data-to="' + a.walk.to.join(',') + '"' : '') + '><img src="' + im.src + '" alt=""' + (a.flip ? ' style="transform:scaleX(-1)"' : '') + '>' +
+        (a.name ? '<span class="nm">' + a.name + '</span>' : '') + (a.sleep ? '<span class="z">z<small>z</small></span>' : '') + (hzSay[a.id] && hzSay[a.id].until > Date.now() ? '<span class="say">' + esc(hzSay[a.id].t) + '</span>' : '') + '</button>';
     });
     h += '</div>';
-    var tip = night ? (S.together ? '夜深了，大家都在臥室。Fiddi 和安安窩在一起睡著了 🌙' : '夜深了，大家都在臥室，貓咪也睡了 🌙') : (S.together ? 'Fiddi 和安安窩在一起睡午覺 💤' : '點貓咪可以摸摸、逗她們玩、餵零食；點哥哥會跟你說話。');
-    h += '<p class="cx-muted hz-tip">' + tip + '</p>';
+    var tips = [];
+    if (anv) tips.push('🎉 今天是「' + esc(anv) + '」，家裡佈置好了！');
+    if (hzPeriod()) tips.push('🌊 這幾天哥哥們幫你準備了熱水袋和紅糖水，要多休息。');
+    if (S.clingy) tips.push('今天心情不太好嗎？Fiddi 和安安一直黏在你身邊 🧡🤍');
+    if (!tips.length) tips.push(night ? (S.together ? '夜深了，大家都睡了，Fiddi 和安安窩在一起 🌙' : '夜深了，大家都在臥室睡了 🌙') : (S.together ? 'Fiddi 和安安窩在一起睡午覺 💤' : '點貓咪可以摸摸、逗她們玩；點哥哥會跟你說話。'));
+    h += '<p class="cx-muted hz-tip">' + tips.join('<br>') + '</p>';
+    var links = (HZ_LINKS[hzRoom] || []).filter(function (l) { return document.getElementById(l[0]); });
+    if (links.length) h += '<div class="hz-links">' + links.map(function (l) { return '<button type="button" class="cx-btn" data-hzl="' + l[0] + '">' + l[1] + ' ' + l[2] + '</button>'; }).join('') + '</div>';
+    if (hzRoom === 'closet') h += '<p class="cx-muted hz-tip">換裝功能準備中，衣服畫好就開放 👗</p>';
     if (hz.sel) {
       var cn = hz.sel === 'fd' ? 'Fiddi 🧡' : '安安 🤍', fish = HI('i_fish'), kib = HI('i_kibble'), wand = HI('i_wand');
       h += '<div class="hz-panel"><b>' + cn + '</b><div class="row">' +
@@ -2386,20 +2437,30 @@
         '<button type="button" class="cx-btn" data-hzc="food">' + (kib ? '<img src="' + kib.src + '" alt="">' : '') + '餵飯</button></div></div>';
     }
     hz.body.innerHTML = h;
+    hz.body.querySelectorAll('.hz-a.walking').forEach(function (el) { var t = el.dataset.to.split(','); requestAnimationFrame(function () { requestAnimationFrame(function () { el.style.left = t[0] + '%'; el.style.top = t[1] + '%'; }); }); });
   }
-  function hzHearts(id) {
-    var el = hz && hz.body.querySelector('[data-hza="' + id + '"]'); if (!el) return;
-    for (var i = 0; i < 4; i++) { var s = document.createElement('span'); s.className = 'hz-heart'; s.textContent = '♥'; s.style.left = (30 + Math.random() * 40) + '%'; s.style.animationDelay = (i * .15) + 's'; el.appendChild(s); setTimeout(function (n) { n.remove(); }.bind(null, s), 1600); }
+  /* 白天站著的人偶爾會走到房間另一頭 */
+  function hzStroll() {
+    if (!hz || !hz.isOpen() || hzNight() || Object.keys(hzWalk).length) return;
+    var S = hzScene(), L = HZ_SPOT[hzRoom], blk = hzBlock(), cand = [];
+    HZ_PPL.forEach(function (p) { var w = S.ppl[p[0]]; if (w && w.room === hzRoom && w.kind === 'stand') cand.push(p[0]); });
+    if (!cand.length || Math.random() < .4) return;
+    var k = pick(cand), id = 'p:' + k, cur = (hzPos[id] && hzPos[id].blk === blk) ? hzPos[id].at : S.ppl[k].at;
+    var spots = L.stand.filter(function (q) { return Math.abs(q[0] - cur[0]) + Math.abs(q[1] - cur[1]) > 8; }); if (!spots.length) return;
+    var to = pick(spots), dist = Math.abs(to[0] - cur[0]) + Math.abs(to[1] - cur[1]), dur = Math.max(1800, dist * 90);
+    hzWalk[id] = { from: cur, to: to, dur: dur }; hzRender();
+    setTimeout(function () { delete hzWalk[id]; hzPos[id] = { blk: blk, at: to }; hzRender(); }, dur + 80);
   }
   function houseOpen() {
     if (!hz) {
       hz = A.makeModal('cx-house-modal', 'fa-house-chimney', '我們的家');
       hz.onBack = function () { hz.close(); homeOpen(); return true; };
-      hz.onClose = function () { clearInterval(hz.tm); hz.tm = null; };
+      hz.onClose = function () { clearInterval(hz.tm); clearInterval(hz.tw); hz.tm = hz.tw = null; };
       hz.body.addEventListener('click', function (e) {
         var b;
-        if ((b = e.target.closest('[data-hzr]'))) { hzRoom = b.dataset.hzr; hz.sel = null; hzRender(); return; }
-        if ((b = e.target.closest('[data-hzm]'))) { try { localStorage.setItem('cxHouseMode', b.dataset.hzm); } catch (x) {} hzRender(); return; }
+        if ((b = e.target.closest('[data-hzr]'))) { hzRoom = b.dataset.hzr; hz.sel = null; hzWalk = {}; hzRender(); return; }
+        if ((b = e.target.closest('[data-hzm]'))) { try { localStorage.setItem('cxHouseMode', b.dataset.hzm); } catch (x) {} hzWalk = {}; hzRender(); return; }
+        if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); homeOpen(); setTimeout(function () { launch(lid); }, 250); return; }
         if ((b = e.target.closest('[data-hzc]'))) {
           var c = hz.sel; if (!c) return; var act = b.dataset.hzc, pose = c === 'fd' ? { pet: 'fd_belly', wand: 'fd_stretch', treat: 'fd_lie', food: 'fd_eat' }[act] : { pet: 'an_belly', wand: 'an_stretch', treat: 'an_sit', food: 'an_sit' }[act];
           hzOver[c] = { pose: pose, until: Date.now() + 5000 }; hzSay['c:' + c] = { t: pick(CAT_TXT[c][act]), until: Date.now() + 4000 };
@@ -2409,18 +2470,20 @@
         if ((b = e.target.closest('[data-hza]'))) {
           var id = b.dataset.hza;
           if (id.indexOf('c:') === 0) { hz.sel = hz.sel === id.slice(2) ? null : id.slice(2); hzRender(); return; }
-          var p = HZ_PPL.filter(function (x) { return 'p:' + x[0] === id; })[0]; if (!p || !p[1]) { hzSay[id] = { t: '（這是你～）', until: Date.now() + 2500 }; hzRender(); setTimeout(hzRender, 2600); return; }
+          var p = HZ_PPL.filter(function (x) { return 'p:' + x[0] === id; })[0];
+          if (b.classList.contains('zz')) { hzSay[id] = { t: p && p[1] ? '……嗯（睡得好熟）' : '（呼呼大睡中）', until: Date.now() + 2500 }; hzRender(); setTimeout(hzRender, 2600); return; }
+          if (!p || !p[1]) { hzSay[id] = { t: '（這是你～）', until: Date.now() + 2500 }; hzRender(); setTimeout(hzRender, 2600); return; }
           hzSay[id] = { t: hzLine(p[1]), until: Date.now() + 5000 }; hzRender(); hzHearts(id); setTimeout(hzRender, 5100); return;
         }
         if (hz.sel && !e.target.closest('.hz-panel')) { hz.sel = null; hzRender(); }
       });
     }
     if (!window.__cxHIMG && !document.getElementById('cx-himg-js')) { var sc = document.createElement('script'); sc.id = 'cx-himg-js'; sc.src = 'homeimg.js'; sc.onload = function () { hzRender(); }; document.body.appendChild(sc); }
-    var S = hzScene(); hzRoom = S.ppl.me[0]; hz.sel = null;
+    var S = hzScene(); hzRoom = S.ppl.me.room; hz.sel = null; hzWalk = {};
     hzRender(); hz.open();
-    clearInterval(hz.tm); hz.tm = setInterval(function () { if (hz.isOpen()) hzRender(); }, 60e3);
+    clearInterval(hz.tm); hz.tm = setInterval(function () { if (hz.isOpen() && !Object.keys(hzWalk).length) hzRender(); }, 60e3);
+    clearInterval(hz.tw); hz.tw = setInterval(hzStroll, 9000);
   }
-
   /* ================= 小窩 ================= */
   var APPS = [
     ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
@@ -2739,6 +2802,7 @@
     '.cx-cd-cat{font-size:12.5px;color:var(--text-secondary);margin:8px 2px 4px}.cx-cds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.cx-cd{background:#fffaf4;border:1px solid #eadfce;border-radius:14px;padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;cursor:pointer;color:#5a4a44}.cx-cd .im{display:flex;align-items:flex-end;justify-content:center;height:58px;gap:0}.cx-cd.gift .im{background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 90%27%3E%3Cpath d=%27M50 86 C10 58 0 38 8 20 C16 4 40 2 50 22 C60 2 84 4 92 20 C100 38 90 58 50 86Z%27 fill=%27%23fdf1f3%27/%3E%3C/svg%3E") center 40%/auto 92% no-repeat}.cx-cd.no .im{background:none}.cx-cd .im span{display:flex;align-items:flex-end;justify-content:center;height:100%}.cx-cd .im span.p{width:34px}.cx-cd .im span.o{width:26px;height:80%}.cx-cd.gift .im span.p+span.o{margin-left:2px}.cx-cd.gift .im span.o+span.p{margin-left:-3px}.cx-cd:not(.gift) .im{gap:3px}.cx-cd:not(.gift) .im span.o{width:34px;height:100%}.cx-cd .im img,.cx-cd .im svg{max-width:100%;max-height:100%;height:auto}.cx-cd .im svg{height:100%}.cx-cd b{font-size:11px;line-height:1.3}.cx-cd small{font-size:10px;color:#b3a59c}.cx-cd.no{cursor:default}.cx-cd.no .im{filter:grayscale(1) brightness(1.6) contrast(.35);opacity:.45}.cx-cd.no b{color:#b3a59c}.cx-cd.big{border:0;background:none;cursor:default;gap:6px}.cx-cd.big .im{height:150px;gap:0;width:auto}.cx-cd.big .im span.p{width:92px}.cx-cd.big .im span.o{width:70px;height:72%}.cx-cd.big.gift .im span.p+span.o{margin-left:6px}.cx-cd.big.gift .im span.o+span.p{margin-left:-8px}.cx-cd.big:not(.gift) .im{gap:6px;width:auto}.cx-cd.big:not(.gift) .im span.o,.cx-cd.big:not(.gift) .im span.o:last-child{width:96px;height:100%}.cx-cd.big .im span.o:last-child{width:84px;height:78%}.cx-cd.big b{font-size:16px}.cx-cd.big p{margin:0;font-size:13.5px;color:#7a6a62}.cx-cd.big small{font-size:12px}' +
     '.cx-g-item img.cx-fi{width:44px;height:42px;flex:0 0 44px;object-fit:contain}.cx-sellb{display:flex;flex-direction:column;gap:4px;align-items:stretch}.cx-sellb span{display:flex;gap:4px}.cx-g-item .cx-btn.sm{padding:4px 7px;font-size:11.5px}.cx-fb{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:6px}.cx-fb .it{border:1px solid var(--border-color);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--primary-bg);text-align:center}.cx-fb img{width:84px;height:76px;object-fit:contain}.cx-fb b{font-size:13px}.cx-fb b small{color:var(--accent-color)}.cx-fb .nd{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.cx-fb .nd span{font-size:10.5px;padding:1px 6px;border-radius:99px;background:var(--secondary-bg);color:var(--text-secondary)}.cx-fb .nd span.ok{color:#4f8a35;background:#eef6e6}.cx-fb .cx-btn{width:100%;justify-content:center;padding:6px;font-size:12.5px}.cx-fb .row{display:flex;gap:5px;width:100%}' +
     '#cx-house-modal .cx-body{gap:8px}.hz-top{display:flex;flex-direction:column;gap:6px}.hz-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}.hz-tabs::-webkit-scrollbar{display:none}.hz-tabs button,.hz-mode button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:5px 11px;font:inherit;font-size:12.5px;white-space:nowrap;cursor:pointer;position:relative}.hz-tabs button.on,.hz-mode button.on{background:var(--accent-color);color:#fff;border-color:var(--accent-color)}.hz-tabs i{font-style:normal;font-size:10px;background:#f2a7b8;color:#fff;border-radius:99px;padding:0 5px;margin-left:4px}.hz-mode{display:flex;gap:5px;justify-content:flex-end}.hz-mode button{padding:3px 9px;font-size:11.5px}.hz-stage{position:relative;width:100%;max-width:520px;margin:0 auto;border-radius:16px;background:#fbf6ee;transition:filter .6s}.hz-room{display:block;width:100%;height:100%;pointer-events:none;user-select:none}.hz-stage.night{background:#2d2b45}.hz-stage.night .hz-room{filter:brightness(.62) saturate(.75) hue-rotate(-8deg)}.hz-stage.night .hz-a img{filter:brightness(.78) saturate(.85)}.hz-stage.night::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 30% 42%,rgba(255,214,140,.28),transparent 32%),radial-gradient(circle at 78% 44%,rgba(255,214,140,.22),transparent 26%)}.hz-a{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}.hz-a img{height:100%;width:auto;display:block;pointer-events:none;filter:drop-shadow(0 3px 2px rgba(80,50,30,.18))}.hz-a.bounce img{animation:hzb .5s ease 2}@keyframes hzb{50%{transform:translateY(-6%)}}.hz-a .nm{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);font-size:10.5px;color:#7a6252;background:rgba(255,250,244,.85);border-radius:99px;padding:0 6px;white-space:nowrap}.hz-a .say{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#fffaf4;color:#5a4a44;border:1px solid #eadfce;border-radius:12px;padding:5px 9px;font-size:12px;line-height:1.45;width:max-content;max-width:180px;box-shadow:0 4px 12px rgba(60,40,30,.15);z-index:3;animation:cxspp .3s ease}.hz-heart{position:absolute;bottom:60%;color:#f08aa6;font-size:15px;pointer-events:none;animation:hzh 1.4s ease-out forwards}@keyframes hzh{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}.hz-tip{text-align:center;font-size:12px;margin:2px 0 0}.hz-panel{border:1px solid var(--border-color);border-radius:14px;padding:8px 10px;background:var(--primary-bg);display:flex;flex-direction:column;gap:6px}.hz-panel b{font-size:13.5px}.hz-panel .row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.hz-panel .cx-btn{flex-direction:column;justify-content:center;padding:6px 4px;font-size:12px;gap:2px}.hz-panel .cx-btn img{height:26px;width:auto}' +
+    '.hz-a.zz{transform:translate(-50%,-100%)}.hz-a .z{position:absolute;right:-4px;top:-6px;font-size:12px;color:#8b7bb8;font-weight:700;animation:hzz 2.4s ease-in-out infinite}.hz-a .z small{font-size:9px;margin-left:1px}@keyframes hzz{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-5px)}}.hz-a.walking img{animation:hzw .45s ease-in-out infinite alternate}@keyframes hzw{to{translate:0 -3%}}.hz-party{position:absolute;left:0;right:0;top:3%;text-align:center;font-size:20px;letter-spacing:6px;pointer-events:none;animation:hzz 3s ease-in-out infinite}.hz-links{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.hz-links .cx-btn{padding:6px 11px;font-size:12.5px}' +
     '.cx-sp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(70,50,70,.28);animation:cxspf .2s ease}.cx-sp .card{background:#fffaf4;color:#5a4a44;border-radius:22px;padding:16px 18px 12px;width:min(300px,86vw);text-align:center;box-shadow:0 12px 40px rgba(60,40,60,.25);display:flex;flex-direction:column;align-items:center;gap:6px;animation:cxspp .4s cubic-bezier(.2,1.5,.4,1)}.cx-sp .row{display:flex;align-items:flex-end;justify-content:center;gap:2px}.cx-sp .cb{height:128px;width:auto;animation:cxspb 1.6s ease-in-out infinite}.cx-sp .art{width:92px;height:120px;display:flex;align-items:flex-end;justify-content:center}.cx-sp .art img,.cx-sp .art svg{max-width:100%;max-height:100%}.cx-sp b{font-size:16px}.cx-sp p{margin:0;font-size:13.5px;line-height:1.55;color:#7a6a62}.cx-sp small{font-size:11px;color:#b3a59c}@keyframes cxspf{from{opacity:0}}@keyframes cxspp{from{transform:scale(.6);opacity:0}}@keyframes cxspb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
     '.cx-scene .pl,.cx-scene [data-ani],.cx-scene [data-prod]{cursor:pointer}.cx-g-pens{margin-top:-4px}.cx-g-pens button{font-size:11.5px;padding:6px 1px;white-space:nowrap}.cx-scene .bz{animation:cxbz 2.4s ease-in-out infinite}@keyframes cxbz{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(1px,-6px)}75%{transform:translate(-5px,-2px)}}.cx-scene .hen.slow .hw{animation-duration:7s}.cx-scene .hen.swim .hw{animation-duration:4.5s}.cx-scene .hen.slow .hw>g:last-child{animation:none}.cx-scene .hen.hive .hw{animation:none}.cx-scene .hen.hive .hw>g:last-child{animation:cxbz 2.4s ease-in-out infinite}.cx-scene .pl:active{opacity:.85}' +
     '.cx-scene .hen .hw{animation:cxhen var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}.cx-scene .hen.hun .hw{animation-duration:6s}' +
