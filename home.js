@@ -2307,10 +2307,10 @@
   var HZ_POSE = { me: { sit: 'me_sit', walk: 'me_walk', sleep: 'me_sleep' }, cs: { sit: 'cs_sit', walk: 'cs_walk', sleep: 'cs_sleep', work: 'cs_work' }, rm: { sit: 'rm_sit', walk: 'rm_walk', sleep: 'rm_sleep' } };
   /* 每個房間的位置：[x%, y%]（腳底／坐的地方） */
   var HZ_SPOT = {
-    living: { stand: [[24, 86], [48, 95], [74, 86], [62, 70]], seat: [[23, 64], [32, 60], [41, 56]], rug: [53, 68], corner: [87, 72] },
-    bed: { stand: [[40, 90], [59, 93], [79, 86]], pillow: [[28, 58], [41, 50], [54, 42]], feet: [[66, 66], [57, 71]], top: [60, 58], catbed: [27, 77], rug: [81, 74] },
+    living: { stand: [[24, 86], [48, 95], [74, 86], [62, 70]], seat: [[23, 64], [32, 60], [41, 56]], rug: [58, 80], corner: [87, 72] },
+    bed: { stand: [[40, 90], [59, 93], [79, 86]], pillow: [[26, 51], [37, 44], [47, 36]], feet: [[66, 66], [57, 71]], top: [60, 58], beside: [[36, 82], [17, 74]], catbed: [27, 77], rug: [81, 74] },
     closet: { stand: [[44, 86], [62, 89]], floor: [68, 80], stool: [52, 74] },
-    cs: { stand: [[60, 88], [42, 92]], chair: [52, 63], floor: [82, 86], arm: [80, 70] },
+    cs: { stand: [[60, 88], [42, 92]], chair: [46, 54], floor: [82, 86], arm: [80, 70] },
     rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
   var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
@@ -2362,8 +2362,9 @@
     if (night) {
       var B = HZ_SPOT.bed;
       S.ppl = { cs: { room: 'bed', kind: 'sleep', at: B.pillow[0] }, me: { room: 'bed', kind: 'sleep', at: B.pillow[1] }, rm: { room: 'bed', kind: 'sleep', at: B.pillow[2] } };
-      if (r(1) < .4 || sad) { S.cats.fd = ['bed', B.feet[0], 'fd_sleep']; S.cats.an = ['bed', B.feet[1], 'an_sleep']; S.together = 1; }
-      else { S.cats.fd = ['bed', B.feet[0], 'fd_sleep']; S.cats.an = ['bed', B.catbed, 'an_sleep']; }
+      if (r(1) < .4 || sad) { S.cats.fd = ['bed', B.catbed, 'fd_sleep']; S.cats.an = ['bed', [B.catbed[0] + 8, B.catbed[1] + 3], 'an_sleep']; S.together = 1; }
+      else if (r(1) < .7) { S.cats.fd = ['bed', B.catbed, 'fd_bed']; S.cats.an = ['bed', B.rug, 'an_sleep']; }
+      else { S.cats.fd = ['bed', B.rug, 'fd_sleep']; S.cats.an = ['living', HZ_SPOT.living.corner, 'an_box']; }
       return S;
     }
     var L = HZ_SPOT.living, used = {}, st = 0;
@@ -2374,8 +2375,8 @@
     var free = [0, 1, 2].filter(function (i) { return !used[i]; }), sofa = free.length ? L.seat[free[0]] : L.rug;
     if (sad) { var me = S.ppl.me; S.cats.fd = [me.room, [me.at[0] + 7, me.at[1] + 6], 'fd_belly']; S.cats.an = [me.room, [me.at[0] - 8, me.at[1] + 8], 'an_sit']; S.clingy = 1; return S; }
     if (r(5) < .15) { S.cats.fd = ['living', L.rug, 'fd_sleep']; S.cats.an = ['living', [L.rug[0] + 7, L.rug[1] + 2], 'an_sleep']; S.together = 1; return S; }
-    var FD = [['living', sofa, 'fd_lie'], ['living', L.rug, 'fd_blanket'], ['living', L.corner, 'fd_stretch'], ['bed', HZ_SPOT.bed.top, 'fd_belly'], ['bed', HZ_SPOT.bed.catbed, 'fd_bed'], ['closet', HZ_SPOT.closet.floor, 'fd_lie'], ['rm', HZ_SPOT.rm.rug, 'fd_sleep']];
-    var AN = [['living', L.corner, 'an_box'], ['living', L.rug, 'an_sit'], ['bed', HZ_SPOT.bed.rug, 'an_side'], ['cs', HZ_SPOT.cs.floor, 'an_sit'], ['closet', HZ_SPOT.closet.stool, 'an_stretch'], ['rm', HZ_SPOT.rm.rug, 'an_belly'], ['cs', HZ_SPOT.cs.arm, 'an_box']];
+    var FD = [['living', sofa, 'fd_lie'], ['living', L.rug, 'fd_blanket'], ['living', L.corner, 'fd_stretch'], ['bed', HZ_SPOT.bed.rug, 'fd_belly'], ['bed', HZ_SPOT.bed.catbed, 'fd_bed'], ['closet', HZ_SPOT.closet.floor, 'fd_lie'], ['rm', HZ_SPOT.rm.rug, 'fd_sleep']];
+    var AN = [['living', L.corner, 'an_box'], ['living', L.rug, 'an_sit'], ['bed', HZ_SPOT.bed.rug, 'an_side'], ['cs', HZ_SPOT.cs.arm, 'an_sit'], ['closet', HZ_SPOT.closet.stool, 'an_stretch'], ['rm', HZ_SPOT.rm.rug, 'an_belly'], ['living', HZ_SPOT.living.rug, 'an_box']];
     S.cats.fd = FD[Math.floor(r(6) * FD.length)];
     var ai = Math.floor(r(7) * AN.length), a = AN[ai]; if (a[0] === S.cats.fd[0] && a[1] === S.cats.fd[1]) a = AN[(ai + 1) % AN.length];
     S.cats.an = a; return S;
@@ -2386,9 +2387,9 @@
       var w = S.ppl[p[0]]; if (!w || w.room !== R) return; var id = 'p:' + p[0], kind = w.kind, at = w.at, pz = hzPos[id];
       if (kind === 'stand' && pz && pz.blk === blk) at = pz.at;
       var wk = hzWalk[id], img = p[2], ci = 1, h = 27, flip = 0;
-      if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? 16 : kind === 'work' ? 24 : 18; }
+      if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
       if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 27; flip = wk.to[0] < wk.from[0]; at = wk.from; }
-      out.push({ id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: kind === 'sleep' ? '' : p[1], flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
+      out.push({ iso: false, id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: '', flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
     });
     ['fd', 'an'].forEach(function (c) {
       var w = S.cats[c]; if (!w || w[0] !== R) return; var sp = w[1], pose = w[2], ov = hzOver[c];
@@ -2406,7 +2407,8 @@
   };
   function hzRender() {
     if (!hz) return;
-    var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]);
+    var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]), bakeBed = hzRoom === 'bed' && ['me', 'cs', 'rm'].every(function (k) { return S.ppl[k] && S.ppl[k].kind === 'sleep'; }) && HI('r_bed_n'), bakeCs = hzRoom === 'cs' && S.ppl.cs && S.ppl.cs.kind === 'work' && HI('r_cs_w');
+    if (bakeBed) ri = bakeBed; else if (bakeCs) ri = bakeCs;
     var cnt = {}; Object.keys(S.ppl).forEach(function (k) { cnt[S.ppl[k].room] = (cnt[S.ppl[k].room] || 0) + 1; }); Object.keys(S.cats).forEach(function (k) { cnt[S.cats[k][0]] = (cnt[S.cats[k][0]] || 0) + 1; });
     var mode = hzMode(), h = '<div class="hz-top"><div class="hz-tabs">' + HZ_ROOMS.map(function (r) { return '<button type="button" data-hzr="' + r[0] + '" class="' + (r[0] === hzRoom ? 'on' : '') + '">' + r[1] + (cnt[r[0]] ? '<i>' + cnt[r[0]] + '</i>' : '') + '</button>'; }).join('') + '</div>' +
       '<div class="hz-mode">' + [['auto', '自動'], ['day', '白天'], ['night', '晚上']].map(function (m) { return '<button type="button" data-hzm="' + m[0] + '" class="' + (mode === m[0] ? 'on' : '') + '">' + (m[0] === 'day' ? '☀️ ' : m[0] === 'night' ? '🌙 ' : '') + m[1] + '</button>'; }).join('') + '</div></div>';
@@ -2415,7 +2417,8 @@
     h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : '');
     hzActors(S).forEach(function (a) {
       var im = a.ci ? CI(a.img) : HI(a.img); if (!im) return;
-      h += '<button type="button" class="hz-a' + (a.cat ? ' cat' : '') + (a.sleep ? ' zz' : '') + (a.walk ? ' walking' : '') + (hzOver[a.cat] && hzOver[a.cat].until > Date.now() ? ' bounce' : '') + '" data-hza="' + a.id + '" style="left:' + a.x + '%;top:' + a.y + '%;height:' + a.h + '%' + (a.walk ? ';transition:left ' + a.walk.dur + 'ms linear,top ' + a.walk.dur + 'ms linear' : '') + '"' + (a.walk ? ' data-to="' + a.walk.to.join(',') + '"' : '') + '><img src="' + im.src + '" alt=""' + (a.flip ? ' style="transform:scaleX(-1)"' : '') + '>' +
+      var ghost = a.id.indexOf('p:') === 0 && (bakeBed || (bakeCs && a.id === 'p:cs'));
+      h += '<button type="button" class="hz-a' + (a.cat ? ' cat' : '') + (a.sleep ? ' zz' : '') + (a.walk ? ' walking' : '') + (hzOver[a.cat] && hzOver[a.cat].until > Date.now() ? ' bounce' : '') + '" data-hza="' + a.id + '" style="left:' + a.x + '%;top:' + a.y + '%;height:' + a.h + '%' + (a.walk ? ';transition:left ' + a.walk.dur + 'ms linear,top ' + a.walk.dur + 'ms linear' : '') + '"' + (a.walk ? ' data-to="' + a.walk.to.join(',') + '"' : '') + '><img src="' + im.src + '" alt=""' + (ghost ? ' style="opacity:0"' : a.flip ? ' style="transform:scaleX(-1)"' : a.iso ? ' style="transform:matrix(.866,-.5,.866,.5,0,0);transform-origin:50% 100%"' : '') + '>' +
         (a.name ? '<span class="nm">' + a.name + '</span>' : '') + (a.sleep ? '<span class="z">z<small>z</small></span>' : '') + (hzSay[a.id] && hzSay[a.id].until > Date.now() ? '<span class="say">' + esc(hzSay[a.id].t) + '</span>' : '') + '</button>';
     });
     h += '</div>';
@@ -2460,7 +2463,7 @@
         var b;
         if ((b = e.target.closest('[data-hzr]'))) { hzRoom = b.dataset.hzr; hz.sel = null; hzWalk = {}; hzRender(); return; }
         if ((b = e.target.closest('[data-hzm]'))) { try { localStorage.setItem('cxHouseMode', b.dataset.hzm); } catch (x) {} hzWalk = {}; hzRender(); return; }
-        if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); homeOpen(); setTimeout(function () { launch(lid); }, 250); return; }
+        if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); fromHome = false; fromHouse = true; wrapShow(); var le = document.getElementById(lid); if (le) le.click(); return; }
         if ((b = e.target.closest('[data-hzc]'))) {
           var c = hz.sel; if (!c) return; var act = b.dataset.hzc, pose = c === 'fd' ? { pet: 'fd_belly', wand: 'fd_stretch', treat: 'fd_lie', food: 'fd_eat' }[act] : { pet: 'an_belly', wand: 'an_stretch', treat: 'an_sit', food: 'an_sit' }[act];
           hzOver[c] = { pose: pose, until: Date.now() + 5000 }; hzSay['c:' + c] = { t: pick(CAT_TXT[c][act]), until: Date.now() + 4000 };
@@ -2584,11 +2587,12 @@
     var el = document.getElementById(id); if (el) el.click();
   }
   /* 從小窩點進去的功能，按「返回」直接回小窩，不要先跳到高階功能 */
-  var fromHome = false, showWrapped = false;
+  var fromHome = false, fromHouse = false, showWrapped = false;
   function wrapShow() {
     if (showWrapped || typeof window.showModal !== 'function') return; showWrapped = true;
     var orig = window.showModal;
     window.showModal = function (el) {
+      if (fromHouse && el && el.id === 'advanced-modal') { fromHouse = false; setTimeout(houseOpen, 30); return; }
       if (fromHome && el && el.id === 'advanced-modal' && home && !home.hidden) { fromHome = false; return; }
       return orig.apply(this, arguments);
     };
@@ -2707,7 +2711,7 @@
     if (!home) homeBuild();
     A.load().then(function () { simulate(true); editing = false; openFolder = -1; hRender(); home.hidden = false; requestAnimationFrame(function () { home.classList.add('on'); }); });
   }
-  function homeClose() { fromHome = false; if (!home) return; home.classList.remove('on'); setTimeout(function () { home.hidden = true; }, 220); }
+  function homeClose() { fromHome = false; fromHouse = false; if (!home) return; home.classList.remove('on'); setTimeout(function () { home.hidden = true; }, 220); }
 
   /* 上方按鈕 */
   (function headerBtn() {
