@@ -2314,6 +2314,17 @@
     rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
   var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
+  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['win', '冬天'], ['formal', '正裝'], ['base', '居家內搭']];
+  function hzOutGet() { try { return JSON.parse(localStorage.getItem('cxOutfit') || '{}') || {}; } catch (e) { return {}; } }
+  function hzOutSet(who, k) { var o = hzOutGet(); o[who] = k; try { localStorage.setItem('cxOutfit', JSON.stringify(o)); } catch (e) {} }
+  /* 這個人現在穿哪套：手動選的優先；自動＝晚上睡衣、冬天（6～8 月）毛衣 */
+  function hzOutNow(who) {
+    var k = hzOutGet()[who] || 'auto';
+    if (k === 'auto') { var mo = new Date().getMonth(); k = hzNight() ? 'pj' : (mo >= 5 && mo <= 7) ? 'win' : 'def'; }
+    if (who === 'cs' && k === 'formal') k = 'def';
+    return k;
+  }
+  function hzOutImg(who, k) { if (who === 'cs' && k === 'formal') k = 'def'; if (k === 'def') return CI({ me: 'cb_me', cs: 'cb_changsi', rm: 'cb_renmi' }[who]); return HI('o_' + who + '_' + k); }
   var HZ_BAD = { sad: 1, tired: 1, angry: 1, lonely: 1, cute: 1 };
   function HI(k) { return (window.__cxHIMG || {})[k]; }
   function hzMode() { var m = 'auto'; try { m = localStorage.getItem('cxHouseMode') || 'auto'; } catch (e) {} return m; }
@@ -2386,11 +2397,15 @@
     HZ_PPL.forEach(function (p) {
       var w = S.ppl[p[0]]; if (!w || w.room !== R) return; var id = 'p:' + p[0], kind = w.kind, at = w.at, pz = hzPos[id];
       if (kind === 'stand' && pz && pz.blk === blk) at = pz.at;
-      var wk = hzWalk[id], img = p[2], ci = 1, h = 23, flip = 0;
+      var wk = hzWalk[id], img = p[2], ci = 1, h = 23, flip = 0, ok = hzOutNow(p[0]);
+      if (ok !== 'def' && HI('o_' + p[0] + '_' + ok)) { img = 'o_' + p[0] + '_' + ok; ci = 0; }
       if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
       if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 23; flip = wk.to[0] < wk.from[0]; at = wk.from; }
       out.push({ iso: false, id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: '', flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
     });
+    if (R === 'closet') { var dw = hz.dress || 'me', dp = HZ_PPL.filter(function (x) { return x[0] === dw; })[0], dk = hzOutNow(dw), dim = dk === 'def' ? null : 'o_' + dw + '_' + dk;
+      out = out.filter(function (a) { return a.id !== 'p:' + dw; });
+      out.push({ id: 'p:' + dw, img: dim && HI(dim) ? dim : dp[2], ci: dim && HI(dim) ? 0 : 1, x: 40, y: 88, h: 30, name: '' }); }
     ['fd', 'an'].forEach(function (c) {
       var w = S.cats[c]; if (!w || w[0] !== R) return; var sp = w[1], pose = w[2], ov = hzOver[c];
       if (ov && ov.until > now) pose = ov.pose;
@@ -2430,7 +2445,14 @@
     h += '<p class="cx-muted hz-tip">' + tips.join('<br>') + '</p>';
     var links = (HZ_LINKS[hzRoom] || []).filter(function (l) { return document.getElementById(l[0]); });
     if (links.length) h += '<div class="hz-links">' + links.map(function (l) { return '<button type="button" class="cx-btn" data-hzl="' + l[0] + '">' + l[1] + ' ' + l[2] + '</button>'; }).join('') + '</div>';
-    if (hzRoom === 'closet') h += '<p class="cx-muted hz-tip">換裝功能準備中，衣服畫好就開放 👗</p>';
+    if (hzRoom === 'closet') {
+      var dw = hz.dress || 'me', cur = hzOutGet()[dw] || 'auto';
+      h += '<div class="hz-panel hz-dress"><div class="who">' + [['me', '我'], ['cs', '昶司'], ['rm', '仁彌']].map(function (w) { return '<button type="button" data-hzd="' + w[0] + '" class="' + (dw === w[0] ? 'on' : '') + '">' + w[1] + '</button>'; }).join('') + '</div><div class="row">' +
+        HZ_OUT.filter(function (o) { return !(dw === 'cs' && o[0] === 'formal'); }).map(function (o) {
+          var im = o[0] === 'auto' ? null : hzOutImg(dw, o[0]); if (o[0] !== 'auto' && !im) return '';
+          return '<button type="button" class="it' + (cur === o[0] ? ' on' : '') + '" data-hzo="' + o[0] + '">' + (im ? '<img src="' + im.src + '" alt="">' : '<span class="au">🌙❄️</span>') + '<small>' + (dw === 'cs' && o[0] === 'def' ? '平常／正裝' : o[1]) + '</small></button>';
+        }).join('') + '</div><p class="cx-muted">「自動」：晚上換睡衣，6～8 月穿毛衣，其他時候穿平常的衣服。</p></div>';
+    }
     if (hz.sel) {
       var cn = hz.sel === 'fd' ? 'Fiddi 🧡' : '安安 🤍', fish = HI('i_fish'), kib = HI('i_kibble'), wand = HI('i_wand');
       h += '<div class="hz-panel"><b>' + cn + '</b><div class="row">' +
@@ -2463,6 +2485,8 @@
         var b;
         if ((b = e.target.closest('[data-hzr]'))) { hzRoom = b.dataset.hzr; hz.sel = null; hzWalk = {}; hzRender(); return; }
         if ((b = e.target.closest('[data-hzm]'))) { try { localStorage.setItem('cxHouseMode', b.dataset.hzm); } catch (x) {} hzWalk = {}; hzRender(); return; }
+        if ((b = e.target.closest('[data-hzd]'))) { hz.dress = b.dataset.hzd; hzRender(); return; }
+        if ((b = e.target.closest('[data-hzo]'))) { hzOutSet(hz.dress || 'me', b.dataset.hzo); hzRender(); hzHearts('p:' + (hz.dress || 'me')); return; }
         if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); fromHome = false; fromHouse = true; wrapShow(); var le = document.getElementById(lid); if (le) le.click(); return; }
         if ((b = e.target.closest('[data-hzc]'))) {
           var c = hz.sel; if (!c) return; var act = b.dataset.hzc, pose = c === 'fd' ? { pet: 'fd_belly', wand: 'fd_stretch', treat: 'fd_lie', food: 'fd_eat' }[act] : { pet: 'an_belly', wand: 'an_stretch', treat: 'an_sit', food: 'an_sit' }[act];
@@ -2807,6 +2831,7 @@
     '.cx-g-item img.cx-fi{width:44px;height:42px;flex:0 0 44px;object-fit:contain}.cx-sellb{display:flex;flex-direction:column;gap:4px;align-items:stretch}.cx-sellb span{display:flex;gap:4px}.cx-g-item .cx-btn.sm{padding:4px 7px;font-size:11.5px}.cx-fb{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:6px}.cx-fb .it{border:1px solid var(--border-color);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--primary-bg);text-align:center}.cx-fb img{width:84px;height:76px;object-fit:contain}.cx-fb b{font-size:13px}.cx-fb b small{color:var(--accent-color)}.cx-fb .nd{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.cx-fb .nd span{font-size:10.5px;padding:1px 6px;border-radius:99px;background:var(--secondary-bg);color:var(--text-secondary)}.cx-fb .nd span.ok{color:#4f8a35;background:#eef6e6}.cx-fb .cx-btn{width:100%;justify-content:center;padding:6px;font-size:12.5px}.cx-fb .row{display:flex;gap:5px;width:100%}' +
     '#cx-house-modal .cx-body{gap:8px}.hz-top{display:flex;flex-direction:column;gap:6px}.hz-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}.hz-tabs::-webkit-scrollbar{display:none}.hz-tabs button,.hz-mode button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:5px 11px;font:inherit;font-size:12.5px;white-space:nowrap;cursor:pointer;position:relative}.hz-tabs button.on,.hz-mode button.on{background:var(--accent-color);color:#fff;border-color:var(--accent-color)}.hz-tabs i{font-style:normal;font-size:10px;background:#f2a7b8;color:#fff;border-radius:99px;padding:0 5px;margin-left:4px}.hz-mode{display:flex;gap:5px;justify-content:flex-end}.hz-mode button{padding:3px 9px;font-size:11.5px}.hz-stage{position:relative;width:100%;max-width:520px;margin:0 auto;border-radius:16px;background:#fbf6ee;transition:filter .6s}.hz-room{display:block;width:100%;height:100%;pointer-events:none;user-select:none}.hz-stage.night{background:#2d2b45}.hz-stage.night .hz-room{filter:brightness(.62) saturate(.75) hue-rotate(-8deg)}.hz-stage.night .hz-a img{filter:brightness(.78) saturate(.85)}.hz-stage.night::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 30% 42%,rgba(255,214,140,.28),transparent 32%),radial-gradient(circle at 78% 44%,rgba(255,214,140,.22),transparent 26%)}.hz-a{position:absolute;transform:translate(-50%,-100%);border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}.hz-a img{height:100%;width:auto;display:block;pointer-events:none;filter:drop-shadow(0 3px 2px rgba(80,50,30,.18))}.hz-a.bounce img{animation:hzb .5s ease 2}@keyframes hzb{50%{transform:translateY(-6%)}}.hz-a .nm{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);font-size:10.5px;color:#7a6252;background:rgba(255,250,244,.85);border-radius:99px;padding:0 6px;white-space:nowrap}.hz-a .say{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;background:#fffaf4;color:#5a4a44;border:1px solid #eadfce;border-radius:12px;padding:5px 9px;font-size:12px;line-height:1.45;width:max-content;max-width:180px;box-shadow:0 4px 12px rgba(60,40,30,.15);z-index:3;animation:cxspp .3s ease}.hz-heart{position:absolute;bottom:60%;color:#f08aa6;font-size:15px;pointer-events:none;animation:hzh 1.4s ease-out forwards}@keyframes hzh{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}.hz-tip{text-align:center;font-size:12px;margin:2px 0 0}.hz-panel{border:1px solid var(--border-color);border-radius:14px;padding:8px 10px;background:var(--primary-bg);display:flex;flex-direction:column;gap:6px}.hz-panel b{font-size:13.5px}.hz-panel .row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.hz-panel .cx-btn{flex-direction:column;justify-content:center;padding:6px 4px;font-size:12px;gap:2px}.hz-panel .cx-btn img{height:26px;width:auto}' +
     '.hz-a.zz{transform:translate(-50%,-100%)}.hz-a .z{position:absolute;right:-4px;top:-6px;font-size:12px;color:#8b7bb8;font-weight:700;animation:hzz 2.4s ease-in-out infinite}.hz-a .z small{font-size:9px;margin-left:1px}@keyframes hzz{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-5px)}}.hz-a.walking img{animation:hzw .45s ease-in-out infinite alternate}@keyframes hzw{to{translate:0 -3%}}.hz-party{position:absolute;left:0;right:0;top:3%;text-align:center;font-size:20px;letter-spacing:6px;pointer-events:none;animation:hzz 3s ease-in-out infinite}.hz-links{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.hz-links .cx-btn{padding:6px 11px;font-size:12.5px}' +
+    '.hz-dress .who{display:flex;gap:6px}.hz-dress .who button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:5px;font:inherit;font-size:13px;cursor:pointer}.hz-dress .who button.on{background:var(--accent-color);color:#fff;border-color:var(--accent-color)}.hz-dress .row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.hz-dress .it{border:1px solid var(--border-color);background:#fffaf4;border-radius:12px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit;color:#5a4a44}.hz-dress .it.on{border-color:var(--accent-color);box-shadow:0 0 0 2px var(--accent-color)}.hz-dress .it img{height:58px;width:auto}.hz-dress .it .au{height:58px;display:flex;align-items:center;font-size:20px}.hz-dress .it small{font-size:11px}.hz-dress p{margin:0;font-size:11.5px}' +
     '.cx-sp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(70,50,70,.28);animation:cxspf .2s ease}.cx-sp .card{background:#fffaf4;color:#5a4a44;border-radius:22px;padding:16px 18px 12px;width:min(300px,86vw);text-align:center;box-shadow:0 12px 40px rgba(60,40,60,.25);display:flex;flex-direction:column;align-items:center;gap:6px;animation:cxspp .4s cubic-bezier(.2,1.5,.4,1)}.cx-sp .row{display:flex;align-items:flex-end;justify-content:center;gap:2px}.cx-sp .cb{height:128px;width:auto;animation:cxspb 1.6s ease-in-out infinite}.cx-sp .art{width:92px;height:120px;display:flex;align-items:flex-end;justify-content:center}.cx-sp .art img,.cx-sp .art svg{max-width:100%;max-height:100%}.cx-sp b{font-size:16px}.cx-sp p{margin:0;font-size:13.5px;line-height:1.55;color:#7a6a62}.cx-sp small{font-size:11px;color:#b3a59c}@keyframes cxspf{from{opacity:0}}@keyframes cxspp{from{transform:scale(.6);opacity:0}}@keyframes cxspb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
     '.cx-scene .pl,.cx-scene [data-ani],.cx-scene [data-prod]{cursor:pointer}.cx-g-pens{margin-top:-4px}.cx-g-pens button{font-size:11.5px;padding:6px 1px;white-space:nowrap}.cx-scene .bz{animation:cxbz 2.4s ease-in-out infinite}@keyframes cxbz{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(1px,-6px)}75%{transform:translate(-5px,-2px)}}.cx-scene .hen.slow .hw{animation-duration:7s}.cx-scene .hen.swim .hw{animation-duration:4.5s}.cx-scene .hen.slow .hw>g:last-child{animation:none}.cx-scene .hen.hive .hw{animation:none}.cx-scene .hen.hive .hw>g:last-child{animation:cxbz 2.4s ease-in-out infinite}.cx-scene .pl:active{opacity:.85}' +
     '.cx-scene .hen .hw{animation:cxhen var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}.cx-scene .hen.hun .hw{animation-duration:6s}' +
