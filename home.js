@@ -165,7 +165,10 @@
   };
   var ANI_H = { hen: 27, duck: 22, cow: 30, rabbit: 26, bee: 26 }, ANI_IMG = { hen: 'hen', duck: 'duck', cow: 'cow', rabbit: 'rabbit', bee: 'hive' };
   Object.keys(ANIM).forEach(function (k) { var orig = ANIM[k].art; ANIM[k].art = function (on, dir, i) {
-    var key = ANI_IMG[k]; if (!FI(key)) return orig(on, dir, i);
+    var key = ANI_IMG[k];
+    if (k === 'bee' && CI('hive2')) { var hm = CI('hive2'), HW = 28 * hm.w / hm.h;
+      return '<ellipse cx="0" cy="1" rx="' + f(HW * .42) + '" ry="3" fill="#00000018"/>' + (on ? '<ellipse cx="0" cy="1" rx="' + f(HW * .5) + '" ry="4.4" fill="none" stroke="var(--accent-color)" stroke-width="1.6"/>' : '') + ciAt('hive2', 0, 2, 28) + beesArt(i, [[-15, -22], [13, -27], [5, -33]]); }
+    if (!FI(key)) return orig(on, dir, i);
     var m = FI(key), H = ANI_H[k], W = H * m.w / m.h;
     return '<ellipse cx="0" cy="1" rx="' + f(W * .42) + '" ry="3" fill="#00000018"/>' + (on ? '<ellipse cx="0" cy="1" rx="' + f(W * .5) + '" ry="4.4" fill="none" stroke="var(--accent-color)" stroke-width="1.6"/>' : '') +
       '<g transform="scale(' + (k === 'bee' ? 1 : -dir) + ',1)">' + imgAt(key, 0, 2, H) + '</g>' + (k === 'bee' ? beesArt(i, [[-15, -22], [13, -27], [5, -33]]) : '');
@@ -406,7 +409,8 @@
     return o;
   }
   function treeArt(crop, st) {
-    var c = CROPS[crop], o = '';
+    var c = CROPS[crop], o = '', bare = crop === 'blueberry' ? 'bush2' : 'baretree';
+    if (st === 2 && CI(bare)) return '<ellipse cx="30" cy="54" rx="16" ry="3" fill="#00000018"/>' + ciAt(bare, 30, 55.5, crop === 'blueberry' ? 0 : 52, crop === 'blueberry' ? 46 : 0);
     if (FI(crop)) { var tm = FI(crop), wide = tm.w > tm.h * 1.3; return '<ellipse cx="30" cy="54" rx="16" ry="3" fill="#00000018"/>' + imgAt(crop, 30, 55.5, wide ? 0 : (st === 3 ? 56 : 48), wide ? (st === 3 ? 58 : 50) : 0, st === 3 ? '' : ' style="filter:saturate(.25) brightness(1.08)" opacity=".9"'); }
     if (crop === 'blueberry') {
       o = bush('x', true).replace(/<path d="M[^"]*Z" fill="#[0-9a-f]{6}"[^>]*\/>|<circle[^>]*\/>/g, '');
@@ -1040,15 +1044,50 @@
   /* --- 等角繪圖小工具 --- */
   function P2(x, y) { return f(x) + ',' + f(y); }
   function poly(pts, fill, stroke, sw, extra) { return '<polygon points="' + pts.map(function (q) { return P2(q[0], q[1]); }).join(' ') + '" fill="' + fill + '"' + (stroke ? ' stroke="' + stroke + '" stroke-width="' + (sw || 1) + '" stroke-linejoin="round"' : '') + (extra || '') + '/>'; }
-  function mkIso(OX, OY) { return function (r, c) { return [OX + (c - r) * TW / 2, OY + (c + r) * TH / 2]; }; }
+  function mkIso(OX, OY) { var fn = function (r, c) { return [OX + (c - r) * TW / 2, OY + (c + r) * TH / 2]; }; fn.id = Math.round(OX) + '_' + Math.round(OY); fn.M = f(TW / 2) + ' ' + f(TH / 2) + ' ' + f(-TW / 2) + ' ' + f(TH / 2) + ' ' + f(OX) + ' ' + f(OY); return fn; }
+  /* 水彩紋理：土、草地、島的側面、籬笆零件（只在 svg 裡放一次，其他地方用 <use>） */
+  function TX() { return !!(CI('t_soil') && CI('t_grass') && CI('t_side')); }
+  function hexRGB(h) { h = h.replace('#', ''); return [parseInt(h.slice(0, 2), 16) / 255, parseInt(h.slice(2, 4), 16) / 255, parseInt(h.slice(4, 6), 16) / 255]; }
+  function commonDefs() {
+    var o = '';
+    if (TX()) {
+      ['t_soil', 't_wet', 't_grass'].forEach(function (k) { o += '<image id="cx' + k + '" href="' + CI(k).src + '" width="1" height="1" preserveAspectRatio="none"/>'; });
+      o += '<pattern id="cxside" patternUnits="userSpaceOnUse" width="46" height="46"><image href="' + CI('t_side').src + '" width="46" height="46" preserveAspectRatio="none"/></pattern>';
+    }
+    if (CI('fpost') && CI('frail')) {
+      var pm = CI('fpost'), rm = CI('frail'), c = hexRGB(FENCE_COL || '#fffaf2');
+      o += '<filter id="cxfc" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="' + f(c[0]) + ' 0 0 0 0 0 ' + f(c[1]) + ' 0 0 0 0 0 ' + f(c[2]) + ' 0 0 0 0 0 1 0"/></filter>';
+      o += '<image id="cxfpost" href="' + pm.src + '" x="-2.6" y="-16" width="5.2" height="16.6" preserveAspectRatio="none"/>';
+      o += '<image id="cxfrail" href="' + rm.src + '" x="0" y="-1.5" width="1" height="3" preserveAspectRatio="none"/>';
+    }
+    return o;
+  }
+  function isoDefs(iso) {
+    if (!TX() || !iso.M) return '';
+    var o = '';
+    [['s', 't_soil', 1], ['w', 't_wet', 1], ['g', 't_grass', 2]].forEach(function (d) { o += '<pattern id="cxp' + d[0] + iso.id + '" patternUnits="userSpaceOnUse" x="-.5" y="-.5" width="' + d[2] + '" height="' + d[2] + '" patternTransform="matrix(' + iso.M + ')"><use href="#cx' + d[1] + '" transform="scale(' + d[2] + ')"/></pattern>'; });
+    return '<defs>' + o + '</defs>';
+  }
   function platform(iso, R, C, m, top, side1, side2, T) {
     var t = iso(-m, -m), rt = iso(-m, C - 1 + m), b = iso(R - 1 + m, C - 1 + m), l = iso(R - 1 + m, -m);
+    if (TX() && iso.M && top.charAt(0) === '#' && !/^#(cfdcc4|dbe5d2)$/.test(top)) {
+      var s1 = [l, b, [b[0], b[1] + T], [l[0], l[1] + T]], s2 = [b, rt, [rt[0], rt[1] + T], [b[0], b[1] + T]], tp = [t, rt, b, l];
+      return isoDefs(iso) + poly(s1, 'url(#cxside)', OL, 1) + poly(s2, 'url(#cxside)', OL, 1) + poly(s2, '#5a3a2a', '', 0, ' fill-opacity=".14"') +
+        poly(tp, 'url(#cxpg' + iso.id + ')', OL, 1) + poly(tp, top, '', 0, ' fill-opacity=".22"');
+    }
     return poly([l, b, [b[0], b[1] + T], [l[0], l[1] + T]], side1, OL, 1) + poly([b, rt, [rt[0], rt[1] + T], [b[0], b[1] + T]], side2, OL, 1) + poly([t, rt, b, l], top, OL, 1);
   }
   var FENCE_COL = '#fffaf2';
   function fenceLine(a, b, n) {
     var o = '', i, pts = [];
     for (i = 0; i <= n; i++) pts.push([a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]);
+    if (CI('fpost') && CI('frail')) {
+      var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.sqrt(dx * dx + dy * dy), ang = Math.atan2(dy, dx) * 180 / Math.PI, flt = FENCE_COL && FENCE_COL.toLowerCase() !== '#fffaf2' ? ' filter="url(#cxfc)"' : '';
+      o += '<g' + flt + '>';
+      [5, 10].forEach(function (hh) { o += '<use href="#cxfrail" transform="translate(' + P2(a[0], a[1] - hh) + ') rotate(' + f(ang) + ') scale(' + f(L) + ',1)"/>'; });
+      pts.forEach(function (q) { o += '<use href="#cxfpost" x="' + f(q[0]) + '" y="' + f(q[1]) + '"/>'; });
+      return o + '</g>';
+    }
     [5, 10].forEach(function (hh) { o += '<polyline points="' + pts.map(function (q) { return P2(q[0], q[1] - hh); }).join(' ') + '" fill="none" stroke="' + OL + '" stroke-width="3"/><polyline points="' + pts.map(function (q) { return P2(q[0], q[1] - hh); }).join(' ') + '" fill="none" stroke="' + FENCE_COL + '" stroke-width="1.6"/>'; });
     pts.forEach(function (q) { o += '<path d="M' + P2(q[0] - 2, q[1]) + ' L' + P2(q[0] - 2, q[1] - 12) + ' L' + P2(q[0], q[1] - 15) + ' L' + P2(q[0] + 2, q[1] - 12) + ' L' + P2(q[0] + 2, q[1]) + 'Z" fill="' + FENCE_COL + '" stroke="' + OL + '" stroke-width=".8" stroke-linejoin="round"/>'; });
     return o;
@@ -1109,6 +1148,7 @@
     Object.keys(SZ).forEach(function (k) { var orig = DART[k], z = SZ[k]; DART[k] = function (x, y) { if (!CI(k)) return orig(x, y); return (k === 'pond' ? '' : '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="' + (z[1] ? z[1] * .42 : 9) + '" ry="3" fill="#00000012"/>') + ciAt(k, x, y + 2 + (z[2] || 0), z[0], z[1]); }; });
     var a2 = DART.arch2; DART.arch2 = function (a, b) { if (!CI('arch')) return a2(a, b); var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
       return '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>' + '<g transform="translate(' + f(2 * mx) + ' 0) scale(-1 1)">' + ciAt('arch', mx, my + 6, 0, Math.abs(b[0] - a[0]) + 16) + '</g>'; };
+    [['bush', 'bush2', 22], ['mush', 'mush', 18], ['stone', 'mush', 0]].forEach(function (r) { var orig = DECOR[r[0]]; DECOR[r[0]] = function (x, y, col) { if (!CI(r[1])) return orig(x, y, col); if (!r[2]) return orig(x, y, col); return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="' + f(r[2] * .42) + '" ry="3" fill="#00000012"/>' + ciAt(r[1], x, y + 2, 0, r[2]); }; });
     var RING = { pink: ['flowerP', 17], lav: ['lavender', 18], hydra: ['hydrangea', 17], white: ['daisy', 15], yellow: ['marigold', 15] };
     Object.keys(RING).forEach(function (k) { var orig = DECOR[k], r = RING[k]; DECOR[k] = function (x, y, col) { if (!CI(r[0])) return orig(x, y, col); var key = k === 'hydra' && col === '#c3b0e6' ? 'pinkhydra' : r[0];
       return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="9" ry="3" fill="#00000012"/>' + ciAt(key, x - 5, y - 1, r[1] * .85) + ciAt(key, x + 5, y, r[1] * .9) + ciAt(key, x, y + 2, r[1]); }; });
@@ -1136,10 +1176,11 @@
       o += '<g transform="translate(' + P2(cen[0], cen[1] - 4) + ')"><path d="M-3.4 -2 v-2.4 a3.4 3.4 0 0 1 6.8 0 v2.4" fill="none" stroke="#8a7a6a" stroke-width="1.4"/><rect x="-5" y="-2" width="10" height="7" rx="1.4" fill="#c9b49a" stroke="#8a7a6a" stroke-width=".8"/></g>';
       return o;
     }
-    var top = wet ? '#b38d6e' : '#d4b08e';
+    var top = wet ? '#b38d6e' : '#d4b08e', txp = TX() && iso.M;
+    if (txp) top = 'url(#cxp' + (wet ? 'w' : 's') + iso.id + ')';
     o += poly([l, b, [b[0], b[1] + 4], [l[0], l[1] + 4]], wet ? '#9a7860' : '#bf9a7c', OL, .8) + poly([b, rt, [rt[0], rt[1] + 4], [b[0], b[1] + 4]], wet ? '#8c6d56' : '#b08d70', OL, .8);
     o += poly([t, rt, b, l], top, on ? 'var(--accent-color)' : OL, on ? 2.2 : .9);
-    for (var i = 1; i < 3; i++) { var a1 = iso(r - k + i * .29, c - k + .06), a2 = iso(r - k + i * .29, c + k - .06); o += '<line x1="' + f(a1[0]) + '" y1="' + f(a1[1]) + '" x2="' + f(a2[0]) + '" y2="' + f(a2[1]) + '" stroke="#00000018" stroke-width="1"/>'; }
+    if (!txp) for (var i = 1; i < 3; i++) { var a1 = iso(r - k + i * .29, c - k + .06), a2 = iso(r - k + i * .29, c + k - .06); o += '<line x1="' + f(a1[0]) + '" y1="' + f(a1[1]) + '" x2="' + f(a2[0]) + '" y2="' + f(a2[1]) + '" stroke="#00000018" stroke-width="1"/>'; }
     if (!p.crop) o += '<text x="' + f(cen[0]) + '" y="' + f(cen[1] + 4) + '" text-anchor="middle" font-size="13" fill="#fff6e8" opacity=".9">＋</text>';
     return o;
   }
@@ -1155,7 +1196,8 @@
   }
   function areaSvg(g, now) {
     var W = 340, o = '', items = [];
-    var bg = '<defs><pattern id="cxchk" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#e2eed8"/><rect width="12" height="12" fill="#d9e9cd"/><rect x="12" y="12" width="12" height="12" fill="#d9e9cd"/></pattern></defs><rect x="-20" y="-20" width="400" height="400" fill="url(#cxchk)"/>';
+    FENCE_COL = FENCES[decoG(g).fence] ? FENCES[decoG(g).fence][2] : '#fffaf2';
+    var bg = '<defs><pattern id="cxchk" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#e2eed8"/><rect width="12" height="12" fill="#d9e9cd"/><rect x="12" y="12" width="12" height="12" fill="#d9e9cd"/></pattern>' + commonDefs() + '</defs><rect x="-20" y="-20" width="400" height="400" fill="url(#cxchk)"/>';
     if (area === 'g' || area === 'o') {
       var isG = area === 'g', arr = isG ? g.plots : g.orchard, per = isG ? 9 : 6, N = arr.length / per, SP = isG ? 264 : 232, show = N + (N < LAND[area].length ? 1 : 0);
       var R = isG ? 3 : 2, C = 3, m = isG ? 1.05 : .95, oy = isG ? 46 : 52, vx = isG ? 38 : 54, vy = isG ? -14 : -6, vh = isG ? 172 : 158;
@@ -1209,7 +1251,7 @@
       items = items.concat(ringDecor(iso3, R3, C3, m3, [[-.4, -.3, 'bush'], [-.45, 1.2, 'lav'], [-.4, 2.5, 'white'], [2.5, .2, 'stone'], [2.5, 2.4, 'bush'], [1.4, 2.6, 'yellow']]));
     } else if (pen === 'cow') {
       items.push({ z: -.3, s: house(hx, hy, '#c9584a', '#b44b40', '#f2ece0', '#e2d9c8', true) });
-      var hb = iso3(2.1, .2); items.push({ z: 2.3, s: '<ellipse cx="' + f(hb[0]) + '" cy="' + f(hb[1]) + '" rx="13" ry="5" fill="#00000016"/><rect x="' + f(hb[0] - 12) + '" y="' + f(hb[1] - 14) + '" width="24" height="13" rx="4" fill="#ecc96b" stroke="' + OL + '" stroke-width=".8"/><path d="M' + P2(hb[0] - 12, hb[1] - 9) + ' h24 M' + P2(hb[0] - 12, hb[1] - 5) + ' h24" stroke="#c9a24a" stroke-width=".8"/>' });
+      var hb = iso3(2.1, .2); if (CI('hay')) items.push({ z: 2.3, s: '<ellipse cx="' + f(hb[0]) + '" cy="' + f(hb[1]) + '" rx="13" ry="4" fill="#00000016"/>' + ciAt('hay', hb[0], hb[1] + 2, 0, 26) }); else items.push({ z: 2.3, s: '<ellipse cx="' + f(hb[0]) + '" cy="' + f(hb[1]) + '" rx="13" ry="5" fill="#00000016"/><rect x="' + f(hb[0] - 12) + '" y="' + f(hb[1] - 14) + '" width="24" height="13" rx="4" fill="#ecc96b" stroke="' + OL + '" stroke-width=".8"/><path d="M' + P2(hb[0] - 12, hb[1] - 9) + ' h24 M' + P2(hb[0] - 12, hb[1] - 5) + ' h24" stroke="#c9a24a" stroke-width=".8"/>' });
       items = items.concat(ringDecor(iso3, R3, C3, m3, [[2.5, 2.4, 'bush'], [-.4, 2.5, 'white'], [1.3, 2.6, 'yellow'], [2.55, 1.2, 'stone']]));
     } else if (pen === 'bee') {
       items = items.concat(ringDecor(iso3, R3, C3, m3, [[-.4, -.3, 'lav'], [-.45, .6, 'lav'], [-.45, 1.5, 'yellow'], [-.4, 2.5, 'lav'], [.6, -.4, 'pink'], [1.6, -.4, 'lav'], [2.5, -.3, 'white'], [2.55, 1.1, 'lav'], [2.5, 2.4, 'pink'], [1.3, 2.6, 'lav']]));
@@ -1250,7 +1292,7 @@
       poly([[x - 23, y - 16], [x, y - 5], [x, y - 18], [x - 10, y - 26]], '#9fbf88', OL, .9) + poly([[x, y - 5], [x + 21, y - 15], [x + 9, y - 26], [x, y - 18]], '#8fb178', OL, .9) +
       '<ellipse cx="' + f(x - 10) + '" cy="' + f(y - 3) + '" rx="4.4" ry="5" fill="#6b4f3a"/>';
   }
-  function trough(tp, full) { return '<path d="M' + P2(tp[0] - 14, tp[1]) + ' L' + P2(tp[0], tp[1] + 7) + ' L' + P2(tp[0] + 14, tp[1]) + ' L' + P2(tp[0], tp[1] - 7) + 'Z" fill="#b68d5f" stroke="' + OL + '" stroke-width=".8"/><path d="M' + P2(tp[0] - 10, tp[1]) + ' L' + P2(tp[0], tp[1] + 5) + ' L' + P2(tp[0] + 10, tp[1]) + ' L' + P2(tp[0], tp[1] - 5) + 'Z" fill="' + (full ? '#e9cf7a' : '#8f6d48') + '"/>'; }
+  function trough(tp, full) { if (CI('trough')) return '<ellipse cx="' + f(tp[0]) + '" cy="' + f(tp[1] + 2) + '" rx="16" ry="4" fill="#00000016"/>' + ciAt('trough', tp[0], tp[1] + 5, 0, 34, full ? '' : ' style="filter:saturate(.7)"'); return '<path d="M' + P2(tp[0] - 14, tp[1]) + ' L' + P2(tp[0], tp[1] + 7) + ' L' + P2(tp[0] + 14, tp[1]) + ' L' + P2(tp[0], tp[1] - 7) + 'Z" fill="#b68d5f" stroke="' + OL + '" stroke-width=".8"/><path d="M' + P2(tp[0] - 10, tp[1]) + ' L' + P2(tp[0], tp[1] + 5) + ' L' + P2(tp[0] + 10, tp[1]) + ' L' + P2(tp[0], tp[1] - 5) + 'Z" fill="' + (full ? '#e9cf7a' : '#8f6d48') + '"/>'; }
   function prodIcon(type) {
     var pk = { hen: 'egg', duck: 'egg', cow: 'milk', bee: 'honey' }[type];
     if (pk && FI(pk)) return imgAt(pk, 0, 5, pk === 'egg' ? 10 : 12);
@@ -1280,6 +1322,7 @@
   }
   function beesArt(i, pts) {
     var o = '';
+    if (CI('bee')) { pts.forEach(function (q, j) { o += '<g class="bz" style="animation-delay:' + (-j * .7 - i * .3) + 's"><g transform="translate(' + q[0] + ' ' + q[1] + ')' + (j % 2 ? ' scale(-1,1)' : '') + '">' + ciAt('bee', 0, 3, 0, 9) + '</g></g>'; }); return o; }
     pts.forEach(function (q, j) { o += '<g class="bz" style="animation-delay:' + (-j * .7 - i * .3) + 's"><ellipse cx="' + q[0] + '" cy="' + q[1] + '" rx="2" ry="1.5" fill="#f6c84a" stroke="' + OL + '" stroke-width=".5"/><path d="M' + (q[0] - .6) + ' ' + (q[1] - 1.4) + ' v2.8 M' + (q[0] + .7) + ' ' + (q[1] - 1.4) + ' v2.8" stroke="#3b2f2a" stroke-width=".5"/><ellipse cx="' + (q[0] - .4) + '" cy="' + (q[1] - 2.2) + '" rx="1.2" ry=".8" fill="#fff" opacity=".85"/></g>'; });
     return o;
   }
@@ -1427,16 +1470,40 @@
       '<div class="cx-g-acts">' + (ready(p) ? '<button type="button" class="cx-btn pri" data-ga="harvest">收成</button>' : '<button type="button" class="cx-btn" data-ga="water"' + (wet && p.wetUntil - now > HR ? ' disabled' : '') + '><i class="fas fa-droplet"></i> 澆水</button>') +
       '<button type="button" class="cx-btn warn" data-ga="dig">剷掉</button></div></div>';
   }
+  /* ---------- 果籃 ---------- */
+  var FB = [
+    { k: 'cherry', n: '櫻桃籃', need: { cherry: 12 } },
+    { k: 'momo', n: '桃子籃', need: { momo: 8 } },
+    { k: 'citrus', n: '柑橘籃', need: { orange: 5, lemon: 4 } },
+    { k: 'mixed', n: '綜合果籃', need: { apple: 3, pear: 3, grape: 2, cherry: 6 } },
+    { k: 'autumn', n: '秋日果籃', need: { persimmon: 4, grape: 2, apple: 3 } }
+  ];
+  var FB_LINES = ['一整籃都是妳摘的？手一定很酸吧，過來我揉揉。', '這麼多，妳先挑一顆最甜的，餵我。', '收到了。今晚一起切來吃好不好？', '妳是把整個果園都搬來給我了嗎……傻瓜，謝謝。', '好香。比外面買的都甜，因為是妳種的。'];
+  function fbPrice(r) { var v = 0; Object.keys(r.need).forEach(function (k) { v += r.need[k] * CROPS[k].price; }); return Math.round(v * 1.5 + 10); }
+  function fbCan(g, r) { return Object.keys(r.need).every(function (k) { return (g.inv[k] || 0) >= r.need[k]; }); }
+  function fbHtml(g) {
+    g.baskets = g.baskets || {};
+    var anyFruit = FB.some(function (r) { return Object.keys(r.need).some(function (k) { return g.inv[k] > 0; }) || g.baskets[r.k] > 0; });
+    if (!anyFruit) return '';
+    return '<div class="cx-g-pt">果籃 <span class="cx-muted">水果湊齊就能包一籃，送哥哥或賣掉都可以</span></div><div class="cx-fb">' + FB.map(function (r) {
+      var im = CI('k_' + r.k), have = g.baskets[r.k] || 0;
+      return '<div class="it">' + (im ? '<img src="' + im.src + '" alt="">' : '') + '<b>' + r.n + (have ? ' <small>×' + have + '</small>' : '') + '</b><div class="nd">' +
+        Object.keys(r.need).map(function (k) { var ok = (g.inv[k] || 0) >= r.need[k]; return '<span class="' + (ok ? 'ok' : '') + '">' + CROPS[k].n + ' ' + Math.min(g.inv[k] || 0, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div>' +
+        '<button type="button" class="cx-btn' + (have ? '' : ' pri') + '" data-fbmake="' + r.k + '"' + (fbCan(g, r) ? '' : ' disabled') + '>包一籃</button>' +
+        (have ? '<div class="row"><button type="button" class="cx-btn pri" data-fbgift="' + r.k + '">送</button><button type="button" class="cx-btn" data-fbsell="' + r.k + '">賣 🪙' + fbPrice(r) + '</button></div>' : '') + '</div>';
+    }).join('') + '</div><div class="cx-g-pt" style="margin-top:8px">倉庫</div>';
+  }
   function invHtml(g) {
     var any = ORDER.filter(function (k) { return g.inv[k] > 0; });
     var ppl = A.groupOn() ? A.groupPeople().filter(function (p) { return p.name.indexOf('系統') < 0; }) : [];
     if (!giftTo || (ppl.length && !ppl.some(function (p) { return p.name === giftTo; }))) giftTo = A.pname();
     var h = ppl.length > 1 ? '<div class="cx-who-t">送給</div>' + A.whoChips('cx-g-who', giftTo) : '';
     if (!any.length) return h + '<p class="cx-muted" style="text-align:center;padding:20px 0">倉庫空空的，去田裡收成吧。</p>';
-    return h + any.map(function (k) {
-      var c = CROPS[k];
-      return '<div class="cx-g-item">' + plantSvg(k, 3) + '<div class="tx"><b>' + c.n + '</b> × ' + g.inv[k] + '<div class="cx-muted">一' + c.unit + '賣 🪙 ' + c.price + '</div></div>' +
-        '<button type="button" class="cx-btn pri" data-gift="' + k + '">送' + (ppl.length > 1 ? '' : '他') + '</button><button type="button" class="cx-btn" data-sell="' + k + '">賣一' + c.unit + '</button></div>';
+    return h + fbHtml(g) + any.map(function (k) {
+      var c = CROPS[k], fi = CI('f_' + k), n = g.inv[k];
+      return '<div class="cx-g-item">' + (fi ? '<img class="cx-fi" src="' + fi.src + '" alt="">' : plantSvg(k, 3)) + '<div class="tx"><b>' + c.n + '</b> × ' + n + '<div class="cx-muted">一' + c.unit + '賣 🪙 ' + c.price + '</div></div>' +
+        '<button type="button" class="cx-btn pri" data-gift="' + k + '">送' + (ppl.length > 1 ? '' : '他') + '</button><div class="cx-sellb"><button type="button" class="cx-btn" data-sell="' + k + '">賣一' + c.unit + '</button>' +
+        (n >= 2 ? '<span><button type="button" class="cx-btn sm" data-sellx="' + k + ':h">賣一半</button><button type="button" class="cx-btn sm" data-sellx="' + k + ':a">全賣</button></span>' : '') + '</div></div>';
     }).join('') + '<button type="button" class="cx-btn" data-ga="sellAll" style="margin-top:6px">全部賣掉</button>';
   }
 
@@ -1448,6 +1515,7 @@
     BROS.forEach(function (b) {
       BQR.forEach(function (r) { L.push({ id: 'g:' + b[0] + ':' + r.k, cat: '送給' + b[0], title: '送給' + b[0] + '的' + r.n, imgs: ['cb_me', 'b:' + r.k, b[1]] }); });
       L.push({ id: 'g:' + b[0] + ':diy', cat: '送給' + b[0], title: '送給' + b[0] + '親手包的花束', imgs: ['cb_me', 'bd', b[1]] });
+      FB.forEach(function (r) { L.push({ id: 'gf:' + b[0] + ':' + r.k, cat: '送給' + b[0], title: '送給' + b[0] + '的' + r.n, imgs: ['cb_me', 'k:' + r.k, b[1]] }); });
     });
     RECIPES.filter(function (r) { return !r.out; }).forEach(function (r) { L.push({ id: 'd:' + r.k, cat: '料理', title: '第一次做出' + r.n + '！', imgs: ['cb_me', 'd:' + r.k] }); });
     L.push({ id: 't:all', cat: '小任務', title: '第一次完成全部小任務！', line: '明天也一起加油～', imgs: ['cb_me'] });
@@ -1462,17 +1530,19 @@
     Object.keys(g.bqSent || {}).forEach(function (key) { var r = g.bqSent[key]; Object.keys(r.to || {}).forEach(function (nm) {
       var b = BROS.filter(function (x) { return chibiOf(nm) === x[1]; })[0]; if (!b) return;
       var rk = r.sample && r.sample.recipe; add('g:' + b[0] + ':' + (rk || 'diy'), r.first || r.t, rk ? null : { flowers: r.sample.flowers, wrap: r.sample.wrap, ribbon: r.sample.ribbon }); }); });
+    Object.keys(g.fbSent || {}).forEach(function (fk) { var r = g.fbSent[fk]; Object.keys(r.to || {}).forEach(function (nm) { var b = BROS.filter(function (x) { return chibiOf(nm) === x[1]; })[0]; if (b) add('gf:' + b[0] + ':' + fk, r.first); }); });
     g.cardsV = 1; return got;
   }
   function cardImg(k, x) {
     if (k.indexOf('cb_') === 0 || k.indexOf('c:') === 0) { var m = CI(k.replace(/^c:/, '')); return m ? '<img src="' + m.src + '" alt="">' : ''; }
     if (k.indexOf('b:') === 0) return bqArt(k.slice(2));
+    if (k.indexOf('k:') === 0) { var km = CI('k_' + k.slice(2)); return km ? '<img src="' + km.src + '" alt="">' : ''; }
     if (k === 'bd') return x ? bouquetSvg(x) : bqArt('roses');
     if (k.indexOf('d:') === 0) return dishSvg(k.slice(2));
     return '';
   }
   function cardHtml(d, rec, big) {
-    return '<div class="cx-cd' + (d.id.indexOf('g:') === 0 ? ' gift' : '') + (rec ? '' : ' no') + (big ? ' big' : '') + '"' + (big ? '' : ' data-card="' + d.id + '"') + '><div class="im">' + d.imgs.map(function (k) { return '<span class="' + (k.indexOf('cb_') === 0 ? 'p' : 'o') + '">' + cardImg(k, rec && rec.x) + '</span>'; }).join('') + '</div>' +
+    return '<div class="cx-cd' + (/^gf?:/.test(d.id) ? ' gift' : '') + (rec ? '' : ' no') + (big ? ' big' : '') + '"' + (big ? '' : ' data-card="' + d.id + '"') + '><div class="im">' + d.imgs.map(function (k) { return '<span class="' + (k.indexOf('cb_') === 0 ? 'p' : 'o') + '">' + cardImg(k, rec && rec.x) + '</span>'; }).join('') + '</div>' +
       '<b>' + (rec ? esc(d.title) : '？？？') + '</b>' + (big && d.line ? '<p>' + esc(d.line) + '</p>' : '') + '<small>' + (rec ? (rec.pre ? '更新前就達成' : new Date(rec.t).toLocaleDateString('zh-TW')) : d.cat) + '</small></div>';
   }
   function cardsHtml(g) {
@@ -1855,6 +1925,21 @@
       g.coins -= c.cost; plant(q, k, '', now); q.wetUntil = now + WET; g.lastSeed = k; tick(g, 'plant'); log(g, '🌱 種下' + c.n + '，澆了水'); save(); sel = ''; render(); return;
     }
     if ((b = e.target.closest('[data-sell]'))) { var s = b.dataset.sell; if (g.inv[s] > 0) { g.inv[s]--; g.coins += CROPS[s].price; tick(g, 'sell'); save(); render(); } return; }
+    if ((b = e.target.closest('[data-sellx]'))) { var sx = b.dataset.sellx.split(':'), sk = sx[0], have0 = g.inv[sk] || 0, q = sx[1] === 'a' ? have0 : Math.floor(have0 / 2); if (q > 0) { g.inv[sk] -= q; g.coins += q * CROPS[sk].price; tick(g, 'sell', q); log(g, '🪙 賣了 ' + CROPS[sk].n + ' × ' + q + '，+' + q * CROPS[sk].price); save(); render(); toast('賣了 ' + q + ' ' + CROPS[sk].unit + '，🪙 +' + q * CROPS[sk].price, 'success'); } return; }
+    if ((b = e.target.closest('[data-fbmake]'))) { var fr = FB.filter(function (x) { return x.k === b.dataset.fbmake; })[0]; if (!fr || !fbCan(g, fr)) return; Object.keys(fr.need).forEach(function (k) { g.inv[k] -= fr.need[k]; }); g.baskets = g.baskets || {}; g.baskets[fr.k] = (g.baskets[fr.k] || 0) + 1; log(g, '🧺 包好了一籃' + fr.n); save(); render(); toast('包好一籃' + fr.n + ' 🧺', 'success'); return; }
+    if ((b = e.target.closest('[data-fbsell]'))) { var fs = FB.filter(function (x) { return x.k === b.dataset.fbsell; })[0]; if (!fs || !(g.baskets[fs.k] > 0)) return; g.baskets[fs.k]--; g.coins += fbPrice(fs); tick(g, 'sell'); log(g, '🪙 賣了一籃' + fs.n + '，+' + fbPrice(fs)); save(); render(); return; }
+    if ((b = e.target.closest('[data-fbgift]'))) {
+      var fg = FB.filter(function (x) { return x.k === b.dataset.fbgift; })[0]; if (!fg || !(g.baskets[fg.k] > 0)) return;
+      var fto = A.groupOn() ? (giftTo || A.pname()) : A.pname(), fwho = fto === A.pname() && !A.groupOn() ? '你' : fto;
+      g.baskets[fg.k]--; g.fbSent = g.fbSent || {}; var fsr = g.fbSent[fg.k] || (g.fbSent[fg.k] = { n: 0, to: {}, first: Date.now() }); fsr.n++; fsr.to[fto] = (fsr.to[fto] || 0) + 1;
+      tick(g, 'gift'); log(g, '🧺 把一籃' + fg.n + '送給了 ' + fto); save(); render();
+      var fim = CI('k_' + fg.k), freply = pick(FB_LINES);
+      if (fim && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: 'user', text: '', image: fim.src, timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
+      A.iSay('（送了一籃' + fg.n + '給' + fwho + '）');
+      setTimeout(function () { var cw = chibiOf(fto); surprise(cw || 'cb_me', fim ? '<img src="' + fim.src + '" alt="">' : '', cw ? fto + '收到果籃了！' : '果籃送出去了！', cw ? freply : ''); }, 300);
+      setTimeout(function () { if (A.groupOn()) A.speakAs(fto, 4000); A.partnerSays(freply, A.groupOn() ? fto : null); }, 1500 + Math.random() * 1500);
+      return;
+    }
     if ((b = e.target.closest('[data-gift]'))) {
       var gk = b.dataset.gift; if (!(g.inv[gk] > 0)) return;
       var to = A.groupOn() ? (giftTo || A.pname()) : A.pname(), cc = CROPS[gk];
@@ -1892,7 +1977,7 @@
       o.innerHTML = '<div class="cxm-hd"><b>摸魚小貓</b><span class="cxm-st"><span id="cxm-lives">♥♥♥</span><span><b id="cxm-score">0</b> <small>分</small></span><span><small>最高</small> <b id="cxm-best">0</b></span></span>' +
         '<button class="cxm-ib" id="cxm-snd" type="button" aria-label="音效開關">♪</button><button class="cxm-ib" id="cxm-pause" type="button" aria-label="暫停">❚❚</button><button class="cxm-ib" id="cxm-close" type="button" aria-label="離開"><i class="fas fa-xmark"></i></button></div>' +
         '<div class="cxm-stage" id="cxm-stage"><canvas id="cxm-cv"></canvas>' +
-        '<div class="cxm-ov" id="cxm-start"><div class="cxm-panel"><h2>摸魚小貓</h2><p>上班好累，讓小黑貓幫你摸魚。<br>左右拖動小貓，接住好東西，躲開工作。<br>每 5 分換 1 枚花園金幣（一天最多 40）。</p><div class="cxm-legend" id="cxm-legend"></div><button class="cxm-go" id="cxm-goBtn" type="button">開始摸魚</button></div></div>' +
+        '<div class="cxm-ov" id="cxm-start"><div class="cxm-panel"><h2>摸魚小貓</h2><p>上班好累，讓 Fiddi 幫你摸魚。<br>左右拖動小貓，接住好東西，躲開工作。<br>每 5 分換 1 枚花園金幣（一天最多 40）。</p><div class="cxm-legend" id="cxm-legend"></div><button class="cxm-go" id="cxm-goBtn" type="button">開始摸魚</button></div></div>' +
         '<div class="cxm-ov" id="cxm-over" hidden><div class="cxm-panel"><h2>被抓回去上班了</h2><div class="cxm-big" id="cxm-final">0</div><p id="cxm-bestLine"></p><p class="cxm-earn" id="cxm-earn"></p><p class="cxm-quote" id="cxm-quote"></p><button class="cxm-go" id="cxm-againBtn" type="button">再摸一次</button></div></div>' +
         '<div class="cxm-ov" id="cxm-paused" hidden><div class="cxm-panel"><h2>偷偷暫停</h2><p>老闆走過去了嗎？</p><button class="cxm-go" id="cxm-resumeBtn" type="button">繼續摸魚</button></div></div></div>';
       document.body.appendChild(o);
@@ -1982,7 +2067,21 @@
       ctx.strokeStyle = '#3b3150'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -s * .22); ctx.moveTo(0, 0); ctx.lineTo(s * .16, s * .06); ctx.stroke();
       ctx.restore();
     }
+    var fdImg = null;
     function drawCat(x, y, t, mood) {
+      var fd = CI('fiddibowl');
+      if (fd) {
+        if (!fdImg || fdImg.src !== fd.src) { fdImg = new Image(); fdImg.src = fd.src; }
+        if (fdImg.complete && fdImg.naturalWidth) {
+          var bb = Math.sin(t * 4) * 1.5, Wd = 86, Hd = Wd * fd.h / fd.w;
+          ctx.save(); ctx.translate(x, y + bb);
+          if (mood === 'ouch') { ctx.rotate(Math.sin(t * 40) * .08); ctx.globalAlpha = .75; }
+          ctx.drawImage(fdImg, -Wd / 2, 46 - Hd, Wd, Hd); ctx.globalAlpha = 1;
+          if (mood === 'yum') { ctx.fillStyle = '#f08aa6'; ctx.font = '16px system-ui'; ctx.textAlign = 'center'; ctx.fillText('♥', 30, 46 - Hd + 8); ctx.fillText('♥', -32, 46 - Hd + 18); }
+          ctx.fillStyle = 'rgba(122,96,82,.85)'; ctx.font = '700 11px system-ui'; ctx.textAlign = 'center'; ctx.fillText('摸魚', 0, 34);
+          ctx.restore(); return;
+        }
+      }
       var bob = Math.sin(t * 4) * 1.5;
       ctx.save(); ctx.translate(x, y + bob);
       // tail
@@ -2516,6 +2615,7 @@
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
     '#cx-garden-modal .cx-body>*{flex-shrink:0}.cx-g-stage{border-radius:18px;overflow:hidden;border:1px solid #c9dfbf;background:#e2eed8}.cx-g-stage.pan{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;cursor:grab}.cx-g-stage.pan::-webkit-scrollbar{display:none}.cx-g-stage.pan .cx-scene{max-width:none}.cx-g-pan{text-align:center;font-size:11.5px;margin:-4px 0 0}.cx-g-decobtn{align-self:center;padding:5px 14px;font-size:12.5px}.cx-deco{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.cx-deco .it{border:1px solid var(--border-color);border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--primary-bg)}.cx-deco .it.on{border-color:var(--accent-color)}.cx-deco svg{width:56px;height:62px;overflow:visible}.cx-deco b{font-size:12.5px}.cx-deco .cx-btn{width:100%;justify-content:center;padding:4px 6px;font-size:11.5px}.cx-fence{display:flex;flex-wrap:wrap;gap:6px}.cx-fence button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:4px 10px 4px 6px;font:inherit;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer}.cx-fence button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-fence i{width:16px;height:16px;border-radius:50%;border:1px solid #7a6252}.cx-fence small{color:var(--text-secondary)}.cx-scene .cx-mill{animation:cxmill 6s linear infinite}@keyframes cxmill{to{transform:rotate(360deg)}}.cx-wx{font-size:12px;padding:6px 12px;border-radius:12px;background:#fff7dc;color:#8a6a2a;border:1px solid #f0dfa8}.cx-wx.rain{background:#e6eef8;color:#4f6a8a;border-color:#c6d6ea}.cx-wx.cloud{background:var(--secondary-bg);color:var(--text-secondary);border-color:var(--border-color)}.cx-scene .cx-rain{animation:cxrain .6s linear infinite}@keyframes cxrain{from{transform:translate(0,-10px)}to{transform:translate(-3px,10px)}}.cx-scene{display:block;width:100%;height:auto;-webkit-tap-highlight-color:transparent;user-select:none}' +
     '.cx-cd-cat{font-size:12.5px;color:var(--text-secondary);margin:8px 2px 4px}.cx-cds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.cx-cd{background:#fffaf4;border:1px solid #eadfce;border-radius:14px;padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;cursor:pointer;color:#5a4a44}.cx-cd .im{display:flex;align-items:flex-end;justify-content:center;height:58px;gap:0}.cx-cd.gift .im{background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 90%27%3E%3Cpath d=%27M50 86 C10 58 0 38 8 20 C16 4 40 2 50 22 C60 2 84 4 92 20 C100 38 90 58 50 86Z%27 fill=%27%23fdf1f3%27/%3E%3C/svg%3E") center 40%/auto 92% no-repeat}.cx-cd.no .im{background:none}.cx-cd .im span{display:flex;align-items:flex-end;justify-content:center;height:100%}.cx-cd .im span.p{width:34px}.cx-cd .im span.o{width:26px;height:80%}.cx-cd.gift .im span.p+span.o{margin-left:2px}.cx-cd.gift .im span.o+span.p{margin-left:-3px}.cx-cd:not(.gift) .im{gap:3px}.cx-cd:not(.gift) .im span.o{width:34px;height:100%}.cx-cd .im img,.cx-cd .im svg{max-width:100%;max-height:100%;height:auto}.cx-cd .im svg{height:100%}.cx-cd b{font-size:11px;line-height:1.3}.cx-cd small{font-size:10px;color:#b3a59c}.cx-cd.no{cursor:default}.cx-cd.no .im{filter:grayscale(1) brightness(1.6) contrast(.35);opacity:.45}.cx-cd.no b{color:#b3a59c}.cx-cd.big{border:0;background:none;cursor:default;gap:6px}.cx-cd.big .im{height:150px;gap:0;width:auto}.cx-cd.big .im span.p{width:92px}.cx-cd.big .im span.o{width:70px;height:72%}.cx-cd.big.gift .im span.p+span.o{margin-left:6px}.cx-cd.big.gift .im span.o+span.p{margin-left:-8px}.cx-cd.big:not(.gift) .im{gap:6px;width:auto}.cx-cd.big:not(.gift) .im span.o,.cx-cd.big:not(.gift) .im span.o:last-child{width:96px;height:100%}.cx-cd.big .im span.o:last-child{width:84px;height:78%}.cx-cd.big b{font-size:16px}.cx-cd.big p{margin:0;font-size:13.5px;color:#7a6a62}.cx-cd.big small{font-size:12px}' +
+    '.cx-g-item img.cx-fi{width:44px;height:42px;flex:0 0 44px;object-fit:contain}.cx-sellb{display:flex;flex-direction:column;gap:4px;align-items:stretch}.cx-sellb span{display:flex;gap:4px}.cx-g-item .cx-btn.sm{padding:4px 7px;font-size:11.5px}.cx-fb{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:6px}.cx-fb .it{border:1px solid var(--border-color);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--primary-bg);text-align:center}.cx-fb img{width:84px;height:76px;object-fit:contain}.cx-fb b{font-size:13px}.cx-fb b small{color:var(--accent-color)}.cx-fb .nd{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.cx-fb .nd span{font-size:10.5px;padding:1px 6px;border-radius:99px;background:var(--secondary-bg);color:var(--text-secondary)}.cx-fb .nd span.ok{color:#4f8a35;background:#eef6e6}.cx-fb .cx-btn{width:100%;justify-content:center;padding:6px;font-size:12.5px}.cx-fb .row{display:flex;gap:5px;width:100%}' +
     '.cx-sp{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(70,50,70,.28);animation:cxspf .2s ease}.cx-sp .card{background:#fffaf4;color:#5a4a44;border-radius:22px;padding:16px 18px 12px;width:min(300px,86vw);text-align:center;box-shadow:0 12px 40px rgba(60,40,60,.25);display:flex;flex-direction:column;align-items:center;gap:6px;animation:cxspp .4s cubic-bezier(.2,1.5,.4,1)}.cx-sp .row{display:flex;align-items:flex-end;justify-content:center;gap:2px}.cx-sp .cb{height:128px;width:auto;animation:cxspb 1.6s ease-in-out infinite}.cx-sp .art{width:92px;height:120px;display:flex;align-items:flex-end;justify-content:center}.cx-sp .art img,.cx-sp .art svg{max-width:100%;max-height:100%}.cx-sp b{font-size:16px}.cx-sp p{margin:0;font-size:13.5px;line-height:1.55;color:#7a6a62}.cx-sp small{font-size:11px;color:#b3a59c}@keyframes cxspf{from{opacity:0}}@keyframes cxspp{from{transform:scale(.6);opacity:0}}@keyframes cxspb{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
     '.cx-scene .pl,.cx-scene [data-ani],.cx-scene [data-prod]{cursor:pointer}.cx-g-pens{margin-top:-4px}.cx-g-pens button{font-size:11.5px;padding:6px 1px;white-space:nowrap}.cx-scene .bz{animation:cxbz 2.4s ease-in-out infinite}@keyframes cxbz{0%,100%{transform:translate(0,0)}25%{transform:translate(5px,-3px)}50%{transform:translate(1px,-6px)}75%{transform:translate(-5px,-2px)}}.cx-scene .hen.slow .hw{animation-duration:7s}.cx-scene .hen.swim .hw{animation-duration:4.5s}.cx-scene .hen.slow .hw>g:last-child{animation:none}.cx-scene .hen.hive .hw{animation:none}.cx-scene .hen.hive .hw>g:last-child{animation:cxbz 2.4s ease-in-out infinite}.cx-scene .pl:active{opacity:.85}' +
     '.cx-scene .hen .hw{animation:cxhen var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}.cx-scene .hen.hun .hw{animation-duration:6s}' +
