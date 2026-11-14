@@ -2307,7 +2307,7 @@
   var HZ_POSE = { me: { sit: 'me_sit', walk: 'me_walk', sleep: 'me_sleep' }, cs: { sit: 'cs_sit', walk: 'cs_walk', sleep: 'cs_sleep', work: 'cs_work' }, rm: { sit: 'rm_sit', walk: 'rm_walk', sleep: 'rm_sleep' } };
   /* 每個房間的位置：[x%, y%]（腳底／坐的地方） */
   var HZ_SPOT = {
-    living: { stand: [[24, 86], [48, 95], [74, 86], [62, 70]], seat: [[23, 64], [32, 60], [41, 56]], rug: [58, 80], corner: [87, 72] },
+    living: { stand: [[64, 74], [78, 86], [52, 92], [36, 94]], seat: [[27, 62], [35, 58], [43, 54]], rug: [58, 80], corner: [87, 72] },
     bed: { stand: [[40, 90], [59, 93], [79, 86]], pillow: [[26, 51], [37, 44], [47, 36]], feet: [[66, 66], [57, 71]], top: [60, 58], beside: [[36, 82], [17, 74]], catbed: [27, 77], rug: [81, 74] },
     closet: { stand: [[44, 86], [62, 89]], floor: [68, 80], stool: [52, 74] },
     cs: { stand: [[60, 88], [42, 92]], chair: [46, 54], floor: [82, 86], arm: [80, 70] },
@@ -2386,9 +2386,9 @@
     HZ_PPL.forEach(function (p) {
       var w = S.ppl[p[0]]; if (!w || w.room !== R) return; var id = 'p:' + p[0], kind = w.kind, at = w.at, pz = hzPos[id];
       if (kind === 'stand' && pz && pz.blk === blk) at = pz.at;
-      var wk = hzWalk[id], img = p[2], ci = 1, h = 27, flip = 0;
+      var wk = hzWalk[id], img = p[2], ci = 1, h = 23, flip = 0;
       if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
-      if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 27; flip = wk.to[0] < wk.from[0]; at = wk.from; }
+      if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 23; flip = wk.to[0] < wk.from[0]; at = wk.from; }
       out.push({ iso: false, id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: '', flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
     });
     ['fd', 'an'].forEach(function (c) {
