@@ -172,7 +172,7 @@
       if (e && e.code === 'resource-exhausted') showPill('Firebase 今日免費額度已用完，明天會繼續同步', 6000);
       else if (e && e.code === 'permission-denied') showPill('Firebase 拒絕寫入，請檢查規則（見使用說明）', 6000);
       else if (e && e.code === 'invalid-argument') showPill('有內容過大未能同步', 4000);
-      else { showPill('同步失敗，稍後重試', 3000); setTimeout(function () { upload(id); }, 8000); }
+      else { var why = (e && (e.code || e.name)) || '?', msg = String((e && e.message) || '').slice(0, 40); lastErr = why + '｜' + String(id).slice(0, 24) + (msg ? '｜' + msg : ''); showPill('同步失敗，稍後重試（' + lastErr + '）', 6000); setTimeout(function () { upload(id); }, 8000); }
     }
     running[id] = false;
     if (again[id]) { again[id] = false; upload(id); }
@@ -187,7 +187,8 @@
     }, 60000);
   }
   function pending() { for (var k in timers) if (dirty[k]) return true; for (var r in running) if (running[r]) return true; return false; }
-  function statusIdle() { if (!pending() && pill.textContent === '同步失敗，稍後重試') pill.hidden = true; }
+  var lastErr = '';
+  function statusIdle() { if (!pending() && pill.textContent.indexOf('同步失敗') === 0) pill.hidden = true; }
   async function flushAll(maxMs) {
     var ids = Object.keys(dirty); ids.forEach(function (id) { clearTimeout(timers[id]); upload(id); });
     var end = Date.now() + (maxMs || 3000);
