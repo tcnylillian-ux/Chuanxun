@@ -41,9 +41,14 @@
     pear:       { n: '梨子',   seed: '梨樹',   cost: 26, grow: 420e3, yield: 3, price: 10, col: '#e2d777', unit: '顆', tree: 1 },
     grape:      { n: '葡萄',   seed: '葡萄藤', cost: 32, grow: 540e3, yield: 3, price: 14, col: '#8a6fc2', unit: '串', tree: 1 },
     persimmon:  { n: '柿子',   seed: '柿子樹', cost: 30, grow: 600e3, yield: 4, price: 9,  col: '#f08a3c', unit: '顆', tree: 1 },
-    cherry:     { n: '櫻桃',   seed: '櫻桃樹', cost: 35, grow: 600e3, yield: 6, price: 6,  col: '#cf4f62', unit: '顆', tree: 1 }
+    cherry:     { n: '櫻桃',   seed: '櫻桃樹', cost: 35, grow: 600e3, yield: 6, price: 6,  col: '#cf4f62', unit: '顆', tree: 1 },
+    banana:     { n: '香蕉',   seed: '香蕉樹', cost: 26, grow: 420e3, yield: 3, price: 9,  col: '#f2d35b', unit: '根', tree: 1 },
+    passion:    { n: '百香果', seed: '百香果棚', cost: 28, grow: 480e3, yield: 4, price: 8,  col: '#7a4a7e', unit: '顆', tree: 1 },
+    fig:        { n: '無花果', seed: '無花果樹', cost: 30, grow: 540e3, yield: 4, price: 9,  col: '#8a5a8f', unit: '顆', tree: 1 },
+    lychee:     { n: '荔枝',   seed: '荔枝樹', cost: 32, grow: 540e3, yield: 6, price: 6,  col: '#e2626e', unit: '顆', tree: 1 },
+    mango:      { n: '芒果',   seed: '芒果樹', cost: 34, grow: 600e3, yield: 3, price: 13, col: '#f4b03e', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'tulip', 'cornflower', 'strawberry', 'tomato', 'gardenia', 'lilyvalley', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'whitelav', 'pinkdaisy', 'blacktulip', 'pinkhydra', 'bluerose', 'goldrose'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'tulip', 'cornflower', 'strawberry', 'tomato', 'gardenia', 'lilyvalley', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'blacktulip', 'pinkhydra', 'bluerose', 'goldrose'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
@@ -55,6 +60,11 @@
     pear: ['梨子不能分著吃喔，整顆都給妳。', '好甜，水分好多。', '燉個冰糖梨給妳潤潤喉。'],
     grape: ['一顆一顆剝好皮餵妳。', '好大一串，妳是不是挑了最漂亮的。', '紫紫的，好甜。'],
     persimmon: ['柿子！事事如意的意思。', '熟透了，好軟好甜。', '秋天的味道。謝謝妳。'],
+    mango: ['芒果！我幫妳切成格子，翻過來那種。', '好香好甜，夏天的味道。', '黏黏的手過來，我幫妳擦。'],
+    lychee: ['荔枝……剝好一顆，張嘴。', '一顆一顆好甜，小心別吃太多會上火。', '粉粉的殼，裡面白白的，好可愛。'],
+    banana: ['香蕉！今天的早餐有著落了。', '一整串？妳是把我當猴子了嗎……好吧，跟妳那隻一樣。', '熟得剛剛好，謝謝妳。'],
+    fig: ['無花果，切開裡面像一朵花。', '好少見，妳怎麼種出來的。', '甜甜軟軟的，配起司剛好。'],
+    passion: ['百香果，好香，整個房間都是它的味道。', '挖一匙加在氣泡水裡，給妳也來一杯。', '酸酸的，但妳送的就是甜的。'],
     lavender: ['好香……放在枕頭邊，晚上就像抱著你睡。', '妳種的薰衣草，我會好好收著。', '聞起來跟妳身上的味道一樣。'],
     gypso: ['滿天星……像把整片星空都送給我了。', '小小的白花，一大把，好溫柔。', '滿天星是真心喜歡的意思吧？我知道。'],
     daisy: ['小小一朵，跟妳一樣可愛。', '雛菊……妳是在偷偷跟我告白嗎？', '插在書桌上了，抬頭就看得到。'],
@@ -530,7 +540,8 @@
     if (!WIM) o += '<path d="M24 76 L60 152 L96 76 L82 84 L60 78 L38 84 Z" fill="' + W[1] + '" fill-opacity=".93" stroke="' + INK + '" stroke-width=".7"/>' +
       '<path d="M38 84 L60 152 M82 84 L60 152" stroke="' + W[2] + '" stroke-width="1" fill="none" opacity=".8"/>';
     // 緞帶
-    o += '<path d="M50 118 Q60 114 70 118 L69 124 Q60 120 51 124Z" fill="' + R[1] + '" stroke="' + INK + '" stroke-width=".5"/>' +
+    if (WIM && CI('bow_' + ribbon)) o += ciAt('bow_' + ribbon, 60, 142, 0, 42);
+    else o += '<path d="M50 118 Q60 114 70 118 L69 124 Q60 120 51 124Z" fill="' + R[1] + '" stroke="' + INK + '" stroke-width=".5"/>' +
       '<path d="M60 121 Q46 108 44 118 Q46 126 60 121Z M60 121 Q74 108 76 118 Q74 126 60 121Z" fill="' + R[1] + '" fill-opacity=".92" stroke="' + INK + '" stroke-width=".5"/>' +
       '<path d="M58 123 L52 138 M62 123 L68 138" stroke="' + R[1] + '" stroke-width="2.4" stroke-linecap="round"/>' + dot(60, 121, 2.2, R[1]);
     if (IMGBQ) o += '</g>';
@@ -1148,6 +1159,8 @@
   DART.well = function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="11" ry="3.4" fill="#00000016"/><rect x="' + f(x - 9) + '" y="' + f(y - 12) + '" width="18" height="12" rx="3" fill="#e4e0d8" stroke="' + OL + '" stroke-width=".8"/><ellipse cx="' + f(x) + '" cy="' + f(y - 12) + '" rx="9" ry="3" fill="#7d8f9a" stroke="' + OL + '" stroke-width=".7"/><path d="M' + P2(x - 8, y - 12) + ' V' + f(y - 28) + ' M' + P2(x + 8, y - 12) + ' V' + f(y - 28) + ' M' + P2(x - 10, y - 27) + ' H' + f(x + 10) + '" stroke="#a07853" stroke-width="2"/>'; };
   (function () { var SZ = { lamp: [34], mailbox: [27], bench: [0, 30], bunny: [22], pond: [0, 46, 9], swing: [34], windmill: [44], well: [32], arch: [42] };
     Object.keys(SZ).forEach(function (k) { var orig = DART[k], z = SZ[k]; DART[k] = function (x, y) { if (!CI(k)) return orig(x, y); return (k === 'pond' ? '' : '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="' + (z[1] ? z[1] * .42 : 9) + '" ry="3" fill="#00000012"/>') + ciAt(k, x, y + 2 + (z[2] || 0), z[0], z[1]); }; });
+    var wm0 = DART.windmill; DART.windmill = function (x, y) { if (!CI('wm_body') || !CI('wm_blade')) return wm0(x, y); var bm = CI('wm_body'), BH = 34, BW = BH * bm.w / bm.h, hx = x - BW / 2 + BW * .47, hy = y + 2 - BH + BH * .14, bl = CI('wm_blade'), LW = 30, LH = LW * bl.h / bl.w;
+      return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="13" ry="3" fill="#00000012"/>' + ciAt('wm_body', x, y + 2, BH) + '<g transform="translate(' + f(hx) + ' ' + f(hy) + ')"><g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>' + ciAt('wm_blade', 0, LH / 2, 0, LW) + '</g></g>'; };
     var a2 = DART.arch2; DART.arch2 = function (a, b) { if (!CI('arch')) return a2(a, b); var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
       return '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>' + '<g transform="translate(' + f(2 * mx) + ' 0) scale(-1 1)">' + ciAt('arch', mx, my + 6, 0, Math.abs(b[0] - a[0]) + 16) + '</g>'; };
     [['bush', 'bush2', 22], ['mush', 'mush', 18], ['stone', 'mush', 0]].forEach(function (r) { var orig = DECOR[r[0]]; DECOR[r[0]] = function (x, y, col) { if (!CI(r[1])) return orig(x, y, col); if (!r[2]) return orig(x, y, col); return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="' + f(r[2] * .42) + '" ry="3" fill="#00000012"/>' + ciAt(r[1], x, y + 2, 0, r[2]); }; });
@@ -1478,7 +1491,8 @@
     { k: 'momo', n: '桃子籃', need: { momo: 8 } },
     { k: 'citrus', n: '柑橘籃', need: { orange: 5, lemon: 4 } },
     { k: 'mixed', n: '綜合果籃', need: { apple: 3, pear: 3, grape: 2, cherry: 6 } },
-    { k: 'autumn', n: '秋日果籃', need: { persimmon: 4, grape: 2, apple: 3 } }
+    { k: 'autumn', n: '秋日果籃', need: { persimmon: 4, grape: 2, apple: 3 } },
+    { k: 'tropic', n: '熱帶果籃', need: { mango: 3, banana: 2, passion: 4 } }
   ];
   var FB_LINES = ['一整籃都是妳摘的？手一定很酸吧，過來我揉揉。', '這麼多，妳先挑一顆最甜的，餵我。', '收到了。今晚一起切來吃好不好？', '妳是把整個果園都搬來給我了嗎……傻瓜，謝謝。', '好香。比外面買的都甜，因為是妳種的。'];
   function fbPrice(r) { var v = 0; Object.keys(r.need).forEach(function (k) { v += r.need[k] * CROPS[k].price; }); return Math.round(v * 1.5 + 10); }
@@ -1675,9 +1689,27 @@
     { k: 'applepie', n: '蘋果派', need: { apple: 3, wheat: 2, butter: 1, sugar: 1 }, price: 62 },
     { k: 'lemontart', n: '檸檬塔', need: { lemon: 2, wheat: 2, egg: 2, butter: 1, sugar: 1 }, price: 64 },
     { k: 'honeycake', n: '蜂蜜蛋糕', need: { honey: 2, egg: 2, wheat: 2, milk: 1 }, price: 60 },
+    { k: 'mpudding', n: '芒果布丁', need: { mango: 2, milk: 2, sugar: 1 }, price: 48 },
+    { k: 'msmoothie', n: '芒果冰沙', need: { mango: 2, milk: 1 }, price: 36 },
+    { k: 'lice', n: '荔枝冰', need: { lychee: 4, sugar: 1 }, price: 40 },
+    { k: 'bcake', n: '香蕉蛋糕', need: { banana: 3, wheat: 2, egg: 2, butter: 1 }, price: 60 },
+    { k: 'figtart', n: '無花果塔', need: { fig: 3, wheat: 2, butter: 1, milk: 1, sugar: 1 }, price: 70 },
+    { k: 'psoda', n: '百香果氣泡飲', need: { passion: 2, honey: 1 }, price: 32 },
+    { k: 'ojam', n: '橘子果醬', need: { orange: 4, sugar: 1 }, price: 38 },
+    { k: 'appletea', n: '蘋果肉桂茶', need: { apple: 2, honey: 1 }, price: 28 },
+    { k: 'bmuffin2', n: '藍莓杯子蛋糕', need: { blueberry: 4, wheat: 2, egg: 1, milk: 1, sugar: 1 }, price: 58 },
     { k: 'fruitcake', n: '水果蛋糕', need: { strawberry: 2, momo: 2, orange: 2, blueberry: 3, wheat: 3, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 160 }
   ];
   var DISH_LINES = {
+    mpudding: ['芒果布丁！滑滑嫩嫩的，上面還有芒果丁。', '一人一半？……好吧，妳吃大的那半。'],
+    msmoothie: ['芒果冰沙，夏天就要喝這個。', '冰冰的，小心頭痛，慢慢喝。'],
+    lice: ['荔枝冰……好香好甜，像初戀的味道。', '粉粉的，跟妳臉紅的時候一樣。'],
+    bcake: ['香蕉蛋糕，整間屋子都是香蕉的味道。', '軟軟的，好好吃，明天早餐也要。'],
+    figtart: ['無花果塔，好漂亮，像在法國的甜點店。', '切開的無花果好像一朵花。'],
+    psoda: ['百香果氣泡飲，酸酸甜甜還會冒泡泡。', '籽咬起來脆脆的，好好玩。'],
+    ojam: ['橘子果醬，自己熬的對吧，好香。', '明天抹吐司，再配一杯紅茶。'],
+    appletea: ['蘋果肉桂茶，暖暖的。', '捧著杯子坐在妳旁邊喝，最舒服了。'],
+    bmuffin2: ['藍莓杯子蛋糕，上面還有奶油，好可愛。', '小小一個，剛好一口……兩口。'],
     cookie: ['薰衣草餅乾……好香，配茶剛好。', '一口一個，停不下來。'],
     tomegg: ['番茄炒蛋！是家的味道。', '妳做的比我做的好吃，不准跟別人說。'],
     jelly: ['QQ 的，好可愛，跟妳一樣。', '冰冰涼涼的，夏天就想吃這個。'],
