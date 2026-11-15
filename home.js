@@ -2323,7 +2323,24 @@
     rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
   var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
-  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['win', '冬天'], ['formal', '正裝'], ['base', '居家內搭']];
+  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['coat', '大衣'], ['win', '冬天'], ['formal', '正裝'], ['base', '居家內搭']];
+  /* 這套衣服有沒有坐／走的圖；沒有就回傳 null */
+  function hzPoseKey(who, kind, ok) {
+    if (kind === 'sleep') return HZ_POSE[who].sleep;
+    if (ok === 'def') return HZ_POSE[who][kind] || (kind === 'work' ? HZ_POSE[who].sit : null);
+    var k = 'o_' + who + '_' + ok + '_' + (kind === 'work' ? 'sit' : kind); return HI(k) ? k : null;
+  }
+  /* 穿的衣服沒有坐姿 → 改成站在房間裡；仁彌穿牛仔褲出門裝坐著時，只坐他房間的懶骨頭 */
+  function hzFixPose(S) {
+    var used = {};
+    Object.keys(S.ppl).forEach(function (k) { var w = S.ppl[k]; if (w.kind === 'stand') used[w.room + w.at.join()] = 1; });
+    if (S.ppl.rm && S.ppl.rm.kind === 'sit' && hzOutNow('rm') === 'out') S.ppl.rm = { room: 'rm', kind: 'sit', at: HZ_SPOT.rm.bean };
+    Object.keys(S.ppl).forEach(function (k) { var w = S.ppl[k];
+      if ((w.kind === 'sit' || w.kind === 'work') && !hzPoseKey(k, w.kind, hzOutNow(k))) {
+        var sp = HZ_SPOT[w.room].stand.filter(function (q) { return !used[w.room + q.join()]; })[0] || HZ_SPOT[w.room].stand[0];
+        used[w.room + sp.join()] = 1; S.ppl[k] = { room: w.room, kind: 'stand', at: sp }; } });
+    return S;
+  }
   function hzOutGet() { try { return JSON.parse(localStorage.getItem('cxOutfit') || '{}') || {}; } catch (e) { return {}; } }
   function hzOutSet(who, k) { var o = hzOutGet(); o[who] = k; try { localStorage.setItem('cxOutfit', JSON.stringify(o)); } catch (e) {} }
   /* 這個人現在穿哪套：手動選的優先；自動＝晚上睡衣、冬天（6～8 月）毛衣 */
@@ -2331,6 +2348,7 @@
     var k = hzOutGet()[who] || 'auto';
     if (k === 'auto') { var mo = new Date().getMonth(); k = hzNight() ? 'pj' : (mo >= 5 && mo <= 7) ? 'win' : 'def'; }
     if (who === 'cs' && k === 'formal') k = 'def';
+    if (k === 'base' && hzRoom !== 'closet') k = 'def'; /* 居家內搭只在衣物間試穿，其他房間穿平常的 */
     return k;
   }
   function hzOutImg(who, k) { if (who === 'cs' && k === 'formal') k = 'def'; if (k === 'def') return CI({ me: 'cb_me', cs: 'cb_changsi', rm: 'cb_renmi' }[who]); return HI('o_' + who + '_' + k); }
@@ -2393,13 +2411,13 @@
     var c = r(3); S.ppl.cs = c < .45 ? { room: 'cs', kind: 'work', at: HZ_SPOT.cs.chair } : c < .75 ? { room: 'living', kind: 'sit', at: seat(0) } : { room: 'living', kind: 'stand', at: L.stand[st++] };
     var m = r(4); S.ppl.rm = m < .4 ? { room: 'rm', kind: 'sit', at: HZ_SPOT.rm.bean } : m < .7 ? { room: 'living', kind: 'sit', at: seat(2) } : { room: 'living', kind: 'stand', at: L.stand[st++] };
     var free = [0, 1, 2].filter(function (i) { return !used[i]; }), sofa = free.length ? L.seat[free[0]] : L.rug;
-    if (sad) { var me = S.ppl.me; S.cats.fd = [me.room, [me.at[0] + 7, me.at[1] + 6], 'fd_belly']; S.cats.an = [me.room, [me.at[0] - 8, me.at[1] + 8], 'an_sit']; S.clingy = 1; return S; }
-    if (r(5) < .15) { S.cats.fd = ['living', L.rug, 'fd_sleep']; S.cats.an = ['living', [L.rug[0] + 7, L.rug[1] + 2], 'an_sleep']; S.together = 1; return S; }
+    if (sad) { var me = S.ppl.me; S.cats.fd = [me.room, [me.at[0] + 7, me.at[1] + 6], 'fd_belly']; S.cats.an = [me.room, [me.at[0] - 8, me.at[1] + 8], 'an_sit']; S.clingy = 1; return hzFixPose(S); }
+    if (r(5) < .15) { S.cats.fd = ['living', L.rug, 'fd_sleep']; S.cats.an = ['living', [L.rug[0] + 7, L.rug[1] + 2], 'an_sleep']; S.together = 1; return hzFixPose(S); }
     var FD = [['living', sofa, 'fd_lie'], ['living', L.rug, 'fd_blanket'], ['living', L.corner, 'fd_stretch'], ['bed', HZ_SPOT.bed.rug, 'fd_belly'], ['bed', HZ_SPOT.bed.catbed, 'fd_bed'], ['closet', HZ_SPOT.closet.floor, 'fd_lie'], ['rm', HZ_SPOT.rm.rug, 'fd_sleep']];
     var AN = [['living', L.corner, 'an_box'], ['living', L.rug, 'an_sit'], ['bed', HZ_SPOT.bed.rug, 'an_side'], ['cs', HZ_SPOT.cs.arm, 'an_sit'], ['closet', HZ_SPOT.closet.stool, 'an_stretch'], ['rm', HZ_SPOT.rm.rug, 'an_belly'], ['living', HZ_SPOT.living.rug, 'an_box']];
     S.cats.fd = FD[Math.floor(r(6) * FD.length)];
     var ai = Math.floor(r(7) * AN.length), a = AN[ai]; if (a[0] === S.cats.fd[0] && a[1] === S.cats.fd[1]) a = AN[(ai + 1) % AN.length];
-    S.cats.an = a; return S;
+    S.cats.an = a; return hzFixPose(S);
   }
   function hzActors(S) {
     var out = [], R = hzRoom, now = Date.now(), blk = hzBlock();
@@ -2408,8 +2426,10 @@
       if (kind === 'stand' && pz && pz.blk === blk) at = pz.at;
       var wk = hzWalk[id], img = p[2], ci = 1, h = 23, flip = 0, ok = hzOutNow(p[0]);
       if (ok !== 'def' && HI('o_' + p[0] + '_' + ok)) { img = 'o_' + p[0] + '_' + ok; ci = 0; }
-      if (kind !== 'stand' && HZ_POSE[p[0]][kind] && HI(HZ_POSE[p[0]][kind])) { img = HZ_POSE[p[0]][kind]; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
-      if (wk && kind === 'stand' && HI(HZ_POSE[p[0]].walk)) { img = HZ_POSE[p[0]].walk; ci = 0; h = 23; flip = wk.to[0] < wk.from[0]; at = wk.from; }
+      var pk = kind !== 'stand' ? hzPoseKey(p[0], kind, ok) : null;
+      if (pk && HI(pk)) { img = pk; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
+      var wkk = hzPoseKey(p[0], 'walk', ok);
+      if (wk && kind === 'stand' && wkk && HI(wkk)) { img = wkk; ci = 0; h = 23; flip = wk.to[0] < wk.from[0]; at = wk.from; }
       out.push({ iso: false, id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: '', flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
     });
     if (R === 'closet') { var dw = hz.dress || 'me', dp = HZ_PPL.filter(function (x) { return x[0] === dw; })[0], dk = hzOutNow(dw), dim = dk === 'def' ? null : 'o_' + dw + '_' + dk;
@@ -2431,7 +2451,7 @@
   };
   function hzRender() {
     if (!hz) return;
-    var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]), bakeBed = hzRoom === 'bed' && ['me', 'cs', 'rm'].every(function (k) { return S.ppl[k] && S.ppl[k].kind === 'sleep'; }) && HI('r_bed_n'), bakeCs = hzRoom === 'cs' && S.ppl.cs && S.ppl.cs.kind === 'work' && HI('r_cs_w');
+    var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]), bakeBed = hzRoom === 'bed' && ['me', 'cs', 'rm'].every(function (k) { return S.ppl[k] && S.ppl[k].kind === 'sleep'; }) && HI('r_bed_n'), bakeCs = hzRoom === 'cs' && S.ppl.cs && S.ppl.cs.kind === 'work' && hzOutNow('cs') === 'def' && HI('r_cs_w');
     if (bakeBed) ri = bakeBed; else if (bakeCs) ri = bakeCs;
     var cnt = {}; Object.keys(S.ppl).forEach(function (k) { cnt[S.ppl[k].room] = (cnt[S.ppl[k].room] || 0) + 1; }); Object.keys(S.cats).forEach(function (k) { cnt[S.cats[k][0]] = (cnt[S.cats[k][0]] || 0) + 1; });
     var mode = hzMode(), h = '<div class="hz-top"><div class="hz-tabs">' + HZ_ROOMS.map(function (r) { return '<button type="button" data-hzr="' + r[0] + '" class="' + (r[0] === hzRoom ? 'on' : '') + '">' + r[1] + (cnt[r[0]] ? '<i>' + cnt[r[0]] + '</i>' : '') + '</button>'; }).join('') + '</div>' +
@@ -2542,7 +2562,18 @@
     }
     return h + '</div>';
   }
+  /* 從小家打開的功能（只有「關閉」的那種）關掉後，自動回到小家 */
+  var hzWB = null;
+  function hzWatchBack() {
+    clearInterval(hzWB); var seen = false, t0 = Date.now();
+    hzWB = setInterval(function () {
+      if (Date.now() - t0 > 36e5) { clearInterval(hzWB); return; }
+      var vis = [].some.call(document.querySelectorAll('.modal'), function (m) { return getComputedStyle(m).display !== 'none'; });
+      if (vis) seen = true; else if (seen) { clearInterval(hzWB); fromHouse = false; if (!(hz && hz.isOpen())) houseOpen(); }
+    }, 400);
+  }
   function houseOpen() {
+    clearInterval(hzWB);
     if (!hz) {
       hz = A.makeModal('cx-house-modal', 'fa-house-chimney', '我們的家');
       hz.onBack = function () { hz.close(); homeOpen(); return true; };
@@ -2558,7 +2589,7 @@
         if ((b = e.target.closest('[data-hzwp]'))) { var W0 = hzWall(); W0[hz.wslot] = b.dataset.hzwp || null; try { localStorage.setItem('cxWall', JSON.stringify(W0)); } catch (x) {} hz.wslot = -1; hzRender(); return; }
         if ((b = e.target.closest('[data-hzfn]'))) { if (b.dataset.hzfn === 'save') { var ta = hz.body.querySelector('#hz-fnote'); try { localStorage.setItem('cxFiddiNote', ta ? ta.value : ''); } catch (x) {} hz.fedit = false; } else hz.fedit = true; hzRender(); return; }
         if ((b = e.target.closest('[data-hzm2]'))) { hzMailOpen(+b.dataset.hzm2); return; }
-        if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); fromHome = false; fromHouse = true; wrapShow(); var le = document.getElementById(lid); if (le) le.click(); return; }
+        if ((b = e.target.closest('[data-hzl]'))) { var lid = b.dataset.hzl; hz.close(); fromHome = false; fromHouse = true; wrapShow(); hzWatchBack(); var le = document.getElementById(lid); if (le) le.click(); return; }
         if ((b = e.target.closest('[data-hzc]'))) {
           var c = hz.sel; if (!c) return; var act = b.dataset.hzc, pose = c === 'fd' ? { pet: 'fd_belly', wand: 'fd_stretch', treat: 'fd_lie', food: 'fd_eat' }[act] : { pet: 'an_belly', wand: 'an_stretch', treat: 'an_sit', food: 'an_sit' }[act];
           hzOver[c] = { pose: pose, until: Date.now() + 5000 }; hzSay['c:' + c] = { t: pick(CAT_TXT[c][act]), until: Date.now() + 4000 };
