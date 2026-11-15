@@ -133,8 +133,10 @@
           var rd = rs && rs.exists ? rs.data() : null;
           if (rd && rd.h !== h) {
             if (isMsg) {
-              var c = RCACHE[id], R = (c && c.h === rd.h) ? c.v : (rd.del ? [] : await deserialize('lf', await fetchValue(rd)));
-              var merged = mergeMsgs(BASE[id], raw, R);
+              var c = RCACHE[id], R = null;
+              try { R = (c && c.h === rd.h) ? c.v : (rd.del ? [] : await deserialize('lf', await fetchValue(rd))); }
+              catch (eR) { console.warn('[cx] 雲端這筆壞掉了，用這台的完整資料覆蓋', id, eR); R = null; m.h = '#broken'; }
+              var merged = R === null ? raw : mergeMsgs(BASE[id], raw, R);
               if (merged !== raw) {
                 raw = merged; await lfSet(d.k, raw); s = await serialize(d.st, raw); h = hash(s);
                 if (pending() || started) { needReload = true; if (document.visibilityState === 'visible') showPill('已合併其他裝置的訊息 · 點此重新整理', 0, reloadNow); }
@@ -183,7 +185,11 @@
     var drop = oldP.filter(function (x) { return !keep[x]; }); if (!drop.length) return;
     setTimeout(function () {
       var cur = {}; ((META[id] && META[id].p) || []).forEach(function (x) { cur[x] = 1; });
-      drop.forEach(function (x) { if (!cur[x]) db.doc(P.kp + '/' + x).delete().catch(function () {}); });
+      // 刪之前再看一次雲端：別台裝置的最新版本如果還用到這片，就留著
+      db.doc(P.kv + '/' + id).get().then(function (rs) {
+        var rd = rs && rs.exists ? rs.data() : null; (rd && rd.p || []).forEach(function (x) { cur[x] = 1; });
+        drop.forEach(function (x) { if (!cur[x]) db.doc(P.kp + '/' + x).delete().catch(function () {}); });
+      }).catch(function () {});
     }, 60000);
   }
   function pending() { for (var k in timers) if (dirty[k]) return true; for (var r in running) if (running[r]) return true; return false; }

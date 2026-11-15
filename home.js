@@ -502,19 +502,21 @@
     var W = WRAPS[wrap] || WRAPS.kraft, R = RIBBONS[ribbon] || RIBBONS.violet, n = flowers.length, o = '';
     // 背後的包裝紙
     var IMGBQ = n && flowers.every(function (cr) { return CI(cr); }), WIM = IMGBQ && CI('w_' + wrap), wid = 'cxwf' + Math.floor(Math.random() * 1e6);
-    if (WIM) o += '<defs><clipPath id="' + wid + '"><path d="M0 74 Q52 106 120 74 L120 170 L0 170Z"/></clipPath></defs>' + ciAt('w_' + wrap, 60, 158, 132);
+    if (WIM) o += '<defs><clipPath id="' + wid + '"><path d="M0 74 Q52 106 120 74 L120 170 L0 170Z"/></clipPath><clipPath id="' + wid + 't"><path d="M-40 -90 L160 -90 L160 74 L120 74 Q52 106 0 74 L-40 74Z"/></clipPath></defs>' + ciAt('w_' + wrap, 60, 158, 132);
     else o += IMGBQ ? '<path d="M16 58 L60 150 L104 58 Q60 40 16 58Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>' : ''; if (!IMGBQ) o += '<path d="M28 70 L60 150 L92 70 Q60 58 28 70Z" fill="' + W[2] + '" fill-opacity=".9" stroke="' + INK + '" stroke-width=".7"/>';
     if (n && flowers.every(function (cr) { return CI(cr); })) {
       // 用水彩花圖：每枝花從包裝紙裡的同一點往外呈扇形散開
       var H0 = n <= 1 ? 104 : n <= 3 ? 100 : n <= 6 ? 96 : 92, spanA = n <= 1 ? 0 : Math.min(62, 22 + n * 6), ord = [];
       for (var i = 0; i < n; i++) ord.push(i);
       ord.sort(function (x, y) { return Math.abs(y - (n - 1) / 2) - Math.abs(x - (n - 1) / 2); }); // 外圈先畫，中間的在前面
+      if (WIM) o += '<g clip-path="url(#' + wid + 't)">';
       ord.forEach(function (i) {
         var cr = flowers[i], t = n <= 1 ? .5 : i / (n - 1), ang = -spanA / 2 + t * spanA, H = H0 * (i % 2 ? .9 : 1) * (/lotus|strawberry|hydra|peony|sunflower|rose|gardenia/.test(cr) ? .84 : 1);
         var rad = ang * Math.PI / 180, hx = 60 + Math.sin(rad) * H * .8, hy = 122 - Math.cos(rad) * H * .8;
         o += '<g data-slot="' + i + '">' + (hi === i ? '<circle cx="' + f(hx) + '" cy="' + f(hy) + '" r="13" fill="#fff6c8" fill-opacity=".7" stroke="#d6a744" stroke-width="1.2" stroke-dasharray="2 2"/>' : '') +
           '<g transform="rotate(' + f(ang) + ' 60 122)">' + ciAt(cr, 60, 122, H) + '</g><circle cx="' + f(hx) + '" cy="' + f(hy) + '" r="12" fill="transparent"/></g>';
       });
+      if (WIM) o += '</g>';
     } else {
     var pos = [], rows = n <= 3 ? [n] : n <= 6 ? [Math.ceil(n / 2), Math.floor(n / 2)] : [Math.ceil(n / 3), Math.ceil(n / 3), n - 2 * Math.ceil(n / 3)];
     var base = rows.length === 1 ? 60 : rows.length === 2 ? 50 : 42, sc = n <= 2 ? 1.45 : n <= 3 ? 1.3 : n <= 6 ? 1.15 : 1.05, k = 0;
@@ -2368,6 +2370,8 @@
     Object.keys(S.ppl).forEach(function (k) { var w = S.ppl[k]; if (w.kind === 'stand') used[w.room + w.at.join()] = 1; });
     if (S.ppl.rm && S.ppl.rm.kind === 'sit' && hzOutNow('rm') === 'out') S.ppl.rm = { room: 'rm', kind: 'sit', at: HZ_SPOT.rm.bean };
     Object.keys(S.ppl).forEach(function (k) { var w = S.ppl[k];
+      // 只有平常的衣服才坐辦公椅工作；換了其他衣服就改坐扶手椅
+      if (k === 'cs' && w.kind === 'work' && hzOutNow('cs') !== 'def') w = S.ppl.cs = { room: w.room, kind: 'sit', at: HZ_SPOT.cs.arm };
       if ((w.kind === 'sit' || w.kind === 'work') && !hzPoseKey(k, w.kind, hzOutNow(k))) {
         var sp = HZ_SPOT[w.room].stand.filter(function (q) { return !used[w.room + q.join()]; })[0] || HZ_SPOT[w.room].stand[0];
         used[w.room + sp.join()] = 1; S.ppl[k] = { room: w.room, kind: 'stand', at: sp }; } });
