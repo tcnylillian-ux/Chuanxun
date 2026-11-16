@@ -2770,11 +2770,17 @@
     if (Math.random() < .5) m.cm.push({ w: other[0], t: hzLine(other[1]), at: now + 6e4 });
     return m;
   }
+  var MM_FREQ = [['often', '常常', 1, 3], ['some', '偶爾', 3, 8], ['rare', '很少', 8, 24], ['off', '不發', 0, 0]], MM_REPLY = [['fast', '馬上', 3 / 60, 10 / 60], ['min', '幾分鐘', 1, 10], ['slow', '慢慢回', 10, 60], ['late', '很久', 60, 240]];
+  function mmSet(g) { g.momSet = g.momSet || { freq: 'some', reply: 'min' }; return g.momSet; }
+  function mmGap(g) { var f = MM_FREQ.filter(function (x) { return x[0] === mmSet(g).freq; })[0] || MM_FREQ[1]; return f[2] ? (f[2] + Math.random() * (f[3] - f[2])) * 36e5 : 0; }
+  function mmReplyMs(g) { var r = MM_REPLY.filter(function (x) { return x[0] === mmSet(g).reply; })[0] || MM_REPLY[1]; return (r[2] + Math.random() * (r[3] - r[2])) * 6e4; }
   function mmTick(g) {
     if (!g) return false; var now = Date.now(); g.moments = g.moments || [];
-    if (!g.momNext) { g.moments.unshift(mmPost(g, now - 3 * 36e5)); g.moments.unshift(mmPost(g, now - 6e5)); g.momNext = now + (3 + Math.random() * 5) * 36e5; return true; }
+    var gap = mmGap(g); if (!gap) return false;
+    if (g.momNext && g.momNext > now + gap) g.momNext = now + gap;
+    if (!g.momNext) { g.moments.unshift(mmPost(g, now - 3 * 36e5)); g.moments.unshift(mmPost(g, now - 6e5)); g.momNext = now + gap; return true; }
     if (now < g.momNext) return false;
-    g.moments.unshift(mmPost(g, now)); g.moments = g.moments.slice(0, 60); g.momNext = now + (3 + Math.random() * 5) * 36e5; g.momUnread = (g.momUnread || 0) + 1; return true;
+    g.moments.unshift(mmPost(g, now)); g.moments = g.moments.slice(0, 60); g.momNext = now + gap; g.momUnread = (g.momUnread || 0) + 1; return true;
   }
   function mmImg(k) {
     if (!k) return null; var i = k.indexOf(':'), t = k.slice(0, i), v = k.slice(i + 1);
@@ -2790,13 +2796,15 @@
       mm = A.makeModal('cx-mm-modal', 'fa-images', '動態');
       mm.onBack = function () { mm.close(); homeOpen(); return true; };
       mm.body.addEventListener('click', function (e) {
-        var g2 = G(), b = e.target.closest('[data-mml],[data-mmc]'); if (!b) return;
+        var g2 = G(), b = e.target.closest('[data-mml],[data-mmc],[data-mmf],[data-mmr]'); if (!b) return;
+        if (b.dataset.mmf) { var S0 = mmSet(g2); S0.freq = b.dataset.mmf; g2.momNext = 0; if (S0.freq !== 'off') g2.momNext = Date.now() + mmGap(g2); save(); mmRender(); return; }
+        if (b.dataset.mmr) { mmSet(g2).reply = b.dataset.mmr; save(); mmRender(); return; }
         var m = (g2.moments || []).filter(function (x) { return x.id === (b.dataset.mml || b.dataset.mmc); })[0]; if (!m) return;
         if (b.dataset.mml) { var i = m.likes.indexOf('me'); if (i >= 0) m.likes.splice(i, 1); else m.likes.push('me'); save(); mmRender(); return; }
         var inp = mm.body.querySelector('[data-mmi="' + m.id + '"]'), tx = inp && inp.value.trim(); if (!tx) return;
-        m.cm.push({ w: 'me', t: tx, at: Date.now() }); save(); mmRender();
+        m.cm.push({ w: 'me', t: tx, at: Date.now() });
         var wn = MM_WHO.filter(function (x) { return x[0] === m.who; })[0];
-        setTimeout(function () { var g3 = G(), m2 = (g3.moments || []).filter(function (x) { return x.id === m.id; })[0]; if (!m2) return; m2.cm.push({ w: m.who, t: '回覆 ' + A.myname() + '：' + hzLine(wn[1]), at: Date.now() }); save(); if (mm && mm.isOpen && mm.isOpen()) mmRender(); }, 2500 + Math.random() * 4000);
+        m.cm.push({ w: m.who, t: '回覆 ' + A.myname() + '：' + hzLine(wn[1]), at: Date.now() + mmReplyMs(g2) }); save(); mmRender();
       });
       mm.body.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset.mmi) { var bt = mm.body.querySelector('[data-mmc="' + e.target.dataset.mmi + '"]'); if (bt) bt.click(); } });
     }
@@ -2806,12 +2814,13 @@
   function mmName(w) { return w === 'me' ? A.myname() : (MM_WHO.filter(function (x) { return x[0] === w; })[0] || [0, w])[1]; }
   function mmRender() {
     var g = G(); if (!g || !mm) return;
-    mm.body.innerHTML = '<p class="cx-muted" style="text-align:center;margin:0 0 6px">哥哥們偶爾會發一下家裡和農場的日常</p>' + (g.moments || []).map(function (m) {
+    var S = mmSet(g), now = Date.now();
+    mm.body.innerHTML = '<div class="cx-mm-set"><div><span>發動態</span>' + MM_FREQ.map(function (x) { return '<button type="button" data-mmf="' + x[0] + '" class="' + (S.freq === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div><div><span>回留言</span>' + MM_REPLY.map(function (x) { return '<button type="button" data-mmr="' + x[0] + '" class="' + (S.reply === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div></div>' + (g.moments || []).filter(function (m) { return m.at <= now; }).map(function (m) {
       var w = MM_WHO.filter(function (x) { return x[0] === m.who; })[0], av = CI(w[2]), im = mmImg(m.img), liked = m.likes.indexOf('me') >= 0;
       return '<div class="cx-mm"><div class="hd"><span class="av">' + (av ? '<img src="' + av.src + '" alt="">' : '') + '</span><div><b>' + w[1] + '</b><small>' + mmAgo(m.at) + '</small></div></div><div class="tx">' + esc(m.t) + '</div>' +
         (im ? '<div class="pic"><img src="' + im.src + '" alt=""></div>' : '') +
         '<div class="act"><button type="button" data-mml="' + m.id + '" class="' + (liked ? 'on' : '') + '">' + (liked ? '♥' : '♡') + ' ' + (m.likes.length || '') + '</button>' + (m.likes.length ? '<span class="lk">♥ ' + m.likes.map(mmName).join('、') + '</span>' : '') + '</div>' +
-        (m.cm.length ? '<div class="cm">' + m.cm.map(function (c) { return '<div><b>' + esc(mmName(c.w)) + '</b>：' + esc(c.t) + '</div>'; }).join('') + '</div>' : '') +
+        (m.cm.length ? '<div class="cm">' + m.cm.map(function (c) { return c.at > now ? (c.w !== 'me' && m.cm.some(function (d) { return d.w === 'me'; }) ? '<div class="cx-muted" style="font-size:12px">' + esc(mmName(c.w)) + ' 看到了，等一下回…</div>' : '') : '<div><b>' + esc(mmName(c.w)) + '</b>：' + esc(c.t) + '</div>'; }).join('') + '</div>' : '') +
         '<div class="in"><input data-mmi="' + m.id + '" maxlength="80" placeholder="留言…"><button type="button" data-mmc="' + m.id + '">送出</button></div></div>';
     }).join('');
   }
@@ -3172,6 +3181,7 @@
     '.cx-k-r .need{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:11px;color:var(--text-secondary);margin-top:2px}.cx-k-r .need .en{color:#3f9e6a}.cx-k-r .cx-btn{padding:8px 14px}' +
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
+    '.cx-mm-set{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;font-size:12px;color:#8a7a6a}.cx-mm-set div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.cx-mm-set span{min-width:44px}.cx-mm-set button{border:1px solid #e6dccb;background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;color:#7a6a5a}.cx-mm-set button.on{background:#c9a77f;color:#fff;border-color:transparent}' +
     '.cx-mm{background:#fff;border:1px solid #eee3d3;border-radius:16px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}.cx-mm .hd{display:flex;gap:10px;align-items:center}.cx-mm .hd .av{width:40px;height:40px;border-radius:50%;background:#f6efe4;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}.cx-mm .hd .av img{height:120%;margin-bottom:-14%}.cx-mm .hd div{display:flex;flex-direction:column}.cx-mm .hd small{color:#a8998a;font-size:11px}.cx-mm .tx{font-size:14px;line-height:1.6}.cx-mm .pic{border-radius:12px;background:#faf6ee;display:flex;justify-content:center;padding:8px}.cx-mm .pic img{max-height:200px;max-width:100%;object-fit:contain}.cx-mm .act{display:flex;align-items:center;gap:8px;font-size:12px;color:#b07a8a}.cx-mm .act button{border:1px solid #f0d9df;background:#fff;border-radius:99px;padding:2px 12px;color:#c0607a;font-size:14px}.cx-mm .act button.on{background:#fbe9ee}.cx-mm .cm{background:#faf6ee;border-radius:10px;padding:6px 10px;font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-mm .cm b{color:#8a6a52}.cx-mm .in{display:flex;gap:6px}.cx-mm .in input{flex:1;border:1px solid #e6dccb;border-radius:99px;padding:6px 12px;font-size:13px;min-width:0}.cx-mm .in button{border:0;background:#c9a77f;color:#fff;border-radius:99px;padding:0 14px;font-size:13px}' +
     '.cx-g-dexrw{background:#faf6ee;border:1px solid #eadfcd;border-radius:14px;padding:10px 12px;margin-bottom:8px}.cx-g-dexrw .bar{height:8px;border-radius:99px;background:#eee4d4;overflow:hidden}.cx-g-dexrw .bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a77f,#e7a6b4)}.cx-g-dexrw .t{font-size:13px;margin:6px 0;color:#6b5848}.cx-g-dexrw .ms{display:flex;gap:6px;flex-wrap:wrap}.cx-g-dexrw .ms button{flex:1;min-width:52px;border:1px solid #e3d6c2;background:#fff;border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;font-size:12px;color:#9a8a7a}.cx-g-dexrw .ms button.can{background:#fff3d6;border-color:#e2b34a;color:#7a5a20;animation:hzz 1.6s ease-in-out infinite}.cx-g-dexrw .ms button.done{background:#eef5e8;color:#5f8a52}.cx-g-dexrw .ms small{font-size:10px}' +
     '.cx-g-map{position:relative;border-radius:18px;overflow:hidden;background:#fbf8f1;border:1px solid #e6dccb}.cx-g-map svg{display:block;width:100%;height:auto}.cx-g-map .zone{cursor:pointer}.cx-g-map .zone polygon{fill:#fff;opacity:0;transition:opacity .2s}.cx-g-map .zone:hover polygon,.cx-g-map .zone:active polygon{opacity:.22}.cx-g-map .zone rect{fill:#fffaf2;stroke:#7a6252;stroke-width:2;opacity:.93}.cx-g-map .zone text{font-size:30px;font-weight:700;fill:#5b4636;text-anchor:middle}.cx-g-fest{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fffaf2e6;border:1px solid #e6c9b8;color:#b0433f;font-weight:700;font-size:13px;padding:4px 14px;border-radius:999px;z-index:1}.hz-fest{font-size:13px;color:#b0433f;font-weight:700}' +
@@ -3205,6 +3215,6 @@
 
   window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G, _moyu: function () { launch('moyu'); }, _house: function () { launch('house'); }, _sp: function (w, t, l) { return surprise(w, '', t, l); } };
   if (lsGet('cxHomeFirst') === '1') setTimeout(homeOpen, 1200);
-  setInterval(function () { if (document.visibilityState === 'visible' && A.X() && G() && mmTick(G())) save(); if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
+  setInterval(function () { if (mm && mm.isOpen && mm.isOpen()) mmRender(); if (document.visibilityState === 'visible' && A.X() && G() && mmTick(G())) save(); if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(function () { if (A.X()) simulate(true); }, 4000); });
 })();

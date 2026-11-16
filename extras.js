@@ -1111,6 +1111,7 @@
       if (await letterTick()) ch = true;
       if (await rpTick()) ch = true;
       if (await todoTick()) ch = true;
+      if (await qzTick()) ch = true;
       if (periodCare()) ch = true;
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
@@ -2556,6 +2557,16 @@
     '一起旅行最想去的國家？', '你覺得我最可愛的時候是？', '晚餐想吃什麼？', '如果可以回到過去一天，你選哪天？', '我最讓你放心的地方？', '睡前最想聽我說什麼？',
     '用三個詞形容我們。', '你會為我改掉什麼習慣？', '最想跟我一起看的電影？', '你覺得我會是什麼樣的老奶奶？', '如果我變成小貓，你會怎麼養我？', '今天最想對我說的一句話？'];
   var qzM = null, qzCur = null, qzWho = null;
+  var QZ_WAIT = [['now', '馬上', 0, 0], ['m5', '幾分鐘', 2, 8], ['m30', '半小時內', 10, 30], ['h2', '一兩個小時', 40, 120], ['day', '半天內', 120, 600]];
+  function qzWait() { var w = QZ_WAIT.filter(function (x) { return x[0] === (X.qz.wait || 'm30'); })[0] || QZ_WAIT[2]; return w[2] ? rnd(w[2], w[3]) * 60e3 : 1500; }
+  async function qzTick() {
+    var now = Date.now(), ch = false;
+    X.qz.list.forEach(function (x) {
+      if (!x.readyAt || x.told || now < x.readyAt) return; x.told = true; ch = true;
+      if (x.chat) sayAs(x.who === pname() ? null : x.who, '「' + x.q + '」' + x.his); else sysNotify(x.who, '回答了問卷：' + x.q, 'quiz');
+    });
+    return ch;
+  }
   function quizOpen() {
     if (!qzM) {
       qzM = makeModal('cx-quiz-modal', 'fa-clipboard-question', '問卷');
@@ -2568,10 +2579,12 @@
         }
         if (b.id === 'cx-qz-own') { var t = (qzM.body.querySelector('#cx-qz-q').value || ''); if (!t.trim()) { toast('先在上面寫一個問題', 'warning'); return; } if (t && t.trim()) { var w2 = qzWho || pname(); qzCur = { q: t.trim(), who: w2, his: pickFor(w2) || '妳問的我都會回答。' }; quizRender(); } return; }
         if (b.id === 'cx-qz-save' && qzCur) {
-          qzCur.mine = (qzM.body.querySelector('#cx-qz-mine').value || '').trim(); qzCur.at = Date.now();
+          qzCur.mine = (qzM.body.querySelector('#cx-qz-mine').value || '').trim(); qzCur.at = Date.now(); qzCur.readyAt = Date.now() + qzWait(); qzCur.chat = qzM.body.querySelector('#cx-qz-chat').checked;
           X.qz.list.unshift(qzCur); await save();
-          if (qzM.body.querySelector('#cx-qz-chat').checked) { iSay('📝 ' + qzCur.q + (qzCur.mine ? '\n我的答案：' + qzCur.mine : '')); var c = qzCur; setTimeout(function () { sayAs(c.who, c.his); }, 1500); }
-          qzCur = null; toast('收進問卷本了', 'success'); quizRender(); return;
+          if (qzCur.chat) iSay('📝 ' + qzCur.q + (qzCur.mine ? '\n我的答案：' + qzCur.mine : ''));
+          var wn = qzCur.who; qzCur = null; toast(wn + ' 拿去寫了，寫好會通知妳', 'success'); quizRender(); return;
+        }
+        if (b.dataset.qzw) { X.qz.wait = b.dataset.qzw; await save(); quizRender(); return;
         }
         if (b.dataset.qzdel != null) { X.qz.list.splice(+b.dataset.qzdel, 1); await save(); quizRender(); return; }
       });
@@ -2580,10 +2593,12 @@
   }
   function quizRender() {
     var h = '<div class="cx-sec"><h4>抽一題問彼此</h4>' + whoChips('cx-qz-who', qzWho) + '<button class="cx-btn pri" id="cx-qz-draw">🎴 抽一題</button><div style="display:flex;gap:8px"><input class="cx-in" id="cx-qz-q" maxlength="60" placeholder="或自己寫一個問題" style="flex:1"><button class="cx-btn" id="cx-qz-own">問他</button></div>';
-    if (qzCur) h += '<div class="cx-qz-card"><b>' + esc(qzCur.q) + '</b></div>' + sayBy(qzCur.who, qzCur.his) +
-      '<textarea class="cx-in" id="cx-qz-mine" rows="3" placeholder="妳的答案（可以不寫）"></textarea><label class="cx-muted" style="font-size:12px"><input type="checkbox" id="cx-qz-chat" checked> 也傳到聊天</label><button class="cx-btn pri" id="cx-qz-save">收進問卷本</button>';
+    if (qzCur) h += '<div class="cx-qz-card"><b>' + esc(qzCur.q) + '</b></div>' +
+      '<textarea class="cx-in" id="cx-qz-mine" rows="3" placeholder="妳的答案（可以不寫）"></textarea><label class="cx-muted" style="font-size:12px"><input type="checkbox" id="cx-qz-chat" checked> 他寫好後在聊天裡回答</label><button class="cx-btn pri" id="cx-qz-save">交給 ' + esc(qzCur.who) + ' 填</button>';
+    h += '<h4>他要想多久</h4><div class="cx-chips">' + QZ_WAIT.map(function (w) { return '<button data-qzw="' + w[0] + '" class="' + ((X.qz.wait || 'm30') === w[0] ? 'on' : '') + '">' + w[1] + '</button>'; }).join('') + '</div>';
     h += '</div><div class="cx-sec"><h4>問卷本（' + X.qz.list.length + '）</h4><div class="cx-list">' + (X.qz.list.length ? X.qz.list.map(function (x, i) {
-      return '<div class="cx-qz-it"><b>' + esc(x.q) + '</b><div><span>' + esc(x.who) + '：</span>' + esc(x.his) + '</div>' + (x.mine ? '<div><span>我：</span>' + esc(x.mine) + '</div>' : '') + '<small class="cx-muted">' + fmtTime(x.at) + '</small><button class="del" data-qzdel="' + i + '">×</button></div>';
+      var wait = x.readyAt && Date.now() < x.readyAt;
+      return '<div class="cx-qz-it"><b>' + esc(x.q) + '</b><div><span>' + esc(x.who) + '：</span>' + (wait ? '<i class="cx-muted">✍️ 還在想…（' + fmtLeft(x.readyAt - Date.now()) + '）</i>' : esc(x.his)) + '</div>' + (x.mine ? '<div><span>我：</span>' + esc(x.mine) + '</div>' : '') + '<small class="cx-muted">' + fmtTime(x.at) + '</small><button class="del" data-qzdel="' + i + '">×</button></div>';
     }).join('') : '<div class="cx-muted">還沒有問答。抽一題開始吧～</div>') + '</div></div>';
     qzM.body.innerHTML = h;
   }
