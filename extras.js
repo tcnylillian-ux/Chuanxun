@@ -14,6 +14,7 @@
     combine: { on: false, min: 2, max: 3, joins: ['，', '…', '、'] },
     letters: { freq: 'off', next: null },
     rp: { chance: 0.03, list: [] },
+    dice: { n: 1, opts: '' }, qz: { list: [] }, todo: { list: [] }, sleep: { cur: 0, log: [] },
     pomo: { focus: 25, short: 5, long: 15, every: 4, toChat: true, run: null, log: {},
       lines: {
         focus: ['加油，我陪著你', '專心一點喔，我在旁邊看著', '你可以的', '寫完就抱抱', '不准偷看手機', '我也在努力', '安靜陪你'],
@@ -306,25 +307,33 @@
       await load();
       var amt = Math.random() < 0.6 ? pick(RP_AMOUNTS) : Math.round(rnd(1, 200) * 100) / 100;
       var ppl = groupPeople(), who = ppl.length > 1 ? pick(ppl).name : null;
-      var p = { id: 'rp' + Date.now().toString(36), from: 'him', amount: amt, note: pick(RP_NOTES), at: Date.now(), opened: false };
+      var tf = Math.random() < .3;
+      var p = { id: 'rp' + Date.now().toString(36), type: tf ? 'tf' : 'rp', from: 'him', amount: amt, note: tf ? pick(['零花錢', '給妳買奶茶', '晚餐我請', '拿去買喜歡的']) : pick(RP_NOTES), at: Date.now(), opened: false };
       if (who) p.who = who;
       X.rp.list.push(p); await save();
-      partnerSays('🧧 紅包｜' + p.note + '（點這則訊息領取）', who);
+      partnerSays(tf ? '💸 轉帳 $' + money(amt) + '｜' + p.note + '（點這則訊息收款）' : '🧧 紅包｜' + p.note + '（點這則訊息領取）', who);
       refreshBadge();
     }, 6000 + Math.random() * 6000);
   }
   async function rpTick() {
     var now = Date.now(), changed = false;
     X.rp.list.forEach(function (p) {
+      if (p.type === 'lucky' && !p.opened) {
+        p.shares.forEach(function (q) { if (!q.got && now >= q.at) { q.got = true; changed = true; sysSay(q.who + ' 搶到了 $' + money(q.amt)); } });
+        if (p.shares.every(function (q) { return q.got; })) { p.opened = true; p.openedAt = now; var best = p.shares.slice().sort(function (a, b) { return b.amt - a.amt; })[0]; sysSay('🏆 手氣最佳：' + best.who + '（$' + money(best.amt) + '）'); var bw = best.who; setTimeout(function () { sayAs(bw, pickFor(bw) || '手氣最好的是我～'); }, 1500); }
+        return;
+      }
       if (p.from === 'me' && !p.opened && p.openAt && now >= p.openAt) {
         p.opened = true; p.openedAt = now; changed = true;
-        sysSay((p.who || pname()) + ' 領取了你的紅包');
+        sysSay((p.who || pname()) + (p.type === 'tf' ? (p.back ? ' 退還了你的轉帳' : ' 已收款 $' + money(p.amount)) : ' 領取了你的紅包'));
         if (p.reply) setTimeout(function () { sayAs(p.who, p.reply); }, 1200);
       }
     });
     return changed;
   }
-  var rpM = null, rpTo = null;
+  var rpM = null, rpTo = null, rpMode = 'rp';
+  var TF_BACK = ['妳留著買好吃的，我的錢就是妳的錢。', '不用給我，乖。', '退給妳了，拿去買奶茶。'], TF_OK = ['收到了，謝謝寶貝。', '這麼大方？那我請妳吃飯。', '收下了，好好存起來給妳買禮物。'];
+  function luckySplit(total, n) { var c = Math.round(total * 100), out = []; for (var i = 0; i < n - 1; i++) { var left = n - i, max = Math.max(1, Math.floor(c / left * 2) - 1), v = Math.max(1, Math.floor(Math.random() * max)); v = Math.min(v, c - (left - 1)); out.push(v); c -= v; } out.push(c); return out.map(function (v) { return v / 100; }); }
   function rpWho(p) { return p.who || pname(); }
   function rpOpen() {
     if (!rpM) {
@@ -333,15 +342,24 @@
       rpM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.amt) { rpM.body.querySelector('#cx-rp-amt').value = b.dataset.amt; return; }
+        if (b.dataset.rpm) { rpMode = b.dataset.rpm; rpRender(); return; }
         if (b.id === 'cx-rp-send') {
-          var amt = parseFloat(rpM.body.querySelector('#cx-rp-amt').value), note = rpM.body.querySelector('#cx-rp-note').value.trim() || '恭喜發財，大吉大利';
+          var amt = parseFloat(rpM.body.querySelector('#cx-rp-amt').value), note = rpM.body.querySelector('#cx-rp-note').value.trim() || (rpMode === 'tf' ? '轉帳' : '恭喜發財，大吉大利');
           if (!(amt > 0) || amt > 99999) { toast('請輸入金額', 'warning'); return; }
           var to = groupOn() && rpTo && rpTo !== pname() ? rpTo : null;
-          var p = { id: 'rp' + Date.now().toString(36), from: 'me', amount: amt, note: note, at: Date.now(), opened: false, openAt: Date.now() + rnd(8e3, 90e3), reply: pickFor(to) || '謝謝寶貝' };
+          if (rpMode === 'lucky') {
+            var ppl = groupPeople(), sh = luckySplit(amt, ppl.length), t0 = Date.now();
+            if (amt < ppl.length * 0.01) { toast('金額太少，不夠分', 'warning'); return; }
+            var pl = { id: 'rp' + t0.toString(36), type: 'lucky', from: 'me', amount: amt, note: note, at: t0, opened: false, shares: ppl.map(function (q, i) { return { who: q.name, amt: sh[i], at: t0 + rnd(5e3, 120e3), got: false }; }) };
+            X.rp.list.push(pl); await save(); iSay('🧧 拼手氣紅包｜' + note + '（' + ppl.length + ' 人搶）'); toast('拼手氣紅包發出去了', 'success'); rpRender(); return;
+          }
+          var tf = rpMode === 'tf';
+          var p = { id: 'rp' + Date.now().toString(36), type: tf ? 'tf' : 'rp', from: 'me', amount: amt, note: note, at: Date.now(), opened: false, openAt: Date.now() + (tf ? rnd(20e3, 180e3) : rnd(8e3, 90e3)), reply: pickFor(to) || '謝謝寶貝' };
+          if (tf && Math.random() < .25) { p.back = true; p.reply = pick(TF_BACK); } else if (tf) p.reply = Math.random() < .5 ? pick(TF_OK) : p.reply;
           if (to) p.who = to;
           X.rp.list.push(p); await save();
-          iSay('🧧 紅包｜' + note + (to ? '（給 ' + to + '）' : ''));
-          toast('紅包已送出', 'success'); rpRender(); return;
+          iSay(tf ? '💸 轉帳 $' + money(amt) + '｜' + note + (to ? '（給 ' + to + '）' : '') : '🧧 紅包｜' + note + (to ? '（給 ' + to + '）' : ''));
+          toast(tf ? '轉帳送出，等他收款' : '紅包已送出', 'success'); rpRender(); return;
         }
         if (b.dataset.open) { openPacket(b.dataset.open); return; }
       });
@@ -353,24 +371,30 @@
     var got = X.rp.list.filter(function (p) { return p.from === 'him' && p.opened; }).reduce(function (s, p) { return s + p.amount; }, 0);
     var sent = X.rp.list.filter(function (p) { return p.from === 'me'; }).reduce(function (s, p) { return s + p.amount; }, 0);
     var chips = whoChips('cx-rp-who', rpTo || pname());
-    var h = '<div class="cx-sec"><h4 id="cx-rp-h">發紅包給 ' + esc(rpTo || pname()) + '</h4>' + chips + '<input class="cx-in" id="cx-rp-amt" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="金額">' +
+    var pendTf = X.rp.list.filter(function (p) { return p.type === 'tf' && !p.opened; }).length;
+    var modes = [['rp', '🧧 紅包'], ['tf', '💸 轉帳']].concat(groupOn() && groupPeople().length > 1 ? [['lucky', '🎲 拼手氣']] : []); if (!modes.some(function (m) { return m[0] === rpMode; })) rpMode = 'rp';
+    var h = '<div class="cx-chips cx-rp-mode">' + modes.map(function (m) { return '<button data-rpm="' + m[0] + '" class="' + (rpMode === m[0] ? 'on' : '') + '">' + m[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="cx-sec"><h4 id="cx-rp-h">' + (rpMode === 'lucky' ? '發給群裡所有人，隨機分' : (rpMode === 'tf' ? '轉帳給 ' : '發紅包給 ') + esc(rpTo || pname())) + '</h4>' + (rpMode === 'lucky' ? '' : chips) + '<input class="cx-in" id="cx-rp-amt" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="金額">' +
       '<div class="cx-chips">' + [5.2, 13.14, 52, 520, 1314].map(function (a) { return '<button data-amt="' + a + '">' + a + '</button>'; }).join('') + '</div>' +
-      '<input class="cx-in" id="cx-rp-note" maxlength="30" placeholder="恭喜發財，大吉大利"><button class="cx-btn pri" id="cx-rp-send">🧧 塞進紅包</button></div>' +
-      '<div class="cx-stat"><div><b>' + unopened() + '</b><span>待領取</span></div><div><b>$' + money(got) + '</b><span>收到</span></div><div><b>$' + money(sent) + '</b><span>送出</span></div></div>' +
+      '<input class="cx-in" id="cx-rp-note" maxlength="30" placeholder="' + (rpMode === 'tf' ? '備註（例如：晚餐錢）' : '恭喜發財，大吉大利') + '"><button class="cx-btn pri" id="cx-rp-send">' + (rpMode === 'tf' ? '💸 轉帳' : rpMode === 'lucky' ? '🎲 發拼手氣紅包' : '🧧 塞進紅包') + '</button></div>' +
+      '<div class="cx-stat"><div><b>' + unopened() + '</b><span>待領取</span></div><div><b>' + pendTf + '</b><span>待收款</span></div><div><b>$' + money(got) + '</b><span>收到</span></div><div><b>$' + money(sent) + '</b><span>送出</span></div></div>' +
       '<div class="cx-sec"><h4>紅包記錄</h4><div class="cx-list">';
     if (!list.length) h += '<div class="cx-muted">還沒有紅包。' + esc(pname()) + ' 聊天時偶爾也會發紅包給你。</div>';
     list.forEach(function (p) {
       var mine = p.from === 'me';
-      h += '<button class="cx-rp' + (p.opened ? ' done' : '') + '"' + (!mine && !p.opened ? ' data-open="' + p.id + '"' : '') + '><span class="i">🧧</span><div><b>' + esc(p.note) + '</b><span>' +
-        (mine ? '送給 ' + esc(rpWho(p)) + ' · $' + money(p.amount) + (p.opened ? ' · 已被領取' : ' · 等待領取') : esc(rpWho(p)) + ' 送的 · ' + (p.opened ? '已領取 $' + money(p.amount) : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
+      var tf = p.type === 'tf', lk = p.type === 'lucky';
+      h += '<button class="cx-rp' + (p.opened ? ' done' : '') + '"' + (!mine && !p.opened ? ' data-open="' + p.id + '"' : '') + '><span class="i">' + (tf ? '💸' : lk ? '🎲' : '🧧') + '</span><div><b>' + esc(p.note) + '</b><span>' +
+        (lk ? '拼手氣 $' + money(p.amount) + ' · ' + p.shares.filter(function (q) { return q.got; }).map(function (q) { return esc(q.who) + ' $' + money(q.amt); }).join('、') + (p.opened ? '' : ' · 還在搶') :
+        mine ? (tf ? '轉帳給 ' : '送給 ') + esc(rpWho(p)) + ' · $' + money(p.amount) + (p.opened ? (tf ? (p.back ? ' · 已退還' : ' · 已收款') : ' · 已被領取') : (tf ? ' · 待收款' : ' · 等待領取')) : esc(rpWho(p)) + (tf ? ' 轉帳給妳 · ' : ' 送的 · ') + (p.opened ? '已' + (tf ? '收款' : '領取') + ' $' + money(p.amount) : tf ? '點一下收款' : '點一下領取')) + ' · ' + fmtTime(p.at) + '</span></div></button>';
     });
     rpM.body.innerHTML = h + '</div></div>';
   }
   function openPacket(id) {
     var p = X.rp.list.find(function (x) { return x.id === id; }); if (!p) return;
     var o = document.createElement('div'); o.className = 'cx-open';
-    o.innerHTML = '<div class="p"><div class="who">' + esc(rpWho(p)) + ' 的紅包</div><div class="note">' + esc(p.note) + '</div>' +
-      (p.opened ? '<div class="amt">$' + money(p.amount) + '</div>' : '<button class="coin">開</button>') + '<div><button class="close">關閉</button></div></div>';
+    var tf = p.type === 'tf';
+    o.innerHTML = '<div class="p' + (tf ? ' tf' : '') + '"><div class="who">' + esc(rpWho(p)) + (tf ? ' 轉帳給妳' : ' 的紅包') + '</div><div class="note">' + esc(p.note) + '</div>' +
+      (p.opened ? '<div class="amt">$' + money(p.amount) + '</div>' : tf ? '<div class="amt">$' + money(p.amount) + '</div><button class="coin tfbtn">收款</button>' : '<button class="coin">開</button>') + '<div><button class="close">關閉</button></div></div>';
     document.body.appendChild(o);
     o.querySelector('.close').onclick = function () { o.remove(); };
     o.addEventListener('click', function (e) { if (e.target === o) o.remove(); });
@@ -379,8 +403,8 @@
       coin.classList.add('spin');
       setTimeout(async function () {
         p.opened = true; p.openedAt = Date.now(); await save();
-        coin.outerHTML = '<div class="amt">$' + money(p.amount) + '</div>';
-        sysSay('你領取了 ' + rpWho(p) + ' 的紅包 $' + money(p.amount));
+        coin.outerHTML = tf ? '<div class="note">已收款 ✓</div>' : '<div class="amt">$' + money(p.amount) + '</div>';
+        sysSay(tf ? '你已收款 ' + rpWho(p) + ' 的轉帳 $' + money(p.amount) : '你領取了 ' + rpWho(p) + ' 的紅包 $' + money(p.amount));
         refreshBadge(); if (rpM && rpM.isOpen()) rpRender();
       }, 900);
     };
@@ -388,7 +412,7 @@
   // tap a red-packet message in the chat to open it
   document.addEventListener('click', async function (e) {
     var msg = e.target.closest && e.target.closest('#chat-container [data-msg-id]'); if (!msg) return;
-    if ((msg.textContent || '').indexOf('🧧 紅包｜') < 0) return;
+    if (!/🧧 紅包｜|💸 轉帳 /.test(msg.textContent || '')) return;
     await load();
     var mine = msg.classList.contains('sent');
     var waiting = X.rp.list.filter(function (p) { return p.from === 'him' && !p.opened; });
@@ -1086,6 +1110,7 @@
       var ch = false;
       if (await letterTick()) ch = true;
       if (await rpTick()) ch = true;
+      if (await todoTick()) ch = true;
       if (periodCare()) ch = true;
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
@@ -2473,7 +2498,192 @@
     var h = Array.prototype.find.call(document.querySelectorAll('h3,h4'), function (x) { return /特別鳴謝/.test(x.textContent); });
     if (h && !document.getElementById('cx-credit')) { var c = document.createElement('p'); c.id = 'cx-credit'; c.style.cssText = 'font-size:12px;opacity:.75;margin-top:8px'; c.textContent = '潮汐、番茄鐘、陪伴中心、紅包、狀態檢測、拼字卡、主動來信的功能靈感來自「渡念」（小紅書 @我要學英語）；搞怪、TA 的手機、通話紀錄、陪伴模式與邀約的點子參考自「字卡傳訊」二改版（小紅書 @滚筒洗衣机）與「ZY」。程式皆為重新撰寫。'; h.parentNode.appendChild(c); }
   })();
+  (function css2() { if (document.getElementById('cx-css-v107')) return; var st = document.createElement('style'); st.id = 'cx-css-v107'; st.textContent =
+    '.cx-chips button.on{background:var(--accent-color,#c9a77f);color:#fff;border-color:transparent}.cx-dice-show{display:flex;align-items:center;justify-content:center;gap:10px;min-height:90px;font-size:64px;line-height:1;color:var(--text-primary)}.cx-dice-show b{font-size:15px;margin-left:6px}.cx-dice-show.roll span{animation:cxroll .65s ease-in-out}@keyframes cxroll{0%{transform:rotate(0)}50%{transform:rotate(200deg) scale(.8)}100%{transform:rotate(360deg)}}' +
+    '.cx-qz-card{padding:16px;border-radius:14px;background:linear-gradient(135deg,#fff6ec,#f5ecfa);border:1px solid var(--border-color);text-align:center;font-size:15px}.cx-qz-it,.cx-td{position:relative;padding:10px 32px 10px 12px;border-radius:12px;background:var(--secondary-bg,#fafafa);border:1px solid var(--border-color);font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-qz-it span{color:var(--accent-color);font-weight:600}.cx-qz-it .del,.cx-td .del{position:absolute;right:6px;top:6px;border:0;background:none;color:#aaa;font-size:16px}' +
+    '.cx-td{flex-direction:row;align-items:center;gap:10px}.cx-td>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.cx-td small{font-size:11px;color:var(--text-secondary)}.cx-td small.late{color:#d0605a}.cx-td .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--accent-color,#c9a77f);background:#fff;color:#fff;flex-shrink:0;font-size:13px}.cx-td.done .ck{background:var(--accent-color,#c9a77f)}.cx-td.done b{text-decoration:line-through;opacity:.5}.cx-td .d{min-width:44px;text-align:center;font-weight:700;color:var(--accent-color)}' +
+    '.cx-sl-top{align-items:center;text-align:center}.cx-sl-top .big{font-size:48px}.cx-sl-bars{display:flex;gap:6px;align-items:flex-end;height:120px;padding:6px 4px;border-radius:12px;background:var(--secondary-bg,#fafafa)}.cx-sl-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--text-secondary)}.cx-sl-bars i{display:block;width:70%;border-radius:6px 6px 2px 2px;background:#b7a6dc}.cx-sl-bars i.low{background:#e9a3a0}' +
+    '.cx-open .p.tf{background:linear-gradient(160deg,#f6b65a,#ef8f3c)}.cx-open .coin.tfbtn{width:auto;padding:0 22px;border-radius:999px;font-size:16px}';
+    document.head.appendChild(st); })();
+  /* ================= v107 新功能：骰子／問卷／待辦／睡眠／轉帳 ================= */
+  function who1() { var ppl = groupPeople(); return ppl.length > 1 ? ppl : [{ name: pname() }]; }
+  function avOf(name) { var p = groupPeople().find(function (x) { return x.name === name; }); var src = p && p.avatar ? p.avatar : ((document.querySelector('#partner-avatar img') || {}).src || ''); return src ? '<img src="' + esc(src) + '" alt="">' : '<i class="fas fa-user"></i>'; }
+  function sayBy(name, text) { return '<div class="cx-say"><div class="av">' + avOf(name) + '</div><div><div class="n">' + esc(name) + '</div><div class="b">' + esc(text) + '</div></div></div>'; }
+
+  /* ---------- 骰子＋幫我抉擇 ---------- */
+  var DICE_FACE = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+  var CHOOSE_LINES = ['就這個吧，聽我的。', '選這個，不准反悔。', '我覺得這個最適合妳。', '這個！我陪妳一起。', '閉著眼睛也選這個。', '妳心裡其實也想選這個吧？'];
+  var dcM = null, dcWho = null, dcLast = null;
+  function diceOpen() {
+    if (!dcM) {
+      dcM = makeModal('cx-dice-modal', 'fa-dice', '骰子與抉擇');
+      bindChips(dcM.body, function (n) { dcWho = n; });
+      dcM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.dn) { X.dice.n = +b.dataset.dn; await save(); diceRender(); return; }
+        if (b.id === 'cx-dice-roll') {
+          var box = dcM.body.querySelector('.cx-dice-show'); box.classList.add('roll');
+          var r = []; for (var i = 0; i < X.dice.n; i++) r.push(1 + Math.floor(Math.random() * 6));
+          setTimeout(function () { box.classList.remove('roll'); box.innerHTML = r.map(function (v) { return '<span>' + DICE_FACE[v - 1] + '</span>'; }).join('') + '<b>' + (r.length > 1 ? '合計 ' + r.reduce(function (a, c) { return a + c; }, 0) : r[0] + ' 點') + '</b>'; }, 650);
+          return;
+        }
+        if (b.id === 'cx-dice-pick') {
+          var opts = dcM.body.querySelector('#cx-dice-opts').value.split(/\n|，|,|、/).map(function (s) { return s.trim(); }).filter(Boolean);
+          if (opts.length < 2) { toast('至少寫兩個選項', 'warning'); return; }
+          X.dice.opts = opts.join('\n'); await save();
+          var w = dcWho || pname(), ch = pick(opts); dcLast = { who: w, ch: ch, line: pick(CHOOSE_LINES) };
+          var out = dcM.body.querySelector('#cx-dice-out'); out.innerHTML = '<div class="cx-muted" style="text-align:center">' + esc(w) + ' 想了一下…</div>';
+          setTimeout(function () { out.innerHTML = sayBy(w, '「' + ch + '」' + dcLast.line) + '<button class="cx-btn" id="cx-dice-send">傳到聊天</button>'; }, 900);
+          return;
+        }
+        if (b.id === 'cx-dice-send' && dcLast) { iSay('🎲 幫我選：' + X.dice.opts.split('\n').join(' / ')); var L = dcLast; setTimeout(function () { sayAs(L.who, '選「' + L.ch + '」。' + L.line); }, 1500); toast('傳到聊天了', 'success'); return; }
+      });
+    }
+    dcWho = pname(); diceRender(); dcM.open();
+  }
+  function diceRender() {
+    dcM.body.innerHTML = '<div class="cx-sec"><h4>丟骰子</h4><div class="cx-chips">' + [1, 2, 3].map(function (n) { return '<button data-dn="' + n + '" class="' + (X.dice.n === n ? 'on' : '') + '">' + n + ' 顆</button>'; }).join('') + '</div>' +
+      '<div class="cx-dice-show"><span>🎲</span></div><button class="cx-btn pri" id="cx-dice-roll">擲！</button></div>' +
+      '<div class="cx-sec"><h4>幫我抉擇</h4>' + whoChips('cx-dice-who', dcWho) + '<textarea class="cx-in" id="cx-dice-opts" rows="4" placeholder="一行一個選項，例如：&#10;火鍋&#10;拉麵&#10;壽司">' + esc(X.dice.opts || '') + '</textarea>' +
+      '<button class="cx-btn pri" id="cx-dice-pick">讓他幫我選</button><div id="cx-dice-out"></div></div>';
+  }
+
+  /* ---------- 問卷（互問） ---------- */
+  var QZ = ['第一次見面時，對我的印象是什麼？', '最喜歡我哪一點？', '如果明天放假，想跟我去哪裡？', '我做過最讓你心動的事？', '吵架的時候，你希望我怎麼做？', '最想跟我一起完成的一件事？',
+    '你覺得我們像什麼動物？', '下雨天最想做什麼？', '如果能交換一天身體，你想做什麼？', '最喜歡的季節是？為什麼？', '我生氣的時候你會怎麼哄我？', '給十年後的我們一句話。',
+    '你最常想起我的時刻是？', '我的哪個小習慣你最在意？', '如果只能吃一種食物一輩子？', '最想收到的禮物是？', '你會怎麼跟別人介紹我？', '覺得我們最像的地方？',
+    '最近一次因為我笑是什麼時候？', '理想的週末怎麼過？', '如果我們養一隻寵物，叫什麼名字？', '最怕失去什麼？', '你覺得愛是什麼？', '最喜歡我叫你什麼？',
+    '一起旅行最想去的國家？', '你覺得我最可愛的時候是？', '晚餐想吃什麼？', '如果可以回到過去一天，你選哪天？', '我最讓你放心的地方？', '睡前最想聽我說什麼？',
+    '用三個詞形容我們。', '你會為我改掉什麼習慣？', '最想跟我一起看的電影？', '你覺得我會是什麼樣的老奶奶？', '如果我變成小貓，你會怎麼養我？', '今天最想對我說的一句話？'];
+  var qzM = null, qzCur = null, qzWho = null;
+  function quizOpen() {
+    if (!qzM) {
+      qzM = makeModal('cx-quiz-modal', 'fa-clipboard-question', '問卷');
+      bindChips(qzM.body, function (n) { qzWho = n; });
+      qzM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.id === 'cx-qz-draw') {
+          var used = X.qz.list.map(function (x) { return x.q; }), pool = QZ.filter(function (q) { return used.indexOf(q) < 0; });
+          var w = qzWho || pname(); qzCur = { q: pick(pool.length ? pool : QZ), who: w, his: pickFor(w) || '……這題好難，讓我想想。' }; quizRender(); return;
+        }
+        if (b.id === 'cx-qz-own') { var t = (qzM.body.querySelector('#cx-qz-q').value || ''); if (!t.trim()) { toast('先在上面寫一個問題', 'warning'); return; } if (t && t.trim()) { var w2 = qzWho || pname(); qzCur = { q: t.trim(), who: w2, his: pickFor(w2) || '妳問的我都會回答。' }; quizRender(); } return; }
+        if (b.id === 'cx-qz-save' && qzCur) {
+          qzCur.mine = (qzM.body.querySelector('#cx-qz-mine').value || '').trim(); qzCur.at = Date.now();
+          X.qz.list.unshift(qzCur); await save();
+          if (qzM.body.querySelector('#cx-qz-chat').checked) { iSay('📝 ' + qzCur.q + (qzCur.mine ? '\n我的答案：' + qzCur.mine : '')); var c = qzCur; setTimeout(function () { sayAs(c.who, c.his); }, 1500); }
+          qzCur = null; toast('收進問卷本了', 'success'); quizRender(); return;
+        }
+        if (b.dataset.qzdel != null) { X.qz.list.splice(+b.dataset.qzdel, 1); await save(); quizRender(); return; }
+      });
+    }
+    qzWho = pname(); quizRender(); qzM.open();
+  }
+  function quizRender() {
+    var h = '<div class="cx-sec"><h4>抽一題問彼此</h4>' + whoChips('cx-qz-who', qzWho) + '<button class="cx-btn pri" id="cx-qz-draw">🎴 抽一題</button><div style="display:flex;gap:8px"><input class="cx-in" id="cx-qz-q" maxlength="60" placeholder="或自己寫一個問題" style="flex:1"><button class="cx-btn" id="cx-qz-own">問他</button></div>';
+    if (qzCur) h += '<div class="cx-qz-card"><b>' + esc(qzCur.q) + '</b></div>' + sayBy(qzCur.who, qzCur.his) +
+      '<textarea class="cx-in" id="cx-qz-mine" rows="3" placeholder="妳的答案（可以不寫）"></textarea><label class="cx-muted" style="font-size:12px"><input type="checkbox" id="cx-qz-chat" checked> 也傳到聊天</label><button class="cx-btn pri" id="cx-qz-save">收進問卷本</button>';
+    h += '</div><div class="cx-sec"><h4>問卷本（' + X.qz.list.length + '）</h4><div class="cx-list">' + (X.qz.list.length ? X.qz.list.map(function (x, i) {
+      return '<div class="cx-qz-it"><b>' + esc(x.q) + '</b><div><span>' + esc(x.who) + '：</span>' + esc(x.his) + '</div>' + (x.mine ? '<div><span>我：</span>' + esc(x.mine) + '</div>' : '') + '<small class="cx-muted">' + fmtTime(x.at) + '</small><button class="del" data-qzdel="' + i + '">×</button></div>';
+    }).join('') : '<div class="cx-muted">還沒有問答。抽一題開始吧～</div>') + '</div></div>';
+    qzM.body.innerHTML = h;
+  }
+
+  /* ---------- 待辦＋節日 ---------- */
+  var LUNAR = { '農曆新年': { 2027: '02-06', 2028: '01-26', 2029: '02-13', 2030: '02-03' }, '元宵節': { 2027: '02-20', 2028: '02-09', 2029: '02-27', 2030: '02-17' }, '端午節': { 2027: '06-09', 2028: '05-28', 2029: '06-16', 2030: '06-05' },
+    '七夕': { 2027: '08-08', 2028: '08-26', 2029: '08-16', 2030: '08-05' }, '中秋節': { 2026: '09-25', 2027: '09-15', 2028: '10-03', 2029: '09-22', 2030: '09-12' }, '冬至': { 2026: '12-22', 2027: '12-22', 2028: '12-21', 2029: '12-21', 2030: '12-22' } };
+  var SOLAR = [['元旦', '01-01'], ['情人節', '02-14'], ['白色情人節', '03-14'], ['萬聖節', '10-31'], ['平安夜', '12-24'], ['聖誕節', '12-25'], ['跨年', '12-31']];
+  var TODO_DONE = ['好棒，又完成一件！', '做得好，獎勵一個抱抱。', '妳真的很棒。', '辛苦了，休息一下吧。', '我就知道妳可以。'];
+  var TODO_REMIND = ['寶貝，「%」該做了喔。', '提醒妳：「%」，別忘了。', '「%」的時間到囉，我陪妳。'];
+  function festList() {
+    var t0 = new Date(); t0.setHours(0, 0, 0, 0); var out = [], y = t0.getFullYear();
+    [y, y + 1].forEach(function (yy) {
+      SOLAR.forEach(function (s) { out.push([s[0], new Date(yy + '-' + s[1] + 'T00:00:00')]); });
+      Object.keys(LUNAR).forEach(function (n) { var d = LUNAR[n][yy]; if (d) out.push([n, new Date(yy + '-' + d + 'T00:00:00')]); });
+      var m1 = new Date(yy, 4, 1); out.push(['母親節', new Date(yy, 4, 1 + (7 - m1.getDay()) % 7 + 7)]);
+    });
+    (typeof anniversaries !== 'undefined' && Array.isArray(anniversaries) ? anniversaries : []).forEach(function (a) { if (!a || !a.date) return; var p = String(a.date).split('-'); if (p.length < 3) return; [y, y + 1].forEach(function (yy) { out.push(['💗 ' + (a.name || '重要日'), new Date(yy, +p[1] - 1, +p[2])]); }); });
+    return out.filter(function (x) { return x[1] >= t0; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 8).map(function (x) { return [x[0], x[1], Math.round((x[1] - t0) / 864e5)]; });
+  }
+  async function todoTick() {
+    var now = Date.now(), ch = false;
+    (X.todo.list || []).forEach(function (t) {
+      if (t.done || !t.due || t.reminded || now < t.due) return;
+      t.reminded = true; ch = true; var w = t.who || pname(), txt = pick(TODO_REMIND).replace('%', t.text);
+      sayAs(w === pname() ? null : w, txt); sysNotify(w, txt, 'todo');
+    });
+    return ch;
+  }
+  var tdM = null;
+  function todoOpen() {
+    if (!tdM) {
+      tdM = makeModal('cx-todo-modal', 'fa-list-check', '待辦與節日');
+      tdM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.id === 'cx-td-add') {
+          var tx = tdM.body.querySelector('#cx-td-txt').value.trim(), dt = tdM.body.querySelector('#cx-td-due').value; if (!tx) { toast('寫一下要做什麼', 'warning'); return; }
+          var ppl = who1(); X.todo.list.push({ id: 't' + Date.now().toString(36), text: tx, due: dt ? new Date(dt).getTime() : 0, at: Date.now(), done: false, who: pick(ppl).name }); await save(); todoRender(); return;
+        }
+        if (b.dataset.tdok) { var t = X.todo.list.find(function (x) { return x.id === b.dataset.tdok; }); if (!t) return; t.done = !t.done; t.doneAt = t.done ? Date.now() : 0; await save(); if (t.done) toast(pick(TODO_DONE), 'success'); todoRender(); return; }
+        if (b.dataset.tddel) { X.todo.list = X.todo.list.filter(function (x) { return x.id !== b.dataset.tddel; }); await save(); todoRender(); return; }
+        if (b.id === 'cx-td-clear') { X.todo.list = X.todo.list.filter(function (x) { return !x.done; }); await save(); todoRender(); return; }
+      });
+    }
+    todoRender(); tdM.open();
+  }
+  function todoRender() {
+    var L = X.todo.list.slice().sort(function (a, b) { return (a.done - b.done) || ((a.due || 9e15) - (b.due || 9e15)); }), open = L.filter(function (t) { return !t.done; }).length;
+    var h = '<div class="cx-sec"><h4>新增待辦</h4><input class="cx-in" id="cx-td-txt" maxlength="60" placeholder="要做什麼？"><label class="cx-muted" style="font-size:12px">提醒時間（可不填，到時候哥哥會提醒妳）</label><input class="cx-in" id="cx-td-due" type="datetime-local"><button class="cx-btn pri" id="cx-td-add">加入</button></div>' +
+      '<div class="cx-sec"><h4>待辦（還有 ' + open + ' 件）</h4><div class="cx-list">' + (L.length ? L.map(function (t) {
+        var late = !t.done && t.due && t.due < Date.now();
+        return '<div class="cx-td' + (t.done ? ' done' : '') + '"><button class="ck" data-tdok="' + t.id + '">' + (t.done ? '✓' : '') + '</button><div><b>' + esc(t.text) + '</b>' + (t.due ? '<small class="' + (late ? 'late' : '') + '">⏰ ' + fmtTime(t.due) + (t.who && !t.done ? ' · ' + esc(t.who) + ' 會提醒' : '') + '</small>' : '') + '</div><button class="del" data-tddel="' + t.id + '">×</button></div>';
+      }).join('') : '<div class="cx-muted">沒有待辦，今天好好休息。</div>') + '</div>' + (L.some(function (t) { return t.done; }) ? '<button class="cx-btn" id="cx-td-clear">清掉完成的</button>' : '') + '</div>' +
+      '<div class="cx-sec"><h4>快到的節日和重要日</h4><div class="cx-list">' + festList().map(function (f) { return '<div class="cx-td fest"><span class="d">' + (f[2] === 0 ? '今天' : f[2] + ' 天') + '</span><div><b>' + esc(f[0]) + '</b><small>' + (f[1].getMonth() + 1) + '/' + f[1].getDate() + '</small></div></div>'; }).join('') + '</div></div>';
+    tdM.body.innerHTML = h;
+  }
+
+  /* ---------- 睡眠紀錄 ---------- */
+  var SLEEP_NIGHT = ['晚安，寶貝。我在這裡陪妳。', '好好睡，夢裡見。', '把手機放下，閉上眼睛，我抱著妳。', '晚安，明天見。'];
+  var SLEEP_MORN = ['早安，睡得好嗎？', '起床啦，今天也要開心。', '早安寶貝，先喝杯水。', '醒了？我想妳了。'];
+  var slM = null;
+  function sleepOpen() {
+    if (!slM) {
+      slM = makeModal('cx-sleep-modal', 'fa-bed', '睡眠紀錄');
+      slM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.id === 'cx-sl-go') { X.sleep.cur = Date.now(); await save(); var w = pick(who1()).name; sayAs(w === pname() ? null : w, pick(SLEEP_NIGHT)); slM.close(); return; }
+        if (b.id === 'cx-sl-cancel') { X.sleep.cur = 0; await save(); sleepRender(); return; }
+        if (b.dataset.slq) {
+          var st = X.sleep.cur, en = Date.now(); if (!st) return;
+          X.sleep.log.unshift({ s: st, e: en, q: +b.dataset.slq }); X.sleep.log = X.sleep.log.slice(0, 120); X.sleep.cur = 0; await save();
+          var hrs = (en - st) / 36e5, w2 = pick(who1()).name, ln = pick(SLEEP_MORN) + (hrs < 6 ? '只睡了 ' + hrs.toFixed(1) + ' 小時，今天早點睡好不好？' : hrs > 9.5 ? '睡了好久，小懶豬。' : '');
+          sayAs(w2 === pname() ? null : w2, ln); sleepRender(); return;
+        }
+        if (b.dataset.sldel != null) { X.sleep.log.splice(+b.dataset.sldel, 1); await save(); sleepRender(); return; }
+      });
+    }
+    sleepRender(); slM.open();
+  }
+  function hm(ms) { var m = Math.round(ms / 6e4); return Math.floor(m / 60) + ' 小時 ' + (m % 60) + ' 分'; }
+  function sleepRender() {
+    var cur = X.sleep.cur, L = X.sleep.log, h = '<div class="cx-sec cx-sl-top">';
+    if (cur) h += '<div class="big">🌙</div><div>睡著了 ' + hm(Date.now() - cur) + '</div><h4>醒來了嗎？睡得怎麼樣</h4><div class="cx-chips">' + [['1', '😫 很差'], ['2', '😕 不好'], ['3', '😐 普通'], ['4', '🙂 不錯'], ['5', '😴 超好']].map(function (q) { return '<button data-slq="' + q[0] + '">' + q[1] + '</button>'; }).join('') + '</div><button class="cx-btn" id="cx-sl-cancel">取消這次</button>';
+    else h += '<div class="big">☀️</div><button class="cx-btn pri" id="cx-sl-go">🌙 我要睡了</button><div class="cx-muted" style="font-size:12px">按了之後哥哥會說晚安；起床回來按「睡得怎麼樣」就會記錄下來</div>';
+    h += '</div>';
+    var wk = L.filter(function (x) { return x.e > Date.now() - 7 * 864e5; });
+    if (wk.length) {
+      var avg = wk.reduce(function (a, x) { return a + (x.e - x.s); }, 0) / wk.length, aq = wk.reduce(function (a, x) { return a + x.q; }, 0) / wk.length;
+      h += '<div class="cx-stat"><div><b>' + (avg / 36e5).toFixed(1) + 'h</b><span>近 7 天平均</span></div><div><b>' + ['', '😫', '😕', '😐', '🙂', '😴'][Math.round(aq)] + '</b><span>睡眠品質</span></div><div><b>' + wk.length + '</b><span>天有記錄</span></div></div>';
+      var days = []; for (var i = 6; i >= 0; i--) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); var e2 = d.getTime() + 864e5, rec = L.filter(function (x) { return x.e >= d.getTime() && x.e < e2; }).reduce(function (a, x) { return a + (x.e - x.s); }, 0); days.push([['日', '一', '二', '三', '四', '五', '六'][d.getDay()], rec / 36e5]); }
+      h += '<div class="cx-sl-bars">' + days.map(function (d) { return '<div><i style="height:' + Math.min(100, d[1] / 10 * 100) + '%" class="' + (d[1] && d[1] < 6 ? 'low' : '') + '"></i><small>' + (d[1] ? d[1].toFixed(1) : '') + '</small><span>' + d[0] + '</span></div>'; }).join('') + '</div>';
+    }
+    h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
+    slM.body.innerHTML = h;
+  }
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
+  addEntry('cx-dice-entry', 'fa-dice', '骰子', diceOpen);
+  addEntry('cx-quiz-entry', 'fa-clipboard-question', '問卷', quizOpen);
+  addEntry('cx-todo-entry', 'fa-list-check', '待辦', todoOpen);
+  addEntry('cx-sleep-entry', 'fa-bed', '睡眠', sleepOpen);
   addEntry('cx-period-entry', 'fa-droplet', '潮汐', pOpen);
   addEntry('cx-pomo-entry', 'fa-clock', '番茄鐘', pomoOpen);
   addEntry('cx-comp-entry', 'fa-headphones', '陪伴中心', compOpen);

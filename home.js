@@ -31,6 +31,22 @@
     pinkhydra:  { n: '粉繡球',   rare: 1, cost: 35, base: 'hydrangea', pair: 'peony',      grow: 300e3,  yield: 1, price: 70, col: '#f2a7c3', unit: '朵', flower: 1, lang: '浪漫的團聚' },
     whitelav:   { n: '白薰衣草', rare: 1, cost: 20, base: 'lavender',  pair: 'gypso',      grow: 30e3,   yield: 1, price: 40, col: '#f3eef9', unit: '束', flower: 1, lang: '純白的等待' },
     pinkdaisy:  { n: '粉雛菊',   rare: 1, cost: 20, base: 'daisy',     pair: 'tulip',      grow: 45e3,   yield: 1, price: 40, col: '#f6b9c8', unit: '朵', flower: 1, lang: '天真又藏不住的喜歡' },
+    carnation:  { n: '康乃馨', cost: 7,  grow: 150e3,  yield: 3, price: 12, col: '#f2a5b5', unit: '朵', flower: 1, lang: '溫暖的關懷' },
+    oncidium:   { n: '跳舞蘭', cost: 8,  grow: 170e3,  yield: 3, price: 13, col: '#f5d35a', unit: '枝', flower: 1, lang: '快樂無憂' },
+    forgetme:   { n: '勿忘我', cost: 6,  grow: 120e3,  yield: 3, price: 10, col: '#8fb0e8', unit: '枝', flower: 1, lang: '不要忘記我' },
+    delph:      { n: '飛燕草', cost: 9,  grow: 200e3,  yield: 3, price: 14, col: '#90a6e2', unit: '枝', flower: 1, lang: '自由與輕盈' },
+    lagurus:    { n: '兔尾草', cost: 5,  grow: 100e3,  yield: 4, price: 7,  col: '#efe6d2', unit: '枝', flower: 1, lang: '堅韌的愛' },
+    alstro:     { n: '六出花', cost: 10, grow: 220e3,  yield: 3, price: 15, col: '#f3a253', unit: '朵', flower: 1, lang: '期待重逢' },
+    eustoma:    { n: '洋桔梗', cost: 14, grow: 320e3,  yield: 2, price: 26, col: '#f6f3e6', unit: '朵', flower: 1, lang: '真誠不變的愛' },
+    ranunc:     { n: '洋牡丹', cost: 16, grow: 400e3,  yield: 2, price: 30, col: '#f3b2ae', unit: '朵', flower: 1, lang: '受歡迎的魅力' },
+    lily:       { n: '百合',   cost: 20, grow: 600e3,  yield: 2, price: 38, col: '#f6c2cc', unit: '朵', flower: 1, lang: '百年好合' },
+    purplecarn: { n: '紫康乃馨', rare: 1, cost: 25, base: 'carnation',  pair: 'lavender',   grow: 150e3,  yield: 1, price: 50, col: '#b8a0dc', unit: '朵', flower: 1, lang: '任性又真誠' },
+    statice:    { n: '星辰花',   rare: 1, cost: 20, base: 'gypso',      pair: 'delph',      grow: 60e3,   yield: 1, price: 40, col: '#a58ad6', unit: '枝', flower: 1, lang: '永不變心' },
+    bluepoppy:  { n: '藍罌粟',   rare: 1, cost: 30, base: 'cornflower', pair: 'forgetme',   grow: 120e3,  yield: 1, price: 60, col: '#8db8ef', unit: '朵', flower: 1, lang: '少見的溫柔' },
+    sakura:     { n: '櫻花',     rare: 1, cost: 35, base: 'peach',      pair: 'pinkdaisy',  grow: 480e3,  yield: 1, price: 70, col: '#f6c4d2', unit: '枝', flower: 1, lang: '生命的美好' },
+    snowdrop:   { n: '雪花蓮',   rare: 1, cost: 35, base: 'lilyvalley', pair: 'whitelav',   grow: 240e3,  yield: 1, price: 75, col: '#f4f8f2', unit: '枝', flower: 1, lang: '冬天裡的希望', season: [5, 6, 7], seasonTxt: '只有 6～8 月（冬天）能種' },
+    epiphyllum: { n: '曇花',     rare: 1, cost: 40, base: 'lotus',      pair: 'gardenia',   grow: 720e3,  yield: 1, price: 85, col: '#f2f4fb', unit: '朵', flower: 1, lang: '剎那的永恆', night: 1 },
+    rainbowrose:{ n: '彩虹玫瑰', rare: 1, cost: 60, base: 'rose',       pair: 'bluerose', pair2: 'goldrose', grow: 1440e3, yield: 1, price: 150, col: '#e9a0c8', unit: '朵', flower: 1, lang: '無限的可能' },
     carrot:     { n: '胡蘿蔔', cost: 3,  grow: 60e3,   yield: 3, price: 4,  col: '#f08a3c', unit: '根' },
     wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
     blueberry:  { n: '藍莓',   seed: '藍莓叢', cost: 15, grow: 180e3, yield: 5, price: 5,  col: '#6f7fc0', unit: '顆', tree: 1 },
@@ -48,10 +64,17 @@
     lychee:     { n: '荔枝',   seed: '荔枝樹', cost: 32, grow: 540e3, yield: 6, price: 6,  col: '#e2626e', unit: '顆', tree: 1 },
     mango:      { n: '芒果',   seed: '芒果樹', cost: 34, grow: 600e3, yield: 3, price: 13, col: '#f4b03e', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'tulip', 'cornflower', 'strawberry', 'tomato', 'gardenia', 'lilyvalley', 'osmanthus', 'hydrangea', 'sunflower', 'peach', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'blacktulip', 'pinkhydra', 'bluerose', 'goldrose'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'lagurus', 'tulip', 'forgetme', 'cornflower', 'carnation', 'oncidium', 'strawberry', 'tomato', 'gardenia', 'delph', 'lilyvalley', 'alstro', 'osmanthus', 'hydrangea', 'eustoma', 'sunflower', 'ranunc', 'peach', 'lily', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'statice', 'purplecarn', 'bluepoppy', 'blacktulip', 'pinkhydra', 'sakura', 'snowdrop', 'bluerose', 'goldrose', 'epiphyllum', 'rainbowrose'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
+    carnation: ['康乃馨，粉粉的，好溫柔。', '妳也會照顧人，我知道。'],
+    lily: ['百合……百年好合的意思，我收下了。', '好香，整個房間都是它的味道。'],
+    forgetme: ['勿忘我。放心，怎麼可能忘記妳。', '小小的藍花，好可愛。'],
+    epiphyllum: ['曇花……只開一個晚上，妳守著它開的嗎？', '剎那也是永遠，跟妳在一起的每一刻都是。'],
+    rainbowrose: ['彩虹玫瑰！妳怎麼種出來的……', '每一種顏色都是妳，好喜歡。'],
+    snowdrop: ['雪花蓮，冬天裡開的花。', '冷的時候有妳就不冷了。'],
+    sakura: ['櫻花！好像春天提早來了。', '一起去看真的櫻花好不好。'],
     marigold: ['金黃色的，像把太陽摘下來給我。', '好有元氣的花，看著就想笑。', '收到了，今天一整天都會很好。'],
     cornflower: ['好藍……像妳穿那件裙子的顏色。', '矢車菊，遇見幸福的意思。我遇見妳了。', '小小一朵，插在杯子裡剛剛好。'],
     lilyvalley: ['鈴蘭……一串小鈴鐺，好可愛。', '幸福歸來的意思。妳就是我的幸福。', '捨不得碰，怕把鈴鐺碰響了。'],
@@ -219,7 +242,9 @@
     }
     p.at = now;
   }
-  function ready(p) { return p.crop && p.prog >= CROPS[p.crop].grow; }
+  function isNightNow() { var h = new Date().getHours(); return h >= 19 || h < 5; }
+  function seasonOK(k) { var c = CROPS[k]; return !c.season || c.season.indexOf(new Date().getMonth()) >= 0; }
+  function ready(p) { return p.crop && p.prog >= CROPS[p.crop].grow && (!CROPS[p.crop].night || isNightNow()); }
   function stage(p) { if (!p.crop) return -1; var f = p.prog / CROPS[p.crop].grow; return f >= 1 ? 3 : f >= .5 ? 2 : f >= .15 ? 1 : 0; }
   function left(p) { var c = CROPS[p.crop], wet = (p.wetUntil || 0) > Date.now(); return Math.max(0, (c.grow - p.prog) / (wet ? 1 : DRY_RATE)); }
   function dur(ms) { if (ms < MIN) return Math.max(1, Math.ceil(ms / 1000)) + ' 秒'; if (ms < 10 * MIN) { var sec = Math.ceil(ms / 1000); return Math.floor(sec / 60) + ' 分' + (sec % 60 ? ' ' + (sec % 60) + ' 秒' : '鐘'); } var m = Math.ceil(ms / MIN); if (m < 60) return m + ' 分鐘'; var h = Math.floor(m / 60), r = m % 60; return h + ' 小時' + (r ? ' ' + r + ' 分' : ''); }
@@ -982,13 +1007,17 @@
     { k: 'sun', n: '向日葵花束', need: { sunflower: 1, peony: 2, rose: 1 } },
     { k: 'peony', n: '牡丹花束', need: { peony: 6 } },
     { k: 'cream', n: '奶油花束', need: { rose: 3, peony: 1, tulip: 2, gypso: 1 } },
-    { k: 'roses', n: '玫瑰花束', need: { rose: 4, tulip: 2, lavender: 1 } }
+    { k: 'roses', n: '玫瑰花束', need: { rose: 4, tulip: 2, lavender: 1 } },
+    { k: 'vase', n: '花瓶捧花', need: { rose: 3, carnation: 2, forgetme: 2, gardenia: 2 } },
+    { k: 'wild', n: '野花牛皮紙花束', need: { delph: 2, alstro: 2, oncidium: 2, carnation: 2, cornflower: 1 } },
+    { k: 'vintage', n: '復古玫瑰花束', need: { rose: 3, ranunc: 2, lily: 1, lagurus: 2, oncidium: 1 } },
+    { k: 'sunset', n: '夕陽花束', need: { rose: 3, carnation: 2, eustoma: 2, marigold: 2, oncidium: 1 } }
   ];
   /* ================= 花園畫面 ================= */
   var recentGift = [];
   var gm = null, gTab = 'field', sel = '', giftTo = null, timer = null;
   function gOpen(fromHome) {
-    var g = G(); if (!g) return;
+    var g = G(); if (!g) return; area = 'm';
     if (!gm) {
       gm = A.makeModal('cx-garden-modal', 'fa-seedling', '我們的花園');
       gm.onBack = function () { gm.close(); homeOpen(); return true; };
@@ -1014,8 +1043,75 @@
       if (gTab === 'field') tickField();
     }, 1000);
   }
+  /* ================= 節日裝扮 =================
+     圖片放在 fest/ 資料夾：<代號>_farm.png（農場全景）、<代號>_living.png（客廳），
+     豆包畫好的原圖直接丟進去就好，網站會自己去白底、對齊；.webp 代表已經處理好的。 */
+  var FEST = [
+    // 代號, 名字, 年份對應的日期 [月, 日]（農曆節日每年不同）, 前幾天開始, 後幾天結束, 打招呼
+    ['cny', '農曆新年', { 2027: [2, 6], 2028: [1, 26], 2029: [2, 13], 2030: [2, 3] }, 7, 15, '新年快樂！今年也要一起過。'],
+    ['val', '情人節', [2, 14], 4, 0, '情人節快樂，我的寶貝。'],
+    ['white', '白色情人節', [3, 14], 4, 0, '白色情人節，換我們送妳禮物。'],
+    ['easter', '復活節', { 2027: [3, 28], 2028: [4, 16], 2029: [4, 1], 2030: [4, 21] }, 3, 1, '復活節快樂，一起去找彩蛋？'],
+    ['mom', '母親節', 'mom', 3, 0, '母親節快樂，記得打給媽媽。'],
+    ['duanwu', '端午節', { 2027: [6, 9], 2028: [5, 28], 2029: [6, 16], 2030: [6, 5] }, 3, 0, '端午節快樂，粽子要吃甜的還是鹹的？'],
+    ['qixi', '七夕', { 2027: [8, 8], 2028: [8, 26], 2029: [8, 16], 2030: [8, 5] }, 3, 0, '七夕快樂，我們不用等鵲橋。'],
+    ['moon', '中秋節', { 2027: [9, 15], 2028: [10, 3], 2029: [9, 22], 2030: [9, 12] }, 5, 1, '中秋節快樂，晚上一起看月亮。'],
+    ['hallo', '萬聖節', [10, 31], 6, 0, '不給糖就搗蛋～'],
+    ['xmas', '聖誕節', [12, 25], 24, 7, '聖誕快樂，今年的禮物是我們。']
+  ];
+  try { var fq = /[?&]fest=([a-z]+)/.exec(location.search); if (fq) { if (fq[1] === 'off') localStorage.removeItem('cxFestTest'); else localStorage.setItem('cxFestTest', fq[1]); } } catch (e) {}
+  function festNow(d) {
+    try { var t = localStorage.getItem('cxFestTest'); if (t) return FEST.filter(function (x) { return x[0] === t; })[0] || null; } catch (e) {}
+    d = d || new Date(); var y = d.getFullYear(), day = 864e5, t0 = new Date(y, d.getMonth(), d.getDate()).getTime();
+    for (var i = 0; i < FEST.length; i++) {
+      var F = FEST[i];
+      for (var yy = y - 1; yy <= y + 1; yy++) {
+        var md = F[2] === 'mom' ? null : Array.isArray(F[2]) ? F[2] : F[2][yy];
+        if (F[2] === 'mom') { var m1 = new Date(yy, 4, 1); md = [5, 1 + (7 - m1.getDay()) % 7 + 7]; }
+        if (!md) continue;
+        var c = new Date(yy, md[0] - 1, md[1]).getTime();
+        if (t0 >= c - F[3] * day && t0 <= c + F[4] * day) return F;
+      }
+    }
+    return null;
+  }
+  var festCache = {};
+  /* 把豆包的原圖對齊成跟平常的圖一樣：找出畫的範圍、底邊對齊、去白底（客廳用原本客廳的外框） */
+  function festFit(img, kind, done) {
+    var W0 = img.naturalWidth, H0 = img.naturalHeight, sc = Math.min(1, 480 / Math.max(W0, H0)), aw = Math.round(W0 * sc), ah = Math.round(H0 * sc);
+    var c = document.createElement('canvas'); c.width = aw; c.height = ah; var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, aw, ah); x.drawImage(img, 0, 0, aw, ah);
+    x.fillRect(aw * .8, ah * .92, aw, ah); /* 浮水印 */
+    var d = x.getImageData(0, 0, aw, ah).data, rows = new Array(ah).fill(0), cols = new Array(aw).fill(0);
+    for (var yy = 0; yy < ah; yy++) for (var xx = 0; xx < aw; xx++) { var o = (yy * aw + xx) * 4; if (Math.min(d[o], d[o + 1], d[o + 2]) < 215) { rows[yy]++; cols[xx]++; } }
+    var rT = Math.max(2, aw * .01), cT = Math.max(2, ah * .01), x0 = cols.findIndex(function (v) { return v > cT; }), x1 = aw - [].concat(cols).reverse().findIndex(function (v) { return v > cT; }), y1 = ah - [].concat(rows).reverse().findIndex(function (v) { return v > rT; });
+    if (x0 < 0 || x1 <= x0) return done(null);
+    x0 /= sc; x1 /= sc; y1 /= sc; var bw = x1 - x0, base = kind === 'living' ? HI('r_living') : null, asp = base ? base.h / base.w : .8128, ih = bw * asp, pad = base ? 0 : ih * .15, top = y1 - ih - pad;
+    var OW = base ? base.w : 1100, OH = Math.round(OW * (ih + pad) / bw), o2 = document.createElement('canvas'); o2.width = OW; o2.height = OH; var y2 = o2.getContext('2d');
+    y2.drawImage(img, x0, top, bw, ih + pad, 0, 0, OW, OH);
+    y2.fillStyle = '#fff'; var wx = (W0 * .8 - x0) * OW / bw, wy = (H0 * .92 - top) * OH / (ih + pad); if (wx < OW && wy < OH) y2.fillRect(wx, wy, OW, OH);
+    var fin = function () { try { done(o2.toDataURL('image/webp', .85)); } catch (e) { done(null); } };
+    if (base) { var bi = new Image(); bi.onload = function () { y2.globalCompositeOperation = 'destination-in'; y2.drawImage(bi, 0, 0, OW, OH); fin(); }; bi.onerror = fin; bi.src = base.src; return; }
+    var id = y2.getImageData(0, 0, OW, OH), q = id.data;
+    for (var i = 0; i < q.length; i += 4) { var mn = Math.min(q[i], q[i + 1], q[i + 2]), a = Math.max(0, Math.min(1, (250 - mn) / 14)); q[i + 3] = Math.round(q[i + 3] * a); }
+    y2.putImageData(id, 0, 0); fin();
+  }
+  /* 拿節日圖（沒有就回 null）；第一次是非同步的，拿到之後會 cb() 讓畫面重畫 */
+  function festImg(key, kind, cb) {
+    var id = kind ? key + '_' + kind : key;
+    if (festCache[id] !== undefined) return festCache[id] === 'loading' ? null : festCache[id];
+    festCache[id] = 'loading';
+    var tries = [[id + '.webp', 0], [id + '.png', 1], [id + '.jpg', 1], [id + '.jpeg', 1]];
+    (function next() {
+      var t = tries.shift(); if (!t) { festCache[id] = null; return; }
+      var im = new Image();
+      im.onload = function () { if (!t[1]) { festCache[id] = im.src; cb && cb(); return; } festFit(im, kind, function (u) { festCache[id] = u; cb && cb(); }); };
+      im.onerror = next; im.src = 'fest/' + t[0];
+    })();
+    return null;
+  }
+
   /* ================= 農場場景（等角視角：花園／果園／雞舍） ================= */
-  var area = 'g';
+  var area = 'm';
   var OL = '#7a6252', TW = 60, TH = 30;
   function sig(g) {
     var now = Date.now();
@@ -1053,7 +1149,7 @@
     var nst = gm.body.querySelector('.cx-g-stage');
     if (nst) { nst.dataset.k = gTab + area; if (landScroll) { nst.scrollLeft = (landScroll - 1) * nst.clientWidth; landScroll = null; } else if (keepKey === gTab + area) nst.scrollLeft = keepX; }
   }
-  function plotStatus(p, now) { return (ready(p) ? '已經可以收成了' : '還要大約 ' + dur(left(p))) + '　·　' + ((p.wetUntil || 0) > now ? '土還濕濕的（' + dur(p.wetUntil - now) + '）' : '土乾了，長得比較慢'); }
+  function plotStatus(p, now) { return (ready(p) ? '已經可以收成了' : (CROPS[p.crop].night && p.prog >= CROPS[p.crop].grow) ? '🌙 花苞長好了，曇花只在晚上 7 點後開，到時候再來收' : '還要大約 ' + dur(left(p))) + '　·　' + ((p.wetUntil || 0) > now ? '土還濕濕的（' + dur(p.wetUntil - now) + '）' : '土乾了，長得比較慢'); }
   function _unusedHenStatus(h, now) { return (hungry(h, now) ? '肚子餓了，餵了才會下蛋' : '吃飽了（' + dur(h.fedUntil - now) + '）') + '　·　' + ((h.eggs || 0) ? '有 ' + h.eggs + ' 顆蛋可以撿' : '還沒下蛋'); }
 
   /* --- 等角繪圖小工具 --- */
@@ -1126,7 +1222,8 @@
   var DECOS = {
     lamp: ['小路燈', 40, [2.7, -.7], 'fa-lightbulb'], mailbox: ['信箱', 50, [2.74, .35], 'fa-envelope'], bench: ['長椅', 60, [1.4, 2.76], 'fa-chair'],
     bunny: ['兔子石像', 80, [-.66, .45], 'fa-carrot'], swing: ['鞦韆', 120, [-.66, 1.55], 'fa-child-reaching'],
-    windmill: ['小風車', 150, [-.66, -.66], 'fa-fan'], well: ['水井', 90, [-.6, 2.5], 'fa-bucket'], arch: ['玫瑰拱門', 200, [2.76, 1.6], 'fa-archway']
+    windmill: ['小風車', 150, [-.66, -.66], 'fa-fan'], well: ['水井', 90, [-.6, 2.5], 'fa-bucket'], arch: ['玫瑰拱門', 200, [2.76, 1.6], 'fa-archway'],
+    xtree: ['聖誕樹', 120, [2.76, 2.7], 'fa-tree'], xwreath: ['花圈', 50, [2.76, .95], 'fa-ring'], xlights: ['彩燈', 40, [.15, -.72], 'fa-lightbulb'], xpine: ['松果', 20, [-.66, 1.0], 'fa-tree'], xpath: ['石板小路', 70, [1.75, -.68], 'fa-shoe-prints'], xsnow: ['雪人', 80, [.3, 2.78], 'fa-snowman'], xgift: ['禮物堆', 60, [1.95, 2.8], 'fa-gift']
   };
   var FENCES = { white: ['奶白', 0, '#fffaf2'], wood: ['原木', 60, '#e2c29a'], pink: ['粉紅', 80, '#f7cdd7'], mint: ['薄荷', 80, '#cfe9d7'], lilac: ['淡紫', 80, '#ddd1f2'], sky: ['天藍', 80, '#cfe2f6'] };
   function decoG(g) { g.deco = g.deco || {}; g.deco.own = g.deco.own || {}; g.deco.on = g.deco.on || {}; g.deco.fown = g.deco.fown || { white: 1 }; g.deco.fence = g.deco.fence || 'white'; if (g.deco.own.pond) { delete g.deco.own.pond; delete g.deco.on.pond; g.coins = (g.coins || 0) + 100; } return g.deco; }
@@ -1163,6 +1260,13 @@
     Object.keys(SZ).forEach(function (k) { var orig = DART[k], z = SZ[k]; DART[k] = function (x, y) { if (!CI(k)) return orig(x, y); return (k === 'pond' ? '' : '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="' + (z[1] ? z[1] * .42 : 9) + '" ry="3" fill="#00000012"/>') + ciAt(k, x, y + 2 + (z[2] || 0), z[0], z[1]); }; });
     var wm0 = DART.windmill; DART.windmill = function (x, y) { if (!CI('wm_body') || !CI('wm_blade')) return wm0(x, y); var bm = CI('wm_body'), BH = 34, BW = BH * bm.w / bm.h, hx = x - BW / 2 + BW * .47, hy = y + 2 - BH + BH * .14, bl = CI('wm_blade'), LW = 30, LH = LW * bl.h / bl.w;
       return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="13" ry="3" fill="#00000012"/>' + ciAt('wm_body', x, y + 2, BH) + '<g transform="translate(' + f(hx) + ' ' + f(hy) + ')"><g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="9s" repeatCount="indefinite"/>' + ciAt('wm_blade', 0, LH / 2, 0, LW) + '</g></g>'; };
+    DART.xwreath = function (x, y) { return '<path d="M' + P2(x - 4, y) + ' L' + P2(x - 2, y - 14) + ' M' + P2(x + 4, y) + ' L' + P2(x + 2, y - 14) + '" stroke="#a07853" stroke-width="1.6"/>' + ciAt('x_wreath', x, y - 6, 18); };
+    DART.xlights = function (x, y) { return '<path d="M' + P2(x - 19, y) + ' v-16 M' + P2(x + 19, y) + ' v-16" stroke="#a07853" stroke-width="1.6"/>' + ciAt('x_lights', x, y - 8, 0, 40); };
+    DART.xpine = function (x, y) { return ciAt('x_pine', x, y + 2, 0, 16); };
+    DART.xpath = function (x, y) { var o = ''; [[-27, 13.5, 0], [-9, 4.5, 1], [9, -4.5, 2], [27, -13.5, 4]].forEach(function (q) { o += '<g transform="translate(' + f(x + q[0]) + ' ' + f(y + q[1]) + ') scale(1 .6)">' + ciAt('x_stone' + q[2], 0, 4, 0, 15) + '</g>'; }); return o; };
+    DART.xtree = function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="12" ry="3.4" fill="#00000016"/>' + ciAt('x_tree', x, y + 2, 40); };
+    DART.xsnow = function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="10" ry="3" fill="#00000012"/>' + ciAt('x_snow', x, y + 2, 28); };
+    DART.xgift = function (x, y) { return '<ellipse cx="' + f(x) + '" cy="' + f(y + 1) + '" rx="13" ry="3" fill="#00000012"/>' + ciAt('x_gift', x, y + 2, 0, 30); };
     var a2 = DART.arch2; DART.arch2 = function (a, b) { if (!CI('arch')) return a2(a, b); var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
       return '<ellipse cx="' + f(mx - 3) + '" cy="' + f(my + 9) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/><ellipse cx="' + f(mx - 9) + '" cy="' + f(my + 15) + '" rx="5" ry="2.4" fill="#f4f1ea" stroke="#c9c1b2" stroke-width=".7"/>' + '<g transform="translate(' + f(2 * mx) + ' 0) scale(-1 1)">' + ciAt('arch', mx, my + 6, 0, Math.abs(b[0] - a[0]) + 16) + '</g>'; };
     [['bush', 'bush2', 22], ['mush', 'mush', 18], ['stone', 'mush', 0]].forEach(function (r) { var orig = DECOR[r[0]]; DECOR[r[0]] = function (x, y, col) { if (!CI(r[1])) return orig(x, y, col); if (!r[2]) return orig(x, y, col); return '<ellipse cx="' + f(x) + '" cy="' + f(y) + '" rx="' + f(r[2] * .42) + '" ry="3" fill="#00000012"/>' + ciAt(r[1], x, y + 2, 0, r[2]); }; });
@@ -1433,10 +1537,19 @@
     o += '<circle cx="6.6" cy="-15" r=".95" fill="#3b2f2a"/><ellipse cx="5.4" cy="-12.4" rx="1.3" ry=".8" fill="#f6b6b6" opacity=".7"/>';
     return o + '</g>';
   }
+  function mapHtml(g, gr, orr, eg) {
+    var F = festNow(), src = (F && festImg(F[0], 'farm', render)) || festImg('farm', '', render);
+    if (!src) return '<p class="cx-muted" style="text-align:center;padding:40px 0">農場地圖載入中…</p>';
+    var Z = [['c', '🐄 牧場', eg, '335,265 520,140 805,262 790,330 585,470 330,300', 560, 220], ['g', '🌷 花園', gr, '20,500 190,340 330,330 460,470 640,650 420,860 30,600', 250, 560], ['o', '🍑 果園', orr, '640,330 860,215 1095,320 1095,560 880,660 640,560', 880, 380]];
+    return '<div class="cx-g-map">' + (F ? '<div class="cx-g-fest">' + F[1] + '快樂 ✨</div>' : '') + '<svg viewBox="0 0 1100 1028" aria-label="農場地圖"><image href="' + src + '" x="0" y="0" width="1100" height="1028"/>' +
+      Z.map(function (z) { return '<g class="zone" data-area="' + z[0] + '" role="button"><polygon points="' + z[3] + '"/><g transform="translate(' + z[4] + ' ' + z[5] + ')"><rect x="-78" y="-26" width="156" height="52" rx="26"/><text y="12">' + z[1] + (z[2] ? ' · ' + z[2] : '') + '</text></g></g>'; }).join('') +
+      '</svg></div><p class="cx-muted cx-g-pan">點一個區域進去照顧它</p>';
+  }
   function fieldHtml(g, now) {
     var gr = g.plots.filter(ready).length, orr = g.orchard.filter(ready).length, eg = allAni(g).reduce(function (s2, x) { return s2 + (x[1].eggs || 0); }, 0);
-    var tabs = [['g', '🌷 花園', gr], ['o', '🍑 果園', orr], ['c', '🐄 牧場', eg]];
+    var tabs = [['m', '🗺️ 全景', 0], ['g', '🌷 花園', gr], ['o', '🍑 果園', orr], ['c', '🐄 牧場', eg]];
     var h = '<div class="cx-g-area">' + tabs.map(function (t) { return '<button type="button" data-area="' + t[0] + '" class="' + (area === t[0] ? 'on' : '') + '">' + t[1] + (t[2] ? '<i>' + t[2] + '</i>' : '') + '</button>'; }).join('') + '</div>';
+    if (area === 'm') return h + mapHtml(g, gr, orr, eg);
     if (area !== 'c') h += wxChip(now);
     h += '<div class="cx-g-stage' + (area !== 'c' ? ' pan' : '') + '">' + areaSvg(g, now) + '</div>';
     if (area !== 'c') { var nl = (area === 'g' ? g.plots.length / 9 : g.orchard.length / 6); h += '<p class="cx-muted cx-g-pan">' + (nl < LAND[area].length ? '往右滑還可以買新的地 →' : '左右滑可以看每一塊地') + '</p>'; }
@@ -1463,7 +1576,7 @@
     if (sel === '*all') {
       var empt = (area === 'o' ? g.orchard : g.plots).filter(function (q) { return q.open && !q.crop; }).length;
       if (!empt) { sel = ''; } else {
-        var sl = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]); });
+        var sl = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]) && seasonOK(k); });
         if (g.lastSeed && sl.indexOf(g.lastSeed) > 0) { sl.splice(sl.indexOf(g.lastSeed), 1); sl.unshift(g.lastSeed); }
         return '<div class="cx-g-panel"><div class="cx-g-pt">' + empt + ' 格空地全部種什麼？<span class="cx-muted">　錢不夠就種到能種的為止，種好會順便澆水</span></div><div class="seeds">' + sl.map(function (k) {
           var c = CROPS[k], can = Math.min(empt, Math.floor(g.coins / c.cost));
@@ -1475,7 +1588,7 @@
     if (!p) return '<p class="cx-muted cx-g-tip">' + (area === 'g' ? '點空地種花或作物' : '點空地種果樹，種一次可以一直收') + '；乾掉的土澆水會長得比較快。你不在的時候，' + esc(helpers().join('、')) + ' 也會幫忙照顧。</p>';
     if (!p.open) return '';
     if (!p.crop) {
-      var list = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]); });
+      var list = ORDER.filter(function (k) { return area === 'o' ? CROPS[k].tree : !CROPS[k].tree && (!CROPS[k].rare || !!(g.dex || {})[k]) && seasonOK(k); });
       return '<div class="cx-g-panel"><div class="cx-g-pt">要種什麼？</div><div class="seeds">' + list.map(function (k) {
         var c = CROPS[k];
         return '<button type="button" class="cx-g-seed" data-seed="' + k + '"' + (g.coins < c.cost ? ' disabled' : '') + '>' + plantSvg(k, 3) + '<span class="nm">' + (c.rare ? '✨' : '') + (c.seed || c.n) + '</span><span class="cx-muted">' + (c.tree ? dur(c.grow) + ' 結果，之後每 ' + dur(c.grow / 2) + ' 再收' : dur(c.grow) + ' · 收 ' + c.yield + c.unit) + '</span><span class="pr">🪙 ' + c.cost + '</span></button>';
@@ -1575,12 +1688,25 @@
     var el = document.createElement('div'); el.className = 'cx-sp'; el.innerHTML = '<div class="card">' + cardHtml(d, rec, true) + '<small>點一下關閉</small></div>';
     setTimeout(function () { ['click', 'touchend', 'pointerup'].forEach(function (ev) { el.addEventListener(ev, function (e) { e.stopPropagation(); if (el.parentNode) el.remove(); }); }); }, 350); document.body.appendChild(el);
   }
+  var DEX_RW = [[10, 50, '小小園丁'], [20, 100, '認真的園丁'], [35, 180, '花園達人'], [50, 280, '料理與花的收藏家'], [70, 450, '農場主人'], [0, 800, '全部收集！']];
+  function dexCount(g) {
+    var tot = ORDER.length + RECIPES.filter(function (r) { return !r.out; }).length, dd = g.dexDish || {};
+    var got = ORDER.filter(function (k) { return g.dex[k]; }).length + RECIPES.filter(function (r) { return !r.out && dd[r.k]; }).length;
+    return [got, tot];
+  }
+  function dexRwHtml(g) {
+    var ct = dexCount(g), got = ct[0], tot = ct[1], rw = g.dexRw || {};
+    return '<div class="cx-g-dexrw"><div class="bar"><i style="width:' + Math.round(got / tot * 100) + '%"></i></div><div class="t">圖鑑收集 <b>' + got + '</b> / ' + tot + '</div><div class="ms">' + DEX_RW.map(function (m) {
+      var need = m[0] || tot, done = rw[need], can = !done && got >= need;
+      return '<button type="button" class="' + (done ? 'done' : can ? 'can' : '') + '" data-dexrw="' + need + '"' + (can ? '' : ' disabled') + '><b>' + need + '</b><small>' + (done ? '✓ ' + m[2] : '🪙' + m[1]) + '</small></button>';
+    }).join('') + '</div></div>';
+  }
   function dexHtml(g) {
     var dd = g.dexDish || {};
     var rec = '<div class="cx-g-pt" style="margin-top:6px">食譜</div><div class="cx-g-dex">' + RECIPES.filter(function (r) { return !r.out; }).map(function (r) { var d = dd[r.k]; return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + dishSvg(r.k) + '<b>' + (d ? r.n : '？？？') + '</b><span class="cx-muted">' + (d ? '做過 ' + d.n + ' 次' : '還沒做過') + '</span></div>'; }).join('') + '</div>';
-    return cardsHtml(g) + '<div class="cx-g-pt" style="margin-top:10px">花與作物</div><div class="cx-g-dex">' + ORDER.map(function (k) {
+    return dexRwHtml(g) + cardsHtml(g) + '<div class="cx-g-pt" style="margin-top:10px">花與作物</div><div class="cx-g-dex">' + ORDER.map(function (k) {
       var c = CROPS[k], d = g.dex[k];
-      return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + plantSvg(k, 3) + '<b>' + (d ? c.n : '？？？') + '</b>' + (d && c.lang ? '<span class="lang">花語：' + c.lang + '</span>' : '') + '<span class="cx-muted">' + (d ? (c.rare ? '長出過 ' : '收成 ') + d.n + ' 次 · ' + (new Date(d.first).getMonth() + 1) + '/' + new Date(d.first).getDate() + ' 起' : c.rare ? '✨ 稀有色：把' + CROPS[c.base].n + '種在' + CROPS[c.pair].n + '旁邊，收成時有機會長出來' : dur(c.grow) + ' 長大') + '</span></div>';
+      return '<div class="cx-g-dx' + (d ? '' : ' no') + '">' + plantSvg(k, 3) + '<b>' + (d ? c.n : '？？？') + '</b>' + (d && c.lang ? '<span class="lang">花語：' + c.lang + '</span>' : '') + '<span class="cx-muted">' + (d && (c.night || c.season) ? (c.night ? '🌙 只在晚上 7 點後開花 · ' : '❄️ ' + c.seasonTxt + ' · ') : '') + (d ? (c.rare ? '長出過 ' : '收成 ') + d.n + ' 次 · ' + (new Date(d.first).getMonth() + 1) + '/' + new Date(d.first).getDate() + ' 起' : c.rare ? '✨ 稀有：把' + CROPS[c.base].n + '種在' + CROPS[c.pair].n + (c.pair2 ? '和' + CROPS[c.pair2].n : '') + '旁邊，收成時有機會長出來' : dur(c.grow) + ' 長大') + '</span></div>';
     }).join('') + '</div>' + rec;
   }
   /* ---------- 花束 ---------- */
@@ -1691,6 +1817,8 @@
     { k: 'applepie', n: '蘋果派', need: { apple: 3, wheat: 2, butter: 1, sugar: 1 }, price: 62 },
     { k: 'lemontart', n: '檸檬塔', need: { lemon: 2, wheat: 2, egg: 2, butter: 1, sugar: 1 }, price: 64 },
     { k: 'honeycake', n: '蜂蜜蛋糕', need: { honey: 2, egg: 2, wheat: 2, milk: 1 }, price: 60 },
+    { k: 'ginger', n: '薑餅人', need: { wheat: 2, butter: 1, honey: 1, egg: 1 }, price: 40, fest: 'xmas' },
+    { k: 'cocoa', n: '熱可可', need: { milk: 2, sugar: 1 }, price: 26, fest: 'xmas' },
     { k: 'mpudding', n: '芒果布丁', need: { mango: 2, milk: 2, sugar: 1 }, price: 48 },
     { k: 'msmoothie', n: '芒果冰沙', need: { mango: 2, milk: 1 }, price: 36 },
     { k: 'lice', n: '荔枝冰', need: { lychee: 4, sugar: 1 }, price: 40 },
@@ -1703,6 +1831,8 @@
     { k: 'fruitcake', n: '水果蛋糕', need: { strawberry: 2, momo: 2, orange: 2, blueberry: 3, wheat: 3, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 160 }
   ];
   var DISH_LINES = {
+    ginger: ['薑餅人！捨不得吃……先從腳開始咬好了。', '還有笑臉，跟妳一樣可愛。'],
+    cocoa: ['熱可可，上面還有棉花糖。', '坐過來，一起喝，外面好冷。'],
     mpudding: ['芒果布丁！滑滑嫩嫩的，上面還有芒果丁。', '一人一半？……好吧，妳吃大的那半。'],
     msmoothie: ['芒果冰沙，夏天就要喝這個。', '冰冰的，小心頭痛，慢慢喝。'],
     lice: ['荔枝冰……好香好甜，像初戀的味道。', '粉粉的，跟妳臉紅的時候一樣。'],
@@ -1813,7 +1943,8 @@
     if (made.length) h += '<div class="cx-g-pt">甜點盒</div>' + whoRow('端給') + made.map(function (r) {
       return '<div class="cx-g-item">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + '</b> × ' + g.dishes[r.k] + ((g.dishHelp || {})[r.k] ? ' <small class="cx-k-tag">🧑‍🍳 和' + esc(g.dishHelp[r.k]) + '一起做的</small>' : '') + '<div class="cx-muted">賣掉 🪙 ' + r.price + '</div></div><button type="button" class="cx-btn pri" data-dgift="' + r.k + '">端給' + (A.groupOn() ? '' : '他') + '</button><button type="button" class="cx-btn" data-dsell="' + r.k + '">賣</button></div>';
     }).join('');
-    h += '<div class="cx-g-pt">食譜</div><div class="cx-k-rec">' + RECIPES.map(function (r) {
+    var fNow = festNow();
+    h += '<div class="cx-g-pt">食譜</div><div class="cx-k-rec">' + RECIPES.filter(function (r) { return !r.fest || (fNow && fNow[0] === r.fest) || (g.dishes[r.k] > 0); }).map(function (r) {
       var ok = canCook(g, r);
       return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + (r.out ? '<small class="cx-muted">　放進食材櫃</small>' : '') + '</b><div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>做</button></div>';
     }).join('') + '</div>';
@@ -1869,9 +2000,9 @@
     if (idx >= 0 && c.flower && !c.rare) {
       var isl = Math.floor(idx / 9), j = idx % 9, r0 = Math.floor(j / 3), c0 = j % 3, nb = [];
       [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { var r1 = r0 + d[0], c1 = c0 + d[1]; if (r1 >= 0 && r1 < 3 && c1 >= 0 && c1 < 3) { var q = g.plots[isl * 9 + r1 * 3 + c1]; if (q && q.crop) nb.push(q.crop); } });
-      Object.keys(CROPS).forEach(function (rk) { var rc = CROPS[rk]; if (rc.rare && rc.base === k && nb.indexOf(rc.pair) >= 0 && Math.random() < .3) {
+      Object.keys(CROPS).forEach(function (rk) { var rc = CROPS[rk]; if (rc.rare && rc.base === k && nb.indexOf(rc.pair) >= 0 && (!rc.pair2 || nb.indexOf(rc.pair2) >= 0) && Math.random() < (rc.pair2 ? .2 : .3)) {
         g.inv[rk] = (g.inv[rk] || 0) + 1; var first = !g.dex[rk]; var d2 = g.dex[rk] || (g.dex[rk] = { n: 0, first: Date.now() }); d2.n++;
-        log(g, '✨ ' + c.n + '和' + CROPS[rc.pair].n + '種在一起，長出了一朵' + rc.n + '！'); hybridMsg = (first ? '✨ 第一次長出' : '✨ 長出了') + rc.n + '！'; hybridKey = rk; } });
+        log(g, '✨ ' + c.n + '和' + CROPS[rc.pair].n + (rc.pair2 ? '、' + CROPS[rc.pair2].n : '') + '種在一起，長出了一朵' + rc.n + '！'); hybridMsg = (first ? '✨ 第一次長出' : '✨ 長出了') + rc.n + '！'; hybridKey = rk; } });
     }
     if (c.tree) { p.prog = c.grow * .5; p.at = Date.now(); p.readyAt = 0; p.bug = false; p.yieldLeft = c.yield; }
     else { p.crop = null; p.bug = false; p.by = ''; p.readyAt = 0; }
@@ -1879,6 +2010,13 @@
   }
   function gClick(e) {
     var g = G(), now = Date.now(), b;
+    if ((b = e.target.closest('[data-dexrw]'))) {
+      var need = +b.dataset.dexrw, m = DEX_RW.filter(function (x) { return (x[0] || dexCount(g)[1]) === need; })[0]; g.dexRw = g.dexRw || {};
+      if (!m || g.dexRw[need] || dexCount(g)[0] < need) return;
+      g.dexRw[need] = Date.now(); g.coins += m[1]; log(g, '📖 圖鑑收集到 ' + need + ' 種，拿到 🪙' + m[1] + '（' + m[2] + '）'); save(); render();
+      if (!surprise('cb_me', '<div style="font-size:54px;line-height:1">📖</div>', '「' + m[2] + '」', '圖鑑收集到 ' + need + ' 種，拿到 🪙' + m[1])) toast('📖 ' + m[2] + '！拿到 🪙' + m[1], 'success');
+      return;
+    }
     if ((b = e.target.closest('[data-deco]'))) {
       var D = decoG(g), dk2 = b.dataset.deco, dd2 = DECOS[dk2];
       if (!D.own[dk2]) { if (g.coins < dd2[1]) return; g.coins -= dd2[1]; D.own[dk2] = 1; D.on[dk2] = 1; log(g, '🏡 買了' + dd2[0] + '擺在花園'); toast(dd2[0] + '擺好了！', 'success'); }
@@ -2357,7 +2495,7 @@
     rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
   var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
-  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['coat', '大衣'], ['win', '冬天'], ['formal', '正裝'], ['base', '居家內搭']];
+  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['coat', '大衣'], ['win', '冬天'], ['formal', '正裝'], ['xmas', '聖誕'], ['xmas2', '聖誕居家'], ['base', '居家內搭']];
   /* 這套衣服有沒有坐／走的圖；沒有就回傳 null */
   function hzPoseKey(who, kind, ok) {
     if (kind === 'sleep') return HZ_POSE[who].sleep;
@@ -2382,7 +2520,7 @@
   /* 這個人現在穿哪套：手動選的優先；自動＝晚上睡衣、冬天（6～8 月）毛衣 */
   function hzOutNow(who) {
     var k = hzOutGet()[who] || 'auto';
-    if (k === 'auto') { var mo = new Date().getMonth(); k = hzNight() ? 'pj' : (mo >= 5 && mo <= 7) ? 'win' : 'def'; }
+    if (k === 'auto') { var mo = new Date().getMonth(), fx = festNow(); k = hzNight() ? 'pj' : (fx && fx[0] === 'xmas' && HI('o_' + who + '_xmas')) ? 'xmas' : (mo >= 5 && mo <= 7) ? 'win' : 'def'; }
     if (who === 'cs' && k === 'formal') k = 'def';
     if (k === 'base' && hzRoom !== 'closet') k = 'def'; /* 居家內搭只在衣物間試穿，其他房間穿平常的 */
     return k;
@@ -2464,6 +2602,7 @@
       if (ok !== 'def' && HI('o_' + p[0] + '_' + ok)) { img = 'o_' + p[0] + '_' + ok; ci = 0; }
       var pk = kind !== 'stand' ? hzPoseKey(p[0], kind, ok) : null;
       if (pk && HI(pk)) { img = pk; ci = 0; h = kind === 'sleep' ? { cs: 14, me: 13, rm: 11.5 }[p[0]] : kind === 'work' ? 24 : 18; }
+      if (kind === 'sit' && R === 'cs' && at[0] === HZ_SPOT.cs.arm[0] && at[1] === HZ_SPOT.cs.arm[1]) flip = 1; // 扶手椅朝左，人也翻過來
       var wkk = hzPoseKey(p[0], 'walk', ok);
       if (wk && kind === 'stand' && wkk && HI(wkk)) { img = wkk; ci = 0; h = 23; flip = wk.to[0] < wk.from[0]; at = wk.from; }
       out.push({ iso: false, id: id, img: img, ci: ci, x: at[0], y: at[1], h: h, name: '', flip: flip, walk: wk && kind === 'stand' ? wk : null, sleep: kind === 'sleep' });
@@ -2489,12 +2628,14 @@
     if (!hz) return;
     var S = hzScene(), night = hzNight(), room = HZ_ROOMS.filter(function (r) { return r[0] === hzRoom; })[0], ri = HI(room[2]), bakeBed = hzRoom === 'bed' && ['me', 'cs', 'rm'].every(function (k) { return S.ppl[k] && S.ppl[k].kind === 'sleep'; }) && HI('r_bed_n'), bakeCs = hzRoom === 'cs' && S.ppl.cs && S.ppl.cs.kind === 'work' && hzOutNow('cs') === 'def' && HI('r_cs_w');
     if (bakeBed) ri = bakeBed; else if (bakeCs) ri = bakeCs;
+    var FST = festNow();
+    if (FST && hzRoom === 'living' && ri) { var fl = festImg(FST[0], 'living', hzRender); if (fl) ri = { w: ri.w, h: ri.h, src: fl }; }
     var cnt = {}; Object.keys(S.ppl).forEach(function (k) { cnt[S.ppl[k].room] = (cnt[S.ppl[k].room] || 0) + 1; }); Object.keys(S.cats).forEach(function (k) { cnt[S.cats[k][0]] = (cnt[S.cats[k][0]] || 0) + 1; });
     var mode = hzMode(), h = '<div class="hz-top"><div class="hz-tabs">' + HZ_ROOMS.map(function (r) { return '<button type="button" data-hzr="' + r[0] + '" class="' + (r[0] === hzRoom ? 'on' : '') + '">' + r[1] + (cnt[r[0]] ? '<i>' + cnt[r[0]] + '</i>' : '') + '</button>'; }).join('') + '</div>' +
       '<div class="hz-mode">' + [['auto', '自動'], ['day', '白天'], ['night', '晚上']].map(function (m) { return '<button type="button" data-hzm="' + m[0] + '" class="' + (mode === m[0] ? 'on' : '') + '">' + (m[0] === 'day' ? '☀️ ' : m[0] === 'night' ? '🌙 ' : '') + m[1] + '</button>'; }).join('') + '</div></div>';
     if (!ri) { hz.body.innerHTML = h + '<p class="cx-muted" style="text-align:center;padding:40px 0">家裡的東西搬進來中…</p>'; return; }
     var anv = hzAnniv();
-    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : '');
+    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : FST ? '<div class="hz-party hz-fest" style="font-size:14px;letter-spacing:2px;top:6px">' + FST[1] + '快樂</div>' : '');
     hzActors(S).forEach(function (a) {
       var im = a.ci ? CI(a.img) : HI(a.img); if (!im) return;
       var ghost = a.id.indexOf('p:') === 0 && (bakeBed || (bakeCs && a.id === 'p:cs'));
@@ -2517,7 +2658,7 @@
         HZ_OUT.filter(function (o) { return !(dw === 'cs' && o[0] === 'formal'); }).map(function (o) {
           var im = o[0] === 'auto' ? null : hzOutImg(dw, o[0]); if (o[0] !== 'auto' && !im) return '';
           return '<button type="button" class="it' + (cur === o[0] ? ' on' : '') + '" data-hzo="' + o[0] + '">' + (im ? '<img src="' + im.src + '" alt="">' : '<span class="au">🌙❄️</span>') + '<small>' + (dw === 'cs' && o[0] === 'def' ? '平常／正裝' : o[1]) + '</small></button>';
-        }).join('') + '</div><p class="cx-muted">「自動」：晚上換睡衣，6～8 月穿毛衣，其他時候穿平常的衣服。</p></div>';
+        }).join('') + '</div><p class="cx-muted">「自動」：晚上換睡衣，聖誕節穿聖誕裝，6～8 月穿毛衣，其他時候穿平常的衣服。</p></div>';
     }
     if (hz.sel) {
       var cn = hz.sel === 'fd' ? 'Fiddi 🧡' : '安安 🤍', fish = HI('i_fish'), kib = HI('i_kibble'), wand = HI('i_wand');
@@ -2608,6 +2749,72 @@
       if (vis) seen = true; else if (seen) { clearInterval(hzWB); fromHouse = false; if (!(hz && hz.isOpen())) houseOpen(); }
     }, 400);
   }
+  /* ================= 動態（哥哥們用農場和小窩的日常發的朋友圈） ================= */
+  var MM_WHO = [['cs', '昶司', 'cb_changsi'], ['rm', '仁彌', 'cb_renmi']];
+  var MM_CAT = [['fd_sleep', 'Fiddi 又睡著了，叫都叫不醒。'], ['fd_belly', 'Fiddi 翻肚子給我看，是要我摸嗎。'], ['fd_eat', 'Fiddi 吃飯的樣子好認真。'], ['an_box', '安安今天也住在紙箱裡。'], ['an_sit', '安安坐得好端正，像在等人。'], ['an_sleep', '安安睡著的時候最乖。'], ['an_stretch', '安安伸了一個超長的懶腰。']];
+  function mmPost(g, now) {
+    var w = pick(MM_WHO), kinds = [], c;
+    var flw = ORDER.filter(function (k) { return g.dex[k] && CROPS[k].flower && CI(k); });
+    if (flw.length) kinds.push(function () { var k = pick(flw); c = CROPS[k]; return { t: pick(['花園的' + c.n + '開了。' + (c.lang ? '花語是「' + c.lang + '」。' : ''), '今天幫忙澆了' + c.n + '，好香。', '摘了一朵' + c.n + '，等一下拿給她。']), img: 'c:' + k }; });
+    var fr = ORDER.filter(function (k) { return g.dex[k] && CROPS[k].tree && CI('f_' + k); });
+    if (fr.length) kinds.push(function () { var k = pick(fr); c = CROPS[k]; return { t: pick(['果園的' + c.n + '熟了，今天收了一籃。', c.n + '好甜，留了最好的給妳。', '在樹下吃' + c.n + '，風好舒服。']), img: 'c:f_' + k }; });
+    var ds = RECIPES.filter(function (r) { return (g.dishes || {})[r.k] > 0 && DI(r.k); });
+    if (ds.length) kinds.push(function () { var r = pick(ds); return { t: pick(['今天一起做了' + r.n + '。', r.n + '，看起來還不錯吧。', '晚餐是' + r.n + '，她說好吃。']) + ' ' + pick((DISH_LINES[r.k] || [''])), img: 'd:' + r.k }; });
+    kinds.push(function () { var m = pick(MM_CAT); return { t: m[1], img: 'h:' + m[0] }; });
+    var ani = allAni(g); if (ani.length) kinds.push(function () { var a = pick(ani), ty = a[0], im = ANI_IMG[ty]; return { t: pick(['牧場的' + (a[1].name || '小傢伙') + '今天很有精神。', '去看了一下' + (a[1].name || '牠們') + '，吃得好飽。', '餵完' + (ANIM[ty] ? ANIM[ty].n : '動物') + '了。']), img: CI(im) ? 'c:' + im : '' }; });
+    kinds.push(function () { return { t: pick(['週末在家，三個人窩在客廳，好舒服。', '今天哪裡都不去，就在家陪她。', '回家看到燈開著，就覺得很安心。']), img: 'h:r_living' }; });
+    var F = festNow(); if (F) kinds.push(function () { return { t: F[5], img: 'fest:' + F[0] }; });
+    var p = pick(kinds)();
+    var other = MM_WHO.filter(function (x) { return x !== w; })[0];
+    var m = { id: 'm' + now.toString(36) + Math.floor(Math.random() * 99), who: w[0], t: p.t, img: p.img, at: now, likes: Math.random() < .7 ? [other[0]] : [], cm: [] };
+    if (Math.random() < .5) m.cm.push({ w: other[0], t: hzLine(other[1]), at: now + 6e4 });
+    return m;
+  }
+  function mmTick(g) {
+    if (!g) return false; var now = Date.now(); g.moments = g.moments || [];
+    if (!g.momNext) { g.moments.unshift(mmPost(g, now - 3 * 36e5)); g.moments.unshift(mmPost(g, now - 6e5)); g.momNext = now + (3 + Math.random() * 5) * 36e5; return true; }
+    if (now < g.momNext) return false;
+    g.moments.unshift(mmPost(g, now)); g.moments = g.moments.slice(0, 60); g.momNext = now + (3 + Math.random() * 5) * 36e5; g.momUnread = (g.momUnread || 0) + 1; return true;
+  }
+  function mmImg(k) {
+    if (!k) return null; var i = k.indexOf(':'), t = k.slice(0, i), v = k.slice(i + 1);
+    if (t === 'c') return CI(v); if (t === 'd') return DI(v); if (t === 'h') return HI(v);
+    if (t === 'fest') { var u = festImg(v, 'farm', function () { mmRender(); }); return u ? { src: u } : null; }
+    return null;
+  }
+  function mmAgo(t) { var m = Math.round((Date.now() - t) / 6e4); return m < 1 ? '剛剛' : m < 60 ? m + ' 分鐘前' : m < 1440 ? Math.round(m / 60) + ' 小時前' : Math.round(m / 1440) + ' 天前'; }
+  var mm = null;
+  function momentsOpen() {
+    var g = G(); if (!g) return;
+    if (!mm) {
+      mm = A.makeModal('cx-mm-modal', 'fa-images', '動態');
+      mm.onBack = function () { mm.close(); homeOpen(); return true; };
+      mm.body.addEventListener('click', function (e) {
+        var g2 = G(), b = e.target.closest('[data-mml],[data-mmc]'); if (!b) return;
+        var m = (g2.moments || []).filter(function (x) { return x.id === (b.dataset.mml || b.dataset.mmc); })[0]; if (!m) return;
+        if (b.dataset.mml) { var i = m.likes.indexOf('me'); if (i >= 0) m.likes.splice(i, 1); else m.likes.push('me'); save(); mmRender(); return; }
+        var inp = mm.body.querySelector('[data-mmi="' + m.id + '"]'), tx = inp && inp.value.trim(); if (!tx) return;
+        m.cm.push({ w: 'me', t: tx, at: Date.now() }); save(); mmRender();
+        var wn = MM_WHO.filter(function (x) { return x[0] === m.who; })[0];
+        setTimeout(function () { var g3 = G(), m2 = (g3.moments || []).filter(function (x) { return x.id === m.id; })[0]; if (!m2) return; m2.cm.push({ w: m.who, t: '回覆 ' + A.myname() + '：' + hzLine(wn[1]), at: Date.now() }); save(); if (mm && mm.isOpen && mm.isOpen()) mmRender(); }, 2500 + Math.random() * 4000);
+      });
+      mm.body.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.dataset.mmi) { var bt = mm.body.querySelector('[data-mmc="' + e.target.dataset.mmi + '"]'); if (bt) bt.click(); } });
+    }
+    if (!window.__cxHIMG && !document.getElementById('cx-himg-js')) { var sc = document.createElement('script'); sc.id = 'cx-himg-js'; sc.src = 'homeimg.js'; sc.onload = function () { mmRender(); if (typeof hzRender === 'function' && hz) hzRender(); }; document.body.appendChild(sc); }
+    mmTick(g); g.momUnread = 0; save(); mmRender(); mm.open();
+  }
+  function mmName(w) { return w === 'me' ? A.myname() : (MM_WHO.filter(function (x) { return x[0] === w; })[0] || [0, w])[1]; }
+  function mmRender() {
+    var g = G(); if (!g || !mm) return;
+    mm.body.innerHTML = '<p class="cx-muted" style="text-align:center;margin:0 0 6px">哥哥們偶爾會發一下家裡和農場的日常</p>' + (g.moments || []).map(function (m) {
+      var w = MM_WHO.filter(function (x) { return x[0] === m.who; })[0], av = CI(w[2]), im = mmImg(m.img), liked = m.likes.indexOf('me') >= 0;
+      return '<div class="cx-mm"><div class="hd"><span class="av">' + (av ? '<img src="' + av.src + '" alt="">' : '') + '</span><div><b>' + w[1] + '</b><small>' + mmAgo(m.at) + '</small></div></div><div class="tx">' + esc(m.t) + '</div>' +
+        (im ? '<div class="pic"><img src="' + im.src + '" alt=""></div>' : '') +
+        '<div class="act"><button type="button" data-mml="' + m.id + '" class="' + (liked ? 'on' : '') + '">' + (liked ? '♥' : '♡') + ' ' + (m.likes.length || '') + '</button>' + (m.likes.length ? '<span class="lk">♥ ' + m.likes.map(mmName).join('、') + '</span>' : '') + '</div>' +
+        (m.cm.length ? '<div class="cm">' + m.cm.map(function (c) { return '<div><b>' + esc(mmName(c.w)) + '</b>：' + esc(c.t) + '</div>'; }).join('') + '</div>' : '') +
+        '<div class="in"><input data-mmi="' + m.id + '" maxlength="80" placeholder="留言…"><button type="button" data-mmc="' + m.id + '">送出</button></div></div>';
+    }).join('');
+  }
   function houseOpen() {
     clearInterval(hzWB);
     if (!hz) {
@@ -2651,11 +2858,11 @@
   }
   /* ================= 小窩 ================= */
   var APPS = [
-    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
+    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
     ['qa-function', 'fa-box-open', '問題箱'],
     ['cx-comp-entry', 'fa-headphones', '陪伴'], ['cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪'], ['cx-phone-entry', 'fa-mobile-screen', 'TA 的手機'], ['cx-rp-entry', 'fa-gift', '紅包'],
     ['cx-calllog-entry', 'fa-phone', '通話紀錄'], ['cx-pomo-entry', 'fa-clock', '番茄鐘'], ['cx-period-entry', 'fa-droplet', '潮汐'], ['mood-function', 'fa-face-smile', '心晴手帳'],
-    ['anniversary-function', 'fa-calendar-days', '重要日'], ['decision-function', 'fa-shuffle', '抉擇'], ['fortune-lenormand-function', 'fa-star', '運勢'], ['cx-rate-entry', 'fa-star-half-stroke', '他的評分'],
+    ['anniversary-function', 'fa-calendar-days', '重要日'], ['decision-function', 'fa-shuffle', '抉擇'], ['cx-dice-entry', 'fa-dice', '骰子'], ['cx-quiz-entry', 'fa-clipboard-question', '問卷'], ['cx-todo-entry', 'fa-list-check', '待辦'], ['cx-sleep-entry', 'fa-bed', '睡眠'], ['fortune-lenormand-function', 'fa-star', '運勢'], ['cx-rate-entry', 'fa-star-half-stroke', '他的評分'],
     ['cx-status-entry', 'fa-heart-pulse', '狀態檢測'], ['stats-function', 'fa-chart-simple', '訊息統計'], ['custom-replies-function', 'fa-comment-dots', '字卡'], ['cx-help-entry', 'fa-book-open', '使用手冊']
   ];
   var home = null;
@@ -2706,7 +2913,7 @@
 
   /* ---------- 圖示排列與資料夾 ---------- */
   var LKEY = 'cxHomeLayout', editing = false, openFolder = -1, suppressUntil = 0;
-  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
+  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
   function meta(id) { for (var i = 0; i < APPS.length; i++) if (APPS[i][0] === id) return APPS[i]; return [id, 'fa-circle', id]; }
   function getLayout() {
     var L = null; try { L = JSON.parse(lsGet(LKEY) || 'null'); } catch (e) {}
@@ -2745,6 +2952,7 @@
     if (id === 'garden') { A.load().then(function () { gOpen(true); }); return; }
     if (id === 'moyu') { A.load().then(moyuOpen); return; }
     if (id === 'house') { A.load().then(houseOpen); return; }
+    if (id === 'moments') { A.load().then(momentsOpen); return; }
     fromHome = true; wrapShow();
     var el = document.getElementById(id); if (el) el.click();
   }
@@ -2964,6 +3172,9 @@
     '.cx-k-r .need{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:11px;color:var(--text-secondary);margin-top:2px}.cx-k-r .need .en{color:#3f9e6a}.cx-k-r .cx-btn{padding:8px 14px}' +
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
+    '.cx-mm{background:#fff;border:1px solid #eee3d3;border-radius:16px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}.cx-mm .hd{display:flex;gap:10px;align-items:center}.cx-mm .hd .av{width:40px;height:40px;border-radius:50%;background:#f6efe4;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}.cx-mm .hd .av img{height:120%;margin-bottom:-14%}.cx-mm .hd div{display:flex;flex-direction:column}.cx-mm .hd small{color:#a8998a;font-size:11px}.cx-mm .tx{font-size:14px;line-height:1.6}.cx-mm .pic{border-radius:12px;background:#faf6ee;display:flex;justify-content:center;padding:8px}.cx-mm .pic img{max-height:200px;max-width:100%;object-fit:contain}.cx-mm .act{display:flex;align-items:center;gap:8px;font-size:12px;color:#b07a8a}.cx-mm .act button{border:1px solid #f0d9df;background:#fff;border-radius:99px;padding:2px 12px;color:#c0607a;font-size:14px}.cx-mm .act button.on{background:#fbe9ee}.cx-mm .cm{background:#faf6ee;border-radius:10px;padding:6px 10px;font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-mm .cm b{color:#8a6a52}.cx-mm .in{display:flex;gap:6px}.cx-mm .in input{flex:1;border:1px solid #e6dccb;border-radius:99px;padding:6px 12px;font-size:13px;min-width:0}.cx-mm .in button{border:0;background:#c9a77f;color:#fff;border-radius:99px;padding:0 14px;font-size:13px}' +
+    '.cx-g-dexrw{background:#faf6ee;border:1px solid #eadfcd;border-radius:14px;padding:10px 12px;margin-bottom:8px}.cx-g-dexrw .bar{height:8px;border-radius:99px;background:#eee4d4;overflow:hidden}.cx-g-dexrw .bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a77f,#e7a6b4)}.cx-g-dexrw .t{font-size:13px;margin:6px 0;color:#6b5848}.cx-g-dexrw .ms{display:flex;gap:6px;flex-wrap:wrap}.cx-g-dexrw .ms button{flex:1;min-width:52px;border:1px solid #e3d6c2;background:#fff;border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;font-size:12px;color:#9a8a7a}.cx-g-dexrw .ms button.can{background:#fff3d6;border-color:#e2b34a;color:#7a5a20;animation:hzz 1.6s ease-in-out infinite}.cx-g-dexrw .ms button.done{background:#eef5e8;color:#5f8a52}.cx-g-dexrw .ms small{font-size:10px}' +
+    '.cx-g-map{position:relative;border-radius:18px;overflow:hidden;background:#fbf8f1;border:1px solid #e6dccb}.cx-g-map svg{display:block;width:100%;height:auto}.cx-g-map .zone{cursor:pointer}.cx-g-map .zone polygon{fill:#fff;opacity:0;transition:opacity .2s}.cx-g-map .zone:hover polygon,.cx-g-map .zone:active polygon{opacity:.22}.cx-g-map .zone rect{fill:#fffaf2;stroke:#7a6252;stroke-width:2;opacity:.93}.cx-g-map .zone text{font-size:30px;font-weight:700;fill:#5b4636;text-anchor:middle}.cx-g-fest{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fffaf2e6;border:1px solid #e6c9b8;color:#b0433f;font-weight:700;font-size:13px;padding:4px 14px;border-radius:999px;z-index:1}.hz-fest{font-size:13px;color:#b0433f;font-weight:700}' +
     '#cx-garden-modal .cx-body>*{flex-shrink:0}.cx-g-stage{border-radius:18px;overflow:hidden;border:1px solid #c9dfbf;background:#e2eed8}.cx-g-stage.pan{overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scrollbar-width:none;cursor:grab}.cx-g-stage.pan::-webkit-scrollbar{display:none}.cx-g-stage.pan .cx-scene{max-width:none}.cx-g-pan{text-align:center;font-size:11.5px;margin:-4px 0 0}.cx-g-decobtn{align-self:center;padding:5px 14px;font-size:12.5px}.cx-deco{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}.cx-deco .it{border:1px solid var(--border-color);border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--primary-bg)}.cx-deco .it.on{border-color:var(--accent-color)}.cx-deco svg{width:56px;height:62px;overflow:visible}.cx-deco b{font-size:12.5px}.cx-deco .cx-btn{width:100%;justify-content:center;padding:4px 6px;font-size:11.5px}.cx-fence{display:flex;flex-wrap:wrap;gap:6px}.cx-fence button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:4px 10px 4px 6px;font:inherit;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer}.cx-fence button.on{border-color:var(--accent-color);box-shadow:0 0 0 1px var(--accent-color)}.cx-fence i{width:16px;height:16px;border-radius:50%;border:1px solid #7a6252}.cx-fence small{color:var(--text-secondary)}.cx-scene .cx-mill{animation:cxmill 6s linear infinite}@keyframes cxmill{to{transform:rotate(360deg)}}.cx-wx{font-size:12px;padding:6px 12px;border-radius:12px;background:#fff7dc;color:#8a6a2a;border:1px solid #f0dfa8}.cx-wx.rain{background:#e6eef8;color:#4f6a8a;border-color:#c6d6ea}.cx-wx.cloud{background:var(--secondary-bg);color:var(--text-secondary);border-color:var(--border-color)}.cx-scene .cx-rain{animation:cxrain .6s linear infinite}@keyframes cxrain{from{transform:translate(0,-10px)}to{transform:translate(-3px,10px)}}.cx-scene{display:block;width:100%;height:auto;-webkit-tap-highlight-color:transparent;user-select:none}' +
     '.cx-cd-cat{font-size:12.5px;color:var(--text-secondary);margin:8px 2px 4px}.cx-cds{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.cx-cd{background:#fffaf4;border:1px solid #eadfce;border-radius:14px;padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;cursor:pointer;color:#5a4a44}.cx-cd .im{display:flex;align-items:flex-end;justify-content:center;height:58px;gap:0}.cx-cd.gift .im{background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 90%27%3E%3Cpath d=%27M50 86 C10 58 0 38 8 20 C16 4 40 2 50 22 C60 2 84 4 92 20 C100 38 90 58 50 86Z%27 fill=%27%23fdf1f3%27/%3E%3C/svg%3E") center 40%/auto 92% no-repeat}.cx-cd.no .im{background:none}.cx-cd .im span{display:flex;align-items:flex-end;justify-content:center;height:100%}.cx-cd .im span.p{width:34px}.cx-cd .im span.o{width:26px;height:80%}.cx-cd.gift .im span.p+span.o{margin-left:2px}.cx-cd.gift .im span.o+span.p{margin-left:-3px}.cx-cd:not(.gift) .im{gap:3px}.cx-cd:not(.gift) .im span.o{width:34px;height:100%}.cx-cd .im img,.cx-cd .im svg{max-width:100%;max-height:100%;height:auto}.cx-cd .im svg{height:100%}.cx-cd b{font-size:11px;line-height:1.3}.cx-cd small{font-size:10px;color:#b3a59c}.cx-cd.no{cursor:default}.cx-cd.no .im{filter:grayscale(1) brightness(1.6) contrast(.35);opacity:.45}.cx-cd.no b{color:#b3a59c}.cx-cd.big{border:0;background:none;cursor:default;gap:6px}.cx-cd.big .im{height:150px;gap:0;width:auto}.cx-cd.big .im span.p{width:92px}.cx-cd.big .im span.o{width:70px;height:72%}.cx-cd.big.gift .im span.p+span.o{margin-left:6px}.cx-cd.big.gift .im span.o+span.p{margin-left:-8px}.cx-cd.big:not(.gift) .im{gap:6px;width:auto}.cx-cd.big:not(.gift) .im span.o,.cx-cd.big:not(.gift) .im span.o:last-child{width:96px;height:100%}.cx-cd.big .im span.o:last-child{width:84px;height:78%}.cx-cd.big b{font-size:16px}.cx-cd.big p{margin:0;font-size:13.5px;color:#7a6a62}.cx-cd.big small{font-size:12px}' +
     '.cx-g-item img.cx-fi{width:44px;height:42px;flex:0 0 44px;object-fit:contain}.cx-sellb{display:flex;flex-direction:column;gap:4px;align-items:stretch}.cx-sellb span{display:flex;gap:4px}.cx-g-item .cx-btn.sm{padding:4px 7px;font-size:11.5px}.cx-fb{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:6px}.cx-fb .it{border:1px solid var(--border-color);border-radius:14px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--primary-bg);text-align:center}.cx-fb img{width:84px;height:76px;object-fit:contain}.cx-fb b{font-size:13px}.cx-fb b small{color:var(--accent-color)}.cx-fb .nd{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}.cx-fb .nd span{font-size:10.5px;padding:1px 6px;border-radius:99px;background:var(--secondary-bg);color:var(--text-secondary)}.cx-fb .nd span.ok{color:#4f8a35;background:#eef6e6}.cx-fb .cx-btn{width:100%;justify-content:center;padding:6px;font-size:12.5px}.cx-fb .row{display:flex;gap:5px;width:100%}' +
@@ -2994,6 +3205,6 @@
 
   window.__cxHome = { open: homeOpen, close: homeClose, garden: function () { A.load().then(function () { gOpen(false); }); }, _sim: simulate, _G: G, _moyu: function () { launch('moyu'); }, _house: function () { launch('house'); }, _sp: function (w, t, l) { return surprise(w, '', t, l); } };
   if (lsGet('cxHomeFirst') === '1') setTimeout(homeOpen, 1200);
-  setInterval(function () { if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
+  setInterval(function () { if (document.visibilityState === 'visible' && A.X() && G() && mmTick(G())) save(); if (document.visibilityState === 'visible' && A.X()) { if (simulate(false)) { if (home && !home.hidden) homeRender(); } } }, 60000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') setTimeout(function () { if (A.X()) simulate(true); }, 4000); });
 })();
