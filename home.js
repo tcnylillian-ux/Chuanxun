@@ -47,6 +47,8 @@
     snowdrop:   { n: '雪花蓮',   rare: 1, cost: 35, base: 'lilyvalley', pair: 'whitelav',   grow: 240e3,  yield: 1, price: 75, col: '#f4f8f2', unit: '枝', flower: 1, lang: '冬天裡的希望', season: [5, 6, 7], seasonTxt: '只有 6～8 月（冬天）能種' },
     epiphyllum: { n: '曇花',     rare: 1, cost: 40, base: 'lotus',      pair: 'gardenia',   grow: 720e3,  yield: 1, price: 85, col: '#f2f4fb', unit: '朵', flower: 1, lang: '剎那的永恆', night: 1 },
     rainbowrose:{ n: '彩虹玫瑰', rare: 1, cost: 60, base: 'rose',       pair: 'bluerose', pair2: 'goldrose', grow: 1440e3, yield: 1, price: 150, col: '#e9a0c8', unit: '朵', flower: 1, lang: '無限的可能' },
+    scallion:   { n: '蔥',     cost: 3,  grow: 90e3,   yield: 4, price: 4,  col: '#7fb069', unit: '把' },
+    potato:     { n: '馬鈴薯', cost: 5,  grow: 180e3,  yield: 4, price: 6,  col: '#d9b77a', unit: '顆' },
     carrot:     { n: '胡蘿蔔', cost: 3,  grow: 60e3,   yield: 3, price: 4,  col: '#f08a3c', unit: '根' },
     wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
     blueberry:  { n: '藍莓',   seed: '藍莓叢', cost: 15, grow: 180e3, yield: 5, price: 5,  col: '#6f7fc0', unit: '顆', tree: 1 },
@@ -64,7 +66,7 @@
     lychee:     { n: '荔枝',   seed: '荔枝樹', cost: 32, grow: 540e3, yield: 6, price: 6,  col: '#e2626e', unit: '顆', tree: 1 },
     mango:      { n: '芒果',   seed: '芒果樹', cost: 34, grow: 600e3, yield: 3, price: 13, col: '#f4b03e', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'gypso', 'wheat', 'carrot', 'daisy', 'marigold', 'lagurus', 'tulip', 'forgetme', 'cornflower', 'carnation', 'oncidium', 'strawberry', 'tomato', 'gardenia', 'delph', 'lilyvalley', 'alstro', 'osmanthus', 'hydrangea', 'eustoma', 'sunflower', 'ranunc', 'peach', 'lily', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'statice', 'purplecarn', 'bluepoppy', 'blacktulip', 'pinkhydra', 'sakura', 'snowdrop', 'bluerose', 'goldrose', 'epiphyllum', 'rainbowrose'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'scallion', 'carrot', 'potato', 'daisy', 'marigold', 'lagurus', 'tulip', 'forgetme', 'cornflower', 'carnation', 'oncidium', 'strawberry', 'tomato', 'gardenia', 'delph', 'lilyvalley', 'alstro', 'osmanthus', 'hydrangea', 'eustoma', 'sunflower', 'ranunc', 'peach', 'lily', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'statice', 'purplecarn', 'bluepoppy', 'blacktulip', 'pinkhydra', 'sakura', 'snowdrop', 'bluerose', 'goldrose', 'epiphyllum', 'rainbowrose'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
@@ -1541,7 +1543,7 @@
     var F = festNow(), src = (F && festImg(F[0], 'farm', render)) || festImg('farm', '', render);
     if (!src) return '<p class="cx-muted" style="text-align:center;padding:40px 0">農場地圖載入中…</p>';
     var Z = [['c', '🐄 牧場', eg, '335,265 520,140 805,262 790,330 585,470 330,300', 560, 220], ['g', '🌷 花園', gr, '20,500 190,340 330,330 460,470 640,650 420,860 30,600', 250, 560], ['o', '🍑 果園', orr, '640,330 860,215 1095,320 1095,560 880,660 640,560', 880, 380]];
-    return '<div class="cx-g-map">' + (F ? '<div class="cx-g-fest">' + F[1] + '快樂 ✨</div>' : '') + '<svg viewBox="0 0 1100 1028" aria-label="農場地圖"><image href="' + src + '" x="0" y="0" width="1100" height="1028"/>' +
+    return '<div class="cx-g-map">' + '<svg viewBox="0 0 1100 1028" aria-label="農場地圖"><image href="' + src + '" x="0" y="0" width="1100" height="1028"/>' +
       Z.map(function (z) { return '<g class="zone" data-area="' + z[0] + '" role="button"><polygon points="' + z[3] + '"/><g transform="translate(' + z[4] + ' ' + z[5] + ')"><rect x="-78" y="-26" width="156" height="52" rx="26"/><text y="12">' + z[1] + (z[2] ? ' · ' + z[2] : '') + '</text></g></g>'; }).join('') +
       '</svg></div><p class="cx-muted cx-g-pan">點一個區域進去照顧它</p>';
   }
@@ -1799,45 +1801,58 @@
   }
 
   /* ================= 廚房 ================= */
-  var PANTRY = { egg: ['雞蛋', 3, 2], milk: ['牛奶', 4, 3], butter: ['奶油', 5, 4], honey: ['蜂蜜', 7, 5], sugar: ['糖', 2, 1] };
+  var PANTRY = { egg: ['雞蛋', 3, 2], milk: ['牛奶', 4, 3], honey: ['蜂蜜', 7, 5], butter: ['奶油', 5, 4], sugar: ['糖', 2, 1], flour: ['麵粉', 8, 4], noodle: ['麵條', 10, 5], steak: ['牛排肉', 18, 9] };
+  var PAN_GRP = [['牧場', ['egg', 'milk', 'honey']], ['乾貨', ['flour', 'sugar', 'butter', 'noodle']], ['市集', ['steak']]];
   var RECIPES = [
-    { k: 'cookie', n: '薰衣草餅乾', need: { lavender: 2, wheat: 2, butter: 1, sugar: 1 }, price: 30 },
+    { k: 'flour', n: '磨麵粉', need: { wheat: 2 }, price: 0, out: 'flour', mill: 1, cat: 'prep' },
+    { k: 'noodle', n: '手工麵條', need: { flour: 1, egg: 1 }, price: 0, out: 'noodle', outN: 2, cat: 'prep' },
+    { k: 'tnoodle', n: '番茄雞蛋麵', need: { noodle: 1, tomato: 2, egg: 1 }, price: 42, cat: 'main', love: '昶司' },
+    { k: 'cpasta', n: '奶油義大利麵', need: { noodle: 1, butter: 1, milk: 1 }, price: 45, cat: 'main', love: '昶司' },
+    { k: 'snoodle', n: '蔥油拌麵', need: { noodle: 1, scallion: 2 }, price: 34, cat: 'main', love: '昶司' },
+    { k: 'steakd', n: '香煎牛排', need: { steak: 1, butter: 1 }, price: 60, cat: 'main', love: '昶司' },
+    { k: 'steakmash', n: '牛排佐馬鈴薯泥', need: { steak: 1, potato: 2, butter: 1, milk: 1 }, price: 80, cat: 'main', love: '昶司' },
+    { k: 'cookie', n: '薰衣草餅乾', need: { lavender: 2, flour: 1, butter: 1, sugar: 1 }, price: 30 },
     { k: 'tomegg', n: '番茄炒蛋', need: { tomato: 2, egg: 2 }, price: 30 },
     { k: 'teaegg', n: '茶葉蛋', need: { egg: 4 }, price: 18 },
     { k: 'tamago', n: '玉子燒', need: { egg: 4, sugar: 1 }, price: 26 },
     { k: 'pudding', n: '雞蛋布丁', need: { egg: 3, milk: 2, sugar: 1 }, price: 34 },
-    { k: 'eggtart', n: '蛋塔', need: { egg: 3, wheat: 2, butter: 1, sugar: 1 }, price: 42 },
+    { k: 'eggtart', n: '蛋塔', need: { egg: 3, flour: 1, butter: 1, sugar: 1 }, price: 42 },
     { k: 'jelly', n: '橘子果凍', need: { orange: 3, sugar: 1 }, price: 42 },
-    { k: 'osm', n: '桂花糕', need: { osmanthus: 3, wheat: 2, sugar: 1 }, price: 45 },
-    { k: 'muffin', n: '藍莓馬芬', need: { blueberry: 5, wheat: 2, egg: 1, milk: 1 }, price: 55 },
-    { k: 'tart', n: '桃子塔', need: { momo: 3, wheat: 2, butter: 1, sugar: 1 }, price: 65 },
-    { k: 'cake', n: '草莓蛋糕', need: { strawberry: 4, wheat: 2, egg: 2, milk: 1, sugar: 1 }, price: 70 },
-    { k: 'pie', n: '櫻桃派', need: { cherry: 6, wheat: 2, butter: 1, sugar: 1 }, price: 72 },
+    { k: 'osm', n: '桂花糕', need: { osmanthus: 3, flour: 1, sugar: 1 }, price: 45 },
+    { k: 'muffin', n: '藍莓馬芬', need: { blueberry: 5, flour: 1, egg: 1, milk: 1 }, price: 55 },
+    { k: 'tart', n: '桃子塔', need: { momo: 3, flour: 1, butter: 1, sugar: 1 }, price: 65 },
+    { k: 'cake', n: '草莓蛋糕', need: { strawberry: 4, flour: 1, egg: 2, milk: 1, sugar: 1 }, price: 70 },
+    { k: 'pie', n: '櫻桃派', need: { cherry: 6, flour: 1, butter: 1, sugar: 1 }, price: 72 },
     { k: 'butterX', n: '自製奶油', need: { milk: 2 }, out: 'butter', price: 0 },
-    { k: 'carrotcake', n: '胡蘿蔔蛋糕', need: { carrot: 3, wheat: 2, egg: 2, sugar: 1 }, price: 60 },
+    { k: 'carrotcake', n: '胡蘿蔔蛋糕', need: { carrot: 3, flour: 1, egg: 2, sugar: 1 }, price: 60 },
     { k: 'sjam', n: '草莓果醬', need: { strawberry: 4, sugar: 1 }, price: 30 },
     { k: 'bjam', n: '藍莓果醬', need: { blueberry: 5, sugar: 1 }, price: 34 },
     { k: 'honeylemon', n: '蜂蜜檸檬水', need: { lemon: 1, honey: 1 }, price: 22 },
     { k: 'pearsoup', n: '冰糖燉梨', need: { pear: 2, sugar: 1 }, price: 30 },
     { k: 'grapejelly', n: '葡萄果凍', need: { grape: 2, sugar: 1 }, price: 38 },
     { k: 'driedpers', n: '柿餅', need: { persimmon: 4 }, price: 40 },
-    { k: 'applepie', n: '蘋果派', need: { apple: 3, wheat: 2, butter: 1, sugar: 1 }, price: 62 },
-    { k: 'lemontart', n: '檸檬塔', need: { lemon: 2, wheat: 2, egg: 2, butter: 1, sugar: 1 }, price: 64 },
-    { k: 'honeycake', n: '蜂蜜蛋糕', need: { honey: 2, egg: 2, wheat: 2, milk: 1 }, price: 60 },
-    { k: 'ginger', n: '薑餅人', need: { wheat: 2, butter: 1, honey: 1, egg: 1 }, price: 40, fest: 'xmas' },
+    { k: 'applepie', n: '蘋果派', need: { apple: 3, flour: 1, butter: 1, sugar: 1 }, price: 62 },
+    { k: 'lemontart', n: '檸檬塔', need: { lemon: 2, flour: 1, egg: 2, butter: 1, sugar: 1 }, price: 64 },
+    { k: 'honeycake', n: '蜂蜜蛋糕', need: { honey: 2, egg: 2, flour: 1, milk: 1 }, price: 60 },
+    { k: 'ginger', n: '薑餅人', need: { flour: 1, butter: 1, honey: 1, egg: 1 }, price: 40, fest: 'xmas' },
     { k: 'cocoa', n: '熱可可', need: { milk: 2, sugar: 1 }, price: 26, fest: 'xmas' },
     { k: 'mpudding', n: '芒果布丁', need: { mango: 2, milk: 2, sugar: 1 }, price: 48 },
     { k: 'msmoothie', n: '芒果冰沙', need: { mango: 2, milk: 1 }, price: 36 },
     { k: 'lice', n: '荔枝冰', need: { lychee: 4, sugar: 1 }, price: 40 },
-    { k: 'bcake', n: '香蕉蛋糕', need: { banana: 3, wheat: 2, egg: 2, butter: 1 }, price: 60 },
-    { k: 'figtart', n: '無花果塔', need: { fig: 3, wheat: 2, butter: 1, milk: 1, sugar: 1 }, price: 70 },
+    { k: 'bcake', n: '香蕉蛋糕', need: { banana: 3, flour: 1, egg: 2, butter: 1 }, price: 60 },
+    { k: 'figtart', n: '無花果塔', need: { fig: 3, flour: 1, butter: 1, milk: 1, sugar: 1 }, price: 70 },
     { k: 'psoda', n: '百香果氣泡飲', need: { passion: 2, honey: 1 }, price: 32 },
     { k: 'ojam', n: '橘子果醬', need: { orange: 4, sugar: 1 }, price: 38 },
     { k: 'appletea', n: '蘋果肉桂茶', need: { apple: 2, honey: 1 }, price: 28 },
-    { k: 'bmuffin2', n: '藍莓杯子蛋糕', need: { blueberry: 4, wheat: 2, egg: 1, milk: 1, sugar: 1 }, price: 58 },
-    { k: 'fruitcake', n: '水果蛋糕', need: { strawberry: 2, momo: 2, orange: 2, blueberry: 3, wheat: 3, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 160 }
+    { k: 'bmuffin2', n: '藍莓杯子蛋糕', need: { blueberry: 4, flour: 1, egg: 1, milk: 1, sugar: 1 }, price: 58 },
+    { k: 'fruitcake', n: '水果蛋糕', need: { strawberry: 2, momo: 2, orange: 2, blueberry: 3, flour: 2, egg: 2, milk: 1, butter: 1, sugar: 1 }, price: 160 }
   ];
   var DISH_LINES = {
+    tnoodle: ['番茄雞蛋麵，家的味道。', '湯我也要喝完。'],
+    cpasta: ['奶油義大利麵，好香好濃。', '妳也吃一口，我捲給妳。'],
+    snoodle: ['蔥油拌麵，香到隔壁都聞得到。', '簡單的最好吃。'],
+    steakd: ['煎得剛剛好，五分熟。', '今天是什麼好日子？'],
+    steakmash: ['牛排配薯泥……妳是要把我寵壞嗎。', '切一塊給妳，張嘴。'],
     ginger: ['薑餅人！捨不得吃……先從腳開始咬好了。', '還有笑臉，跟妳一樣可愛。'],
     cocoa: ['熱可可，上面還有棉花糖。', '坐過來，一起喝，外面好冷。'],
     mpudding: ['芒果布丁！滑滑嫩嫩的，上面還有芒果丁。', '一人一半？……好吧，妳吃大的那半。'],
@@ -1876,7 +1891,16 @@
   };
   function iname(k) { return CROPS[k] ? CROPS[k].n : PANTRY[k] ? PANTRY[k][0] : k; }
   function haveN(g, k) { return PANTRY[k] ? (g.pantry[k] || 0) : (g.inv[k] || 0); }
-  function canCook(g, r) { return Object.keys(r.need).every(function (k) { return haveN(g, k) >= r.need[k]; }); }
+  function hasMill(g) { return !!((g.deco || {}).own || {}).windmill; }
+  function canCook(g, r) { return (!r.mill || hasMill(g)) && Object.keys(r.need).every(function (k) { return haveN(g, k) >= r.need[k]; }); }
+  var REC_CAT = { cookie: 'bake', eggtart: 'bake', osm: 'bake', muffin: 'bake', tart: 'bake', cake: 'bake', pie: 'bake', carrotcake: 'bake', applepie: 'bake', lemontart: 'bake', honeycake: 'bake', ginger: 'bake', bcake: 'bake', figtart: 'bake', bmuffin2: 'bake', fruitcake: 'bake',
+    pudding: 'cold', jelly: 'cold', grapejelly: 'cold', mpudding: 'cold', msmoothie: 'cold', lice: 'cold',
+    tomegg: 'home', teaegg: 'home', tamago: 'home', pearsoup: 'home', driedpers: 'home',
+    sjam: 'drink', bjam: 'drink', ojam: 'drink', honeylemon: 'drink', cocoa: 'drink', psoda: 'drink', appletea: 'drink', butterX: 'prep' };
+  var KCATS = [['can', '✅ 現在能做'], ['all', '全部'], ['prep', '🌾 備料'], ['main', '🍝 正餐'], ['home', '🥚 家常'], ['bake', '🍰 烘焙'], ['cold', '🍮 冰品果凍'], ['drink', '🫙 果醬飲品']], kCat = 'all';
+  function recCat(r) { return r.cat || REC_CAT[r.k] || 'home'; }
+  function loveOf(r) { return r.love || ((recCat(r) === 'bake' || recCat(r) === 'cold') ? '仁彌' : ''); }
+  var LOVE_LINES = { '昶司': ['……妳記得我喜歡這個。', '這個我可以吃三碗。', '好吃，比外面的都好吃。', '妳做的，我一口都不會剩。'], '仁彌': ['甜的！我最喜歡了！', '妳怎麼知道我想吃甜點～', '再一個好不好，一個就好。', '好幸福，甜到心裡了。'] };
   function dishArt(k) {
     var o = '<ellipse cx="30" cy="46" rx="22" ry="5" fill="#f4efe6" stroke="' + INK + '" stroke-width=".6"/><ellipse cx="30" cy="45.4" rx="17" ry="3.4" fill="#e9e1d2" fill-opacity=".7"/>';
     var cream = '#fff7ea';
@@ -1938,10 +1962,10 @@
   var kitHelp = '', COOK_LINES = ['妳負責攪拌，我負責偷吃。', '圍裙綁好了，過來，我幫妳把頭髮紮起來。', '第一口給妳，小心燙。', '下次還要一起做，好不好？', '手上沾到麵粉了……別動，我幫妳擦。'];
   function kitchenHtml(g) {
     g.pantry = g.pantry || {}; g.dishes = g.dishes || {};
-    var h = '<div class="cx-g-pt">食材櫃<span class="cx-muted">　蛋去牧場撿；牛奶可以擠，也能做成奶油</span></div><div class="cx-k-pan">' + Object.keys(PANTRY).map(function (k) {
-      var pim = { egg: 'egg', milk: 'milk', honey: 'honey' }[k], dim = k === 'butter' ? DI('butterX') : k === 'sugar' ? DI('sugar') : null;
+    var h = '<div class="cx-g-pt">食材櫃<span class="cx-muted">　小麥放進風車磨成麵粉；麵粉加蛋做麵條</span></div>' + PAN_GRP.map(function (G0) { return '<div class="cx-k-pg">' + G0[0] + '</div><div class="cx-k-pan">' + G0[1].map(function (k) {
+      var pim = { egg: 'egg', milk: 'milk', honey: 'honey' }[k], dim = k === 'butter' ? DI('butterX') : (k === 'sugar' || k === 'flour' || k === 'noodle' || k === 'steak') ? DI(k) : null;
       return '<div class="it">' + (dim ? '<img src="' + dim.src + '" alt="" style="height:30px;width:auto">' : '') + (pim && FI(pim) ? '<img src="' + FI(pim).src + '" alt="" style="height:30px;width:auto">' : '') + '<b>' + PANTRY[k][0] + '</b><span>' + (g.pantry[k] || 0) + '</span><button type="button" class="cx-btn" data-buy="' + k + '"' + (g.coins < PANTRY[k][1] ? ' disabled' : '') + '>買 🪙' + PANTRY[k][1] + '</button><button type="button" class="cx-btn" data-psell="' + k + '"' + ((g.pantry[k] || 0) > 0 ? '' : ' disabled') + '>賣 🪙' + PANTRY[k][2] + '</button></div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>'; }).join('');
     var extra = ['egg', 'milk', 'butter', 'honey'].reduce(function (s2, k) { return s2 + (g.pantry[k] || 0) * PANTRY[k][2]; }, 0);
     if (extra) h += '<div class="cx-g-acts" style="margin-top:6px"><button type="button" class="cx-btn" data-ga="psellAll">蛋、奶、蜂蜜全部賣掉 🪙' + extra + '</button></div>';
     var made = RECIPES.filter(function (r) { return g.dishes[r.k] > 0; });
@@ -1951,9 +1975,12 @@
       return '<div class="cx-g-item">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + '</b> × ' + g.dishes[r.k] + ((g.dishHelp || {})[r.k] ? ' <small class="cx-k-tag">🧑‍🍳 和' + esc(g.dishHelp[r.k]) + '一起做的</small>' : '') + '<div class="cx-muted">賣掉 🪙 ' + r.price + '</div></div><button type="button" class="cx-btn pri" data-dgift="' + r.k + '">端給' + (A.groupOn() ? '' : '他') + '</button><button type="button" class="cx-btn" data-dsell="' + r.k + '">賣</button></div>';
     }).join('');
     var fNow = festNow();
-    h += '<div class="cx-g-pt">食譜</div><div class="cx-k-rec">' + RECIPES.filter(function (r) { return !r.fest || (fNow && fNow[0] === r.fest) || (g.dishes[r.k] > 0); }).map(function (r) {
-      var ok = canCook(g, r);
-      return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.k) + '<div class="tx"><b>' + r.n + (r.out ? '<small class="cx-muted">　放進食材櫃</small>' : '') + '</b><div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>做</button></div>';
+    var vis = RECIPES.filter(function (r) { return !r.fest || (fNow && fNow[0] === r.fest) || (g.dishes[r.k] > 0); });
+    h += '<div class="cx-g-pt">食譜</div><div class="cx-k-cat">' + KCATS.map(function (c) { var n = c[0] === 'all' ? vis.length : c[0] === 'can' ? vis.filter(function (r) { return canCook(g, r); }).length : vis.filter(function (r) { return recCat(r) === c[0]; }).length; return '<button type="button" data-kcat="' + c[0] + '" class="' + (kCat === c[0] ? 'on' : '') + '">' + c[1] + ' <small>' + n + '</small></button>'; }).join('') + '</div>';
+    var show = vis.filter(function (r) { return kCat === 'all' ? true : kCat === 'can' ? canCook(g, r) : recCat(r) === kCat; });
+    h += '<div class="cx-k-rec">' + (show.length ? '' : '<p class="cx-muted" style="text-align:center;padding:14px 0">' + (kCat === 'can' ? '材料還不夠做任何一道，去收成或買點食材吧。' : '這類還沒有食譜。') + '</p>') + show.map(function (r) {
+      var ok = canCook(g, r), lv = loveOf(r);
+      return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.out && r.out !== 'butter' ? r.out : r.k) + '<div class="tx"><b>' + r.n + (lv ? ' <small class="cx-k-love">❤ ' + lv + '最愛</small>' : '') + (r.out ? '<small class="cx-muted">　放進食材櫃' + (r.outN > 1 ? ' ×' + r.outN : '') + '</small>' : '') + '</b>' + (r.mill && !hasMill(g) ? '<div class="cx-muted" style="font-size:11px">要先在花園佈置裡蓋小風車</div>' : '') + '<div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>' + (r.mill ? '磨' : '做') + '</button></div>';
     }).join('') + '</div>';
     return h;
   }
@@ -1967,10 +1994,11 @@
     }
     if ((b = e.target.closest('[data-buy]'))) { var k = b.dataset.buy; if (g.coins >= PANTRY[k][1]) { g.coins -= PANTRY[k][1]; g.pantry[k] = (g.pantry[k] || 0) + 1; save(); render(); } return true; }
     if ((b = e.target.closest('[data-khelp]'))) { kitHelp = b.dataset.khelp; render(); return true; }
+    if ((b = e.target.closest('[data-kcat]'))) { kCat = b.dataset.kcat; render(); return true; }
     if ((b = e.target.closest('[data-cook]'))) {
       var r = RECIPES.find(function (x) { return x.k === b.dataset.cook; }); if (!r || !canCook(g, r)) return true;
       Object.keys(r.need).forEach(function (k) { if (PANTRY[k]) g.pantry[k] -= r.need[k]; else g.inv[k] -= r.need[k]; });
-      if (r.out) { g.pantry[r.out] = (g.pantry[r.out] || 0) + 1; log(g, '🧈 做了一塊' + r.n); save(); toast(r.n + '放進食材櫃了', 'success'); render(); return true; }
+      if (r.out) { var on = r.outN || 1; g.pantry[r.out] = (g.pantry[r.out] || 0) + on; log(g, (r.mill ? '🌾 風車磨好了 ' : '🧈 做好了 ') + on + ' 份' + PANTRY[r.out][0]); save(); toast((r.mill ? '風車轉呀轉，' : '') + PANTRY[r.out][0] + ' +' + on + '，放進食材櫃了', 'success'); render(); return true; }
       g.dishes[r.k] = (g.dishes[r.k] || 0) + 1; g.dexDish = g.dexDish || {}; var dd = g.dexDish[r.k] || (g.dexDish[r.k] = { n: 0, first: Date.now() }); dd.n++;
       tick(g, 'cook');
       if (kitHelp) { g.dishHelp = g.dishHelp || {}; g.dishHelp[r.k] = kitHelp; log(g, '🧑‍🍳 和' + kitHelp + '一起做了一份' + r.n); save(); render();
@@ -1983,7 +2011,8 @@
       var to = A.groupOn() ? (giftTo || A.pname()) : A.pname(), who = (to === A.pname() && !A.groupOn()) ? '你' : to;
       g.dishes[r3.k]--; tick(g, 'gift'); log(g, '🍽 端了一份' + r3.n + '給 ' + to); save(); render();
       var own = A.charGroup ? (A.charGroup(to) || []) : [], pool = DISH_LINES[r3.k].filter(function (t) { return recentGift.indexOf(t) < 0; });
-      var reply = own.length && Math.random() < .25 ? pick(own) : pick(pool.length ? pool : DISH_LINES[r3.k]); recentGift.push(reply); if (recentGift.length > 4) recentGift.shift();
+      var reply = own.length && Math.random() < .25 ? pick(own) : pick(pool.length ? pool : DISH_LINES[r3.k]);
+      var lv3 = loveOf(r3); if (lv3 && (to === lv3 || (!A.groupOn() && A.pname() === lv3)) && Math.random() < .6) reply = pick(LOVE_LINES[lv3]) + reply; recentGift.push(reply); if (recentGift.length > 4) recentGift.shift();
       svgPng(dishSvg(r3.k, true), 360, 336).then(function (img) {
         if (img && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: 'user', text: '', image: img, timestamp: new Date(), status: 'sent', favorited: false, note: null, type: 'normal' });
         A.iSay('（端了一份' + r3.n + '給' + who + '）');
@@ -2643,7 +2672,7 @@
       '<div class="hz-mode">' + [['auto', '自動'], ['day', '白天'], ['night', '晚上']].map(function (m) { return '<button type="button" data-hzm="' + m[0] + '" class="' + (mode === m[0] ? 'on' : '') + '">' + (m[0] === 'day' ? '☀️ ' : m[0] === 'night' ? '🌙 ' : '') + m[1] + '</button>'; }).join('') + '</div></div>';
     if (!ri) { hz.body.innerHTML = h + '<p class="cx-muted" style="text-align:center;padding:40px 0">家裡的東西搬進來中…</p>'; return; }
     var anv = hzAnniv();
-    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : FST ? '<div class="hz-party hz-fest" style="font-size:14px;letter-spacing:2px;top:6px">' + FST[1] + '快樂</div>' : '');
+    h += '<div class="hz-stage' + (night ? ' night' : '') + '" style="aspect-ratio:' + ri.w + '/' + ri.h + '"><img class="hz-room" src="' + ri.src + '" alt="">' + (anv ? '<div class="hz-party">🎉🎈💐🎈🎉</div>' : '');
     hzActors(S).forEach(function (a) {
       var im = a.ci ? CI(a.img) : HI(a.img); if (!im) return;
       var ghost = a.id.indexOf('p:') === 0 && (bakeBed || (bakeCs && a.id === 'p:cs'));
@@ -3189,6 +3218,7 @@
     '.cx-k-r .need{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:11px;color:var(--text-secondary);margin-top:2px}.cx-k-r .need .en{color:#3f9e6a}.cx-k-r .cx-btn{padding:8px 14px}' +
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
+    '.cx-k-cat{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.cx-k-cat button{flex-shrink:0;border:1px solid #e6dccb;background:#fff;border-radius:99px;padding:4px 11px;font-size:12px;color:#7a6a5a;white-space:nowrap}.cx-k-cat button.on{background:#c9a77f;color:#fff;border-color:transparent}.cx-k-cat small{opacity:.7}.cx-k-pg{font-size:12px;color:#a08a74;margin:6px 0 2px}.cx-k-love{font-size:11px;color:#d0607a;font-weight:600}' +
     '.cx-mm-set{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;font-size:12px;color:#8a7a6a}.cx-mm-set div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.cx-mm-set span{min-width:44px}.cx-mm-set button{border:1px solid #e6dccb;background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;color:#7a6a5a}.cx-mm-set button.on{background:#c9a77f;color:#fff;border-color:transparent}' +
     '.cx-mm{background:#fff;border:1px solid #eee3d3;border-radius:16px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}.cx-mm .hd{display:flex;gap:10px;align-items:center}.cx-mm .hd .av{width:40px;height:40px;border-radius:50%;background:#f6efe4;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}.cx-mm .hd .av img{height:120%;margin-bottom:-14%}.cx-mm .hd div{display:flex;flex-direction:column}.cx-mm .hd small{color:#a8998a;font-size:11px}.cx-mm .tx{font-size:14px;line-height:1.6}.cx-mm .pic{border-radius:12px;background:#faf6ee;display:flex;justify-content:center;padding:8px}.cx-mm .pic img{max-height:200px;max-width:100%;object-fit:contain}.cx-mm .act{display:flex;align-items:center;gap:8px;font-size:12px;color:#b07a8a}.cx-mm .act button{border:1px solid #f0d9df;background:#fff;border-radius:99px;padding:2px 12px;color:#c0607a;font-size:14px}.cx-mm .act button.on{background:#fbe9ee}.cx-mm .cm{background:#faf6ee;border-radius:10px;padding:6px 10px;font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-mm .cm b{color:#8a6a52}.cx-mm .in{display:flex;gap:6px}.cx-mm .in input{flex:1;border:1px solid #e6dccb;border-radius:99px;padding:6px 12px;font-size:13px;min-width:0}.cx-mm .in button{border:0;background:#c9a77f;color:#fff;border-radius:99px;padding:0 14px;font-size:13px}' +
     '.cx-g-dexrw{background:#faf6ee;border:1px solid #eadfcd;border-radius:14px;padding:10px 12px;margin-bottom:8px}.cx-g-dexrw .bar{height:8px;border-radius:99px;background:#eee4d4;overflow:hidden}.cx-g-dexrw .bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a77f,#e7a6b4)}.cx-g-dexrw .t{font-size:13px;margin:6px 0;color:#6b5848}.cx-g-dexrw .ms{display:flex;gap:6px;flex-wrap:wrap}.cx-g-dexrw .ms button{flex:1;min-width:52px;border:1px solid #e3d6c2;background:#fff;border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;font-size:12px;color:#9a8a7a}.cx-g-dexrw .ms button.can{background:#fff3d6;border-color:#e2b34a;color:#7a5a20;animation:hzz 1.6s ease-in-out infinite}.cx-g-dexrw .ms button.done{background:#eef5e8;color:#5f8a52}.cx-g-dexrw .ms small{font-size:10px}' +

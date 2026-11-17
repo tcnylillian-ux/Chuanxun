@@ -2669,10 +2669,13 @@
         if (b.id === 'cx-sl-cancel') { X.sleep.cur = 0; await save(); sleepRender(); return; }
         if (b.dataset.slq) {
           var st = X.sleep.cur, en = Date.now(); if (!st) return;
+          var wv = (slM.body.querySelector('#cx-sl-wake') || {}).value;
+          if (wv) { var hm2 = wv.split(':'), wd = new Date(); wd.setHours(+hm2[0], +hm2[1], 0, 0); if (wd.getTime() > Date.now() + 6e4) wd.setDate(wd.getDate() - 1); if (wd.getTime() > st) en = Math.min(Date.now(), wd.getTime()); }
           X.sleep.log.unshift({ s: st, e: en, q: +b.dataset.slq }); X.sleep.log = X.sleep.log.slice(0, 120); X.sleep.cur = 0; await save();
           var hrs = (en - st) / 36e5, w2 = pick(who1()).name, ln = pick(SLEEP_MORN) + (hrs < 6 ? '只睡了 ' + hrs.toFixed(1) + ' 小時，今天早點睡好不好？' : hrs > 9.5 ? '睡了好久，小懶豬。' : '');
           sayAs(w2 === pname() ? null : w2, ln); sleepRender(); return;
         }
+        if (b.dataset.slfix != null) { var R0 = X.sleep.log[+b.dataset.slfix], inp = slM.body.querySelector('[data-slfixv="' + b.dataset.slfix + '"]'); if (!R0 || !inp || !inp.value) return; var p2 = inp.value.split(':'), d2 = new Date(R0.e); d2.setHours(+p2[0], +p2[1], 0, 0); if (d2.getTime() <= R0.s) d2.setDate(d2.getDate() + 1); if (d2.getTime() - R0.s > 20 * 36e5) d2.setDate(d2.getDate() - 1); if (d2.getTime() > R0.s) { R0.e = d2.getTime(); await save(); toast('改好了', 'success'); sleepRender(); } return; }
         if (b.dataset.sldel != null) { X.sleep.log.splice(+b.dataset.sldel, 1); await save(); sleepRender(); return; }
       });
     }
@@ -2681,7 +2684,8 @@
   function hm(ms) { var m = Math.round(ms / 6e4); return Math.floor(m / 60) + ' 小時 ' + (m % 60) + ' 分'; }
   function sleepRender() {
     var cur = X.sleep.cur, L = X.sleep.log, h = '<div class="cx-sec cx-sl-top">';
-    if (cur) h += '<div class="big">🌙</div><div>睡著了 ' + hm(Date.now() - cur) + '</div><h4>醒來了嗎？睡得怎麼樣</h4><div class="cx-chips">' + [['1', '😫 很差'], ['2', '😕 不好'], ['3', '😐 普通'], ['4', '🙂 不錯'], ['5', '😴 超好']].map(function (q) { return '<button data-slq="' + q[0] + '">' + q[1] + '</button>'; }).join('') + '</div><button class="cx-btn" id="cx-sl-cancel">取消這次</button>';
+    var nw = new Date(), nv = pad(nw.getHours()) + ':' + pad(nw.getMinutes());
+    if (cur) h += '<div class="big">🌙</div><div>睡著了 ' + hm(Date.now() - cur) + '</div><label class="cx-muted" style="font-size:12px">幾點醒的？（忘了按也可以改）<input type="time" id="cx-sl-wake" class="cx-in" value="' + nv + '" style="width:auto;display:inline-block;margin-left:6px"></label><h4>醒來了嗎？睡得怎麼樣</h4><div class="cx-chips">' + [['1', '😫 很差'], ['2', '😕 不好'], ['3', '😐 普通'], ['4', '🙂 不錯'], ['5', '😴 超好']].map(function (q) { return '<button data-slq="' + q[0] + '">' + q[1] + '</button>'; }).join('') + '</div><button class="cx-btn" id="cx-sl-cancel">取消這次</button>';
     else h += '<div class="big">☀️</div><button class="cx-btn pri" id="cx-sl-go">🌙 我要睡了</button><div class="cx-muted" style="font-size:12px">按了之後哥哥會說晚安；起床回來按「睡得怎麼樣」就會記錄下來</div>';
     h += '</div>';
     var wk = L.filter(function (x) { return x.e > Date.now() - 7 * 864e5; });
@@ -2689,9 +2693,9 @@
       var avg = wk.reduce(function (a, x) { return a + (x.e - x.s); }, 0) / wk.length, aq = wk.reduce(function (a, x) { return a + x.q; }, 0) / wk.length;
       h += '<div class="cx-stat"><div><b>' + (avg / 36e5).toFixed(1) + 'h</b><span>近 7 天平均</span></div><div><b>' + ['', '😫', '😕', '😐', '🙂', '😴'][Math.round(aq)] + '</b><span>睡眠品質</span></div><div><b>' + wk.length + '</b><span>天有記錄</span></div></div>';
       var days = []; for (var i = 6; i >= 0; i--) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); var e2 = d.getTime() + 864e5, rec = L.filter(function (x) { return x.e >= d.getTime() && x.e < e2; }).reduce(function (a, x) { return a + (x.e - x.s); }, 0); days.push([['日', '一', '二', '三', '四', '五', '六'][d.getDay()], rec / 36e5]); }
-      h += '<div class="cx-sl-bars">' + days.map(function (d) { return '<div><i style="height:' + Math.min(100, d[1] / 10 * 100) + '%" class="' + (d[1] && d[1] < 6 ? 'low' : '') + '"></i><small>' + (d[1] ? d[1].toFixed(1) : '') + '</small><span>' + d[0] + '</span></div>'; }).join('') + '</div>';
+      h += '<div class="cx-sl-bars">' + days.map(function (d) { return '<div><i style="height:' + Math.round(Math.min(1, d[1] / 10) * 80) + 'px" class="' + (d[1] && d[1] < 6 ? 'low' : '') + '"></i><small>' + (d[1] ? d[1].toFixed(1) : '') + '</small><span>' + d[0] + '</span></div>'; }).join('') + '</div>';
     }
-    h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
+    h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small><span style="font-size:11px;color:var(--text-secondary)">改起床時間 <input type="time" data-slfixv="' + i + '" value="' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '" style="border:1px solid var(--border-color);border-radius:6px;font-size:11px;padding:1px 4px"> <button class="cx-btn sm" data-slfix="' + i + '" style="padding:1px 8px;font-size:11px">改</button></span></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
     slM.body.innerHTML = h;
   }
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
