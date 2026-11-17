@@ -48,6 +48,7 @@
     epiphyllum: { n: '曇花',     rare: 1, cost: 40, base: 'lotus',      pair: 'gardenia',   grow: 720e3,  yield: 1, price: 85, col: '#f2f4fb', unit: '朵', flower: 1, lang: '剎那的永恆', night: 1 },
     rainbowrose:{ n: '彩虹玫瑰', rare: 1, cost: 60, base: 'rose',       pair: 'bluerose', pair2: 'goldrose', grow: 1440e3, yield: 1, price: 150, col: '#e9a0c8', unit: '朵', flower: 1, lang: '無限的可能' },
     scallion:   { n: '蔥',     cost: 3,  grow: 90e3,   yield: 4, price: 4,  col: '#7fb069', unit: '把' },
+    sugarcane:  { n: '甘蔗',   cost: 6,  grow: 300e3,  yield: 4, price: 7,  col: '#8a5a86', unit: '根' },
     potato:     { n: '馬鈴薯', cost: 5,  grow: 180e3,  yield: 4, price: 6,  col: '#d9b77a', unit: '顆' },
     carrot:     { n: '胡蘿蔔', cost: 3,  grow: 60e3,   yield: 3, price: 4,  col: '#f08a3c', unit: '根' },
     wheat:      { n: '小麥',   cost: 2,  grow: 40e3,   yield: 3, price: 3,  col: '#e3c27a', unit: '把' },
@@ -66,7 +67,7 @@
     lychee:     { n: '荔枝',   seed: '荔枝樹', cost: 32, grow: 540e3, yield: 6, price: 6,  col: '#e2626e', unit: '顆', tree: 1 },
     mango:      { n: '芒果',   seed: '芒果樹', cost: 34, grow: 600e3, yield: 3, price: 13, col: '#f4b03e', unit: '顆', tree: 1 }
   };
-  var ORDER = ['lavender', 'gypso', 'wheat', 'scallion', 'carrot', 'potato', 'daisy', 'marigold', 'lagurus', 'tulip', 'forgetme', 'cornflower', 'carnation', 'oncidium', 'strawberry', 'tomato', 'gardenia', 'delph', 'lilyvalley', 'alstro', 'osmanthus', 'hydrangea', 'eustoma', 'sunflower', 'ranunc', 'peach', 'lily', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'statice', 'purplecarn', 'bluepoppy', 'blacktulip', 'pinkhydra', 'sakura', 'snowdrop', 'bluerose', 'goldrose', 'epiphyllum', 'rainbowrose'];
+  var ORDER = ['lavender', 'gypso', 'wheat', 'scallion', 'carrot', 'potato', 'sugarcane', 'daisy', 'marigold', 'lagurus', 'tulip', 'forgetme', 'cornflower', 'carnation', 'oncidium', 'strawberry', 'tomato', 'gardenia', 'delph', 'lilyvalley', 'alstro', 'osmanthus', 'hydrangea', 'eustoma', 'sunflower', 'ranunc', 'peach', 'lily', 'lotus', 'peony', 'rose', 'blueberry', 'lemon', 'orange', 'apple', 'pear', 'momo', 'grape', 'cherry', 'persimmon', 'banana', 'passion', 'fig', 'lychee', 'mango', 'whitelav', 'pinkdaisy', 'statice', 'purplecarn', 'bluepoppy', 'blacktulip', 'pinkhydra', 'sakura', 'snowdrop', 'bluerose', 'goldrose', 'epiphyllum', 'rainbowrose'];
   var UNLOCK = [0, 0, 0, 0, 0, 0, 60, 120, 200];
   var WET = 6 * HR, DRY_RATE = 0.35;
   var GIFT_LINES = {
@@ -1539,19 +1540,73 @@
     o += '<circle cx="6.6" cy="-15" r=".95" fill="#3b2f2a"/><ellipse cx="5.4" cy="-12.4" rx="1.3" ry=".8" fill="#f6b6b6" opacity=".7"/>';
     return o + '</g>';
   }
+  /* ================= 魚池 ================= */
+  var fs = { st: 'idle', t0: 0, bite: 0, gold: false, last: null, timer: 0 }, fishWho = '';
+  var FISH_LINE = {
+    '昶司': { ok: ['釣得不錯。', '這條晚上煎給妳吃。', '耐心點，魚就會來。'], miss: ['太急了，再等一下。', '跑了……沒關係，再來。'], boot: ['……這是誰的靴子。', '把它丟回去吧。'], rare: ['這條很漂亮，放進池子裡養吧。', '妳手氣真好。'] },
+    '仁彌': { ok: ['哇！釣到了！', '好厲害！我要拍照！', '這條好肥～'], miss: ['啊啊啊跑掉了！', '換我來！……也跑了。'], boot: ['哈哈哈哈靴子！', '妳釣到一隻靴子耶！'], rare: ['金光閃閃的！！', '許個願吧！'] }
+  };
+  function pickFish(gold) {
+    var tot = 0, ks = Object.keys(FISH), w = ks.map(function (k) { var x = FISH[k][1] * (gold && FISH[k][3] ? 5 : 1) * (gold && k === 'boot' ? .3 : 1); tot += x; return x; }), r = Math.random() * tot;
+    for (var i = 0; i < ks.length; i++) { r -= w[i]; if (r <= 0) return ks[i]; } return ks[0];
+  }
+  function fishSay(kind) { var L = FISH_LINE[fishWho]; return L ? fishWho + '：「' + pick(L[kind]) + '」' : ''; }
+  function fishHtml(g) {
+    g.fish = g.fish || {}; g.fishDex = g.fishDex || {}; g.pantry = g.pantry || {};
+    var bait = g.pantry.bait || 0, bg = CI('pondbg'), ft = fs.st;
+    var h = '<div class="cx-fish-top"><span>🪱 魚餌 <b>' + bait + '</b></span><button type="button" class="cx-btn sm" data-fbuy="1"' + (g.coins < 2 ? ' disabled' : '') + '>買 1 個 🪙2</button><button type="button" class="cx-btn sm" data-fbuy="10"' + (g.coins < 20 ? ' disabled' : '') + '>買 10 個 🪙20</button></div>' +
+      '<div class="cx-k-help"><span>陪我釣</span>' + [['', '自己釣'], ['昶司', '昶司'], ['仁彌', '仁彌']].map(function (x) { return '<button type="button" data-fwho="' + x[0] + '" class="' + (fishWho === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    h += '<div class="cx-pond' + (ft === 'bite' ? ' bite' : '') + (fs.gold && ft !== 'idle' ? ' gold' : '') + '">' + (bg ? '<img class="bg" src="' + bg.src + '" alt="">' : '') +
+      (ft === 'wait' || ft === 'bite' ? '<svg class="ln" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M45 22 Q47 34 49 ' + (ft === 'bite' ? 54 : 49) + '" stroke="#5b463688" stroke-width=".35" fill="none" vector-effect="non-scaling-stroke"/></svg><div class="bob"><i></i></div><div class="rip"></div>' : '') +
+      (CI('rod') ? '<img class="rod" src="' + CI('rod').src + '" alt="">' : '') +
+      (ft === 'idle' && fs.last ? '<div class="got">' + (fs.last.k ? (CI('fi_' + fs.last.k) ? '<img src="' + CI('fi_' + fs.last.k).src + '" alt="">' : '') + '<b>' + FISH[fs.last.k][0] + (FISH[fs.last.k][3] ? ' ✨' : '') + (fs.last.nw ? '<small> 新！</small>' : '') + '</b>' : '<b>' + esc(fs.last.msg) + '</b>') + (fs.last.say ? '<small>' + esc(fs.last.say) + '</small>' : '') + '</div>' : '') + '</div>';
+    h += '<div class="cx-fish-act">' + (ft === 'idle' ? '<button type="button" class="cx-btn pri big" data-fcast="1"' + (bait < 1 ? ' disabled' : '') + '>🎣 拋竿</button>' + (bait < 1 ? '<div class="cx-muted" style="text-align:center;font-size:12px">沒有魚餌了，買一點或在廚房用麵粉做</div>' : '') :
+      '<button type="button" class="cx-btn pri big" data-freel="1">' + (ft === 'bite' ? '‼️ 收！' : '…等浮標沉下去') + '</button><div class="cx-muted" style="text-align:center;font-size:12px">' + (fs.gold ? '✨ 金色漣漪！可能有稀有魚' : '浮標往下沉的瞬間按「收」') + '</div>') + '</div>';
+    var have = Object.keys(FISH).filter(function (k) { return g.fish[k] > 0; });
+    h += '<div class="cx-g-pt">漁獲<span class="cx-muted">　魚圖鑑 ' + Object.keys(g.fishDex).length + ' / ' + Object.keys(FISH).length + '</span></div>' + (have.length ? have.map(function (k) {
+      var F = FISH[k], im = CI('fi_' + k);
+      return '<div class="cx-g-item">' + (im ? '<img class="cx-fi" src="' + im.src + '" alt="">' : '') + '<div class="tx"><b>' + F[0] + (F[3] ? ' ✨' : '') + '</b> × ' + g.fish[k] + '<div class="cx-muted">' + (F[2] ? '一條賣 🪙 ' + F[2] : '賣不了錢……') + '</div></div><div class="cx-sellb"><button type="button" class="cx-btn" data-fsell="' + k + ':1">' + (F[2] ? '賣一條' : '丟掉') + '</button>' + (g.fish[k] > 1 ? '<span><button type="button" class="cx-btn sm" data-fsell="' + k + ':a">全' + (F[2] ? '賣' : '丟') + '</button></span>' : '') + '</div></div>';
+    }).join('') : '<p class="cx-muted" style="text-align:center;padding:10px 0">還沒有魚，拋一竿試試。魚可以在廚房做鮮魚湯、烤魚、鮭魚飯糰。</p>');
+    h += '<div class="cx-fish-dex">' + Object.keys(FISH).map(function (k) { var im = CI('fi_' + k), got = g.fishDex[k]; return '<div class="' + (got ? 'on' : '') + '">' + (im ? '<img src="' + im.src + '" alt="">' : '') + '<small>' + (got ? FISH[k][0] : '？？？') + '</small></div>'; }).join('') + '</div>';
+    return h;
+  }
+  function fishClick(e, g) {
+    var b;
+    if ((b = e.target.closest('[data-fbuy]'))) { var n = +b.dataset.fbuy; if (g.coins >= 2 * n) { g.coins -= 2 * n; g.pantry.bait = (g.pantry.bait || 0) + n; save(); render(); } return true; }
+    if ((b = e.target.closest('[data-fwho]'))) { fishWho = b.dataset.fwho; render(); return true; }
+    if ((b = e.target.closest('[data-fsell]'))) { var q = b.dataset.fsell.split(':'), k = q[0], c = g.fish[k] || 0, n2 = q[1] === 'a' ? c : Math.min(1, c); if (n2) { g.fish[k] -= n2; var earn = n2 * FISH[k][2]; g.coins += earn; if (earn) { tick(g, 'sell', n2); log(g, '💰 賣了 ' + n2 + ' 條' + FISH[k][0] + ' +' + earn); } save(); render(); } return true; }
+    if ((b = e.target.closest('[data-fcast]'))) {
+      if (fs.st !== 'idle' || !(g.pantry.bait > 0)) return true;
+      g.pantry.bait--; save(); fs.st = 'wait'; fs.gold = Math.random() < .15; fs.last = null; clearTimeout(fs.timer);
+      fs.timer = setTimeout(function () { fs.st = 'bite'; fs.bite = Date.now(); render(); try { navigator.vibrate && navigator.vibrate(60); } catch (er) {}
+        fs.timer = setTimeout(function () { if (fs.st !== 'bite') return; fs.st = 'idle'; fs.last = { msg: '魚把魚餌吃掉跑了…', say: fishSay('miss') }; render(); }, fs.gold ? 750 : 1000); }, 1800 + Math.random() * 4500);
+      render(); return true;
+    }
+    if ((b = e.target.closest('[data-freel]'))) {
+      clearTimeout(fs.timer);
+      if (fs.st === 'wait') { fs.st = 'idle'; fs.last = { msg: '太早了，魚被嚇跑了', say: fishSay('miss') }; render(); return true; }
+      if (fs.st !== 'bite') return true;
+      var k2 = pickFish(fs.gold), nw = !g.fishDex[k2];
+      g.fish[k2] = (g.fish[k2] || 0) + 1; g.fishDex[k2] = g.fishDex[k2] || Date.now();
+      fs.st = 'idle'; fs.last = { k: k2, nw: nw, say: fishSay(k2 === 'boot' ? 'boot' : FISH[k2][3] ? 'rare' : 'ok') };
+      log(g, '🎣 釣到了' + FISH[k2][0] + (FISH[k2][3] ? ' ✨' : '')); save(); render(); return true;
+    }
+    return false;
+  }
   function mapHtml(g, gr, orr, eg) {
     var F = festNow(), src = (F && festImg(F[0], 'farm', render)) || festImg('farm', '', render);
     if (!src) return '<p class="cx-muted" style="text-align:center;padding:40px 0">農場地圖載入中…</p>';
-    var Z = [['c', '🐄 牧場', eg, '335,265 520,140 805,262 790,330 585,470 330,300', 560, 220], ['g', '🌷 花園', gr, '20,500 190,340 330,330 460,470 640,650 420,860 30,600', 250, 560], ['o', '🍑 果園', orr, '640,330 860,215 1095,320 1095,560 880,660 640,560', 880, 380]];
+    var Z = [['c', '🐄 牧場', eg, '335,265 520,140 805,262 790,330 585,470 330,300', 560, 220], ['g', '🌷 花園', gr, '20,500 190,340 330,330 460,470 560,620 390,700 330,790 30,600', 250, 560], ['o', '🍑 果園', orr, '640,330 860,215 1095,320 1095,560 880,660 640,560', 880, 380], ['f', '🎣 魚池', 0, '400,770 460,700 600,685 710,725 715,800 630,860 470,860', 560, 905]];
     return '<div class="cx-g-map">' + '<svg viewBox="0 0 1100 1028" aria-label="農場地圖"><image href="' + src + '" x="0" y="0" width="1100" height="1028"/>' +
       Z.map(function (z) { return '<g class="zone" data-area="' + z[0] + '" role="button"><polygon points="' + z[3] + '"/><g transform="translate(' + z[4] + ' ' + z[5] + ')"><rect x="-78" y="-26" width="156" height="52" rx="26"/><text y="12">' + z[1] + (z[2] ? ' · ' + z[2] : '') + '</text></g></g>'; }).join('') +
       '</svg></div><p class="cx-muted cx-g-pan">點一個區域進去照顧它</p>';
   }
   function fieldHtml(g, now) {
     var gr = g.plots.filter(ready).length, orr = g.orchard.filter(ready).length, eg = allAni(g).reduce(function (s2, x) { return s2 + (x[1].eggs || 0); }, 0);
-    var tabs = [['m', '🗺️ 全景', 0], ['g', '🌷 花園', gr], ['o', '🍑 果園', orr], ['c', '🐄 牧場', eg]];
+    var tabs = [['m', '🗺️ 全景', 0], ['g', '🌷 花園', gr], ['o', '🍑 果園', orr], ['c', '🐄 牧場', eg], ['f', '🎣 魚池', 0]];
     var h = '<div class="cx-g-area">' + tabs.map(function (t) { return '<button type="button" data-area="' + t[0] + '" class="' + (area === t[0] ? 'on' : '') + '">' + t[1] + (t[2] ? '<i>' + t[2] + '</i>' : '') + '</button>'; }).join('') + '</div>';
     if (area === 'm') return h + mapHtml(g, gr, orr, eg);
+    if (area === 'f') return h + fishHtml(g);
     if (area !== 'c') h += wxChip(now);
     h += '<div class="cx-g-stage' + (area !== 'c' ? ' pan' : '') + '">' + areaSvg(g, now) + '</div>';
     if (area !== 'c') { var nl = (area === 'g' ? g.plots.length / 9 : g.orchard.length / 6); h += '<p class="cx-muted cx-g-pan">' + (nl < LAND[area].length ? '往右滑還可以買新的地 →' : '左右滑可以看每一塊地') + '</p>'; }
@@ -1801,11 +1856,18 @@
   }
 
   /* ================= 廚房 ================= */
-  var PANTRY = { egg: ['雞蛋', 3, 2], milk: ['牛奶', 4, 3], honey: ['蜂蜜', 7, 5], butter: ['奶油', 5, 4], sugar: ['糖', 2, 1], flour: ['麵粉', 8, 4], noodle: ['麵條', 10, 5], steak: ['牛排肉', 18, 9] };
-  var PAN_GRP = [['牧場', ['egg', 'milk', 'honey']], ['乾貨', ['flour', 'sugar', 'butter', 'noodle']], ['市集', ['steak']]];
+  var PANTRY = { egg: ['雞蛋', 3, 2], milk: ['牛奶', 4, 3], honey: ['蜂蜜', 7, 5], butter: ['奶油', 5, 4], sugar: ['糖', 2, 1], flour: ['麵粉', 8, 4], noodle: ['麵條', 10, 5], steak: ['牛排肉', 18, 9], bait: ['魚餌', 2, 1] };
+  var PAN_GRP = [['牧場', ['egg', 'milk', 'honey']], ['乾貨', ['flour', 'sugar', 'butter', 'noodle']], ['市集', ['steak', 'bait']]];
   var RECIPES = [
     { k: 'flour', n: '磨麵粉', need: { wheat: 2 }, price: 0, out: 'flour', mill: 1, cat: 'prep' },
     { k: 'noodle', n: '手工麵條', need: { flour: 1, egg: 1 }, price: 0, out: 'noodle', outN: 2, cat: 'prep' },
+    { k: 'sugarX', n: '熬糖', need: { sugarcane: 2 }, price: 0, out: 'sugar', outN: 3, cat: 'prep' },
+    { k: 'bait', n: '做魚餌', need: { flour: 1 }, price: 0, out: 'bait', outN: 5, cat: 'prep' },
+    { k: 'ajitama', n: '糖心蛋', need: { egg: 2, sugar: 1 }, price: 22, cat: 'home' },
+    { k: 'ramen', n: '糖心蛋拉麵', need: { noodle: 1, egg: 1, scallion: 1 }, price: 50, cat: 'main', love: '昶司' },
+    { k: 'fishsoup', n: '鮮魚湯', need: { crucian: 1, scallion: 1 }, price: 30, cat: 'main', love: '昶司' },
+    { k: 'grillfish', n: '烤魚', need: { bass: 1 }, price: 32, cat: 'main', love: '昶司' },
+    { k: 'onigiri', n: '鮭魚飯糰', need: { salmon: 1 }, price: 34, cat: 'home' },
     { k: 'tnoodle', n: '番茄雞蛋麵', need: { noodle: 1, tomato: 2, egg: 1 }, price: 42, cat: 'main', love: '昶司' },
     { k: 'cpasta', n: '奶油義大利麵', need: { noodle: 1, butter: 1, milk: 1 }, price: 45, cat: 'main', love: '昶司' },
     { k: 'snoodle', n: '蔥油拌麵', need: { noodle: 1, scallion: 2 }, price: 34, cat: 'main', love: '昶司' },
@@ -1849,6 +1911,11 @@
   ];
   var DISH_LINES = {
     tnoodle: ['番茄雞蛋麵，家的味道。', '湯我也要喝完。'],
+    ajitama: ['糖心蛋！蛋黃流出來了，好完美。', '一口一個，太幸福了。'],
+    ramen: ['糖心蛋拉麵……湯頭好濃。', '蛋給妳一半，不行，我想全部吃掉。'],
+    fishsoup: ['鮮魚湯，暖到胃裡。', '妳釣的魚？好厲害。'],
+    grillfish: ['烤魚，外皮脆脆的。', '我幫妳挑刺，妳只管吃。'],
+    onigiri: ['鮭魚飯糰，明天野餐帶這個。', '捏得圓圓的，跟妳一樣。'],
     cpasta: ['奶油義大利麵，好香好濃。', '妳也吃一口，我捲給妳。'],
     snoodle: ['蔥油拌麵，香到隔壁都聞得到。', '簡單的最好吃。'],
     steakd: ['煎得剛剛好，五分熟。', '今天是什麼好日子？'],
@@ -1889,8 +1956,10 @@
     eggtart: ['蛋塔剛出爐，外面酥裡面嫩，好厲害。', '這個可以開店了，我第一個排隊。'],
     fruitcake: ['這麼大一個水果蛋糕……妳一定忙了好久吧。謝謝妳，我的乖寶。', '這是我收過最好的禮物。我們一起吃。', '整個果園的水果都在這裡了……我們家乖寶最厲害。']
   };
-  function iname(k) { return CROPS[k] ? CROPS[k].n : PANTRY[k] ? PANTRY[k][0] : k; }
-  function haveN(g, k) { return PANTRY[k] ? (g.pantry[k] || 0) : (g.inv[k] || 0); }
+  // 魚：[名字, 機率權重, 賣價, 稀有]
+  var FISH = { crucian: ['鯽魚', 30, 6, 0], shrimp: ['小蝦', 20, 5, 0], bass: ['鱸魚', 22, 9, 0], salmon: ['鮭魚', 15, 12, 0], goldfish: ['金魚', 4, 30, 1], koi: ['錦鯉', 2.5, 45, 1], boot: ['舊靴子', 6, 0, 0] };
+  function iname(k) { return CROPS[k] ? CROPS[k].n : PANTRY[k] ? PANTRY[k][0] : FISH[k] ? FISH[k][0] : k; }
+  function haveN(g, k) { return PANTRY[k] ? (g.pantry[k] || 0) : FISH[k] ? ((g.fish || {})[k] || 0) : (g.inv[k] || 0); }
   function hasMill(g) { return !!((g.deco || {}).own || {}).windmill; }
   function canCook(g, r) { return (!r.mill || hasMill(g)) && Object.keys(r.need).every(function (k) { return haveN(g, k) >= r.need[k]; }); }
   var REC_CAT = { cookie: 'bake', eggtart: 'bake', osm: 'bake', muffin: 'bake', tart: 'bake', cake: 'bake', pie: 'bake', carrotcake: 'bake', applepie: 'bake', lemontart: 'bake', honeycake: 'bake', ginger: 'bake', bcake: 'bake', figtart: 'bake', bmuffin2: 'bake', fruitcake: 'bake',
@@ -1980,7 +2049,7 @@
     var show = vis.filter(function (r) { return kCat === 'all' ? true : kCat === 'can' ? canCook(g, r) : recCat(r) === kCat; });
     h += '<div class="cx-k-rec">' + (show.length ? '' : '<p class="cx-muted" style="text-align:center;padding:14px 0">' + (kCat === 'can' ? '材料還不夠做任何一道，去收成或買點食材吧。' : '這類還沒有食譜。') + '</p>') + show.map(function (r) {
       var ok = canCook(g, r), lv = loveOf(r);
-      return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.out && r.out !== 'butter' ? r.out : r.k) + '<div class="tx"><b>' + r.n + (lv ? ' <small class="cx-k-love">❤ ' + lv + '最愛</small>' : '') + (r.out ? '<small class="cx-muted">　放進食材櫃' + (r.outN > 1 ? ' ×' + r.outN : '') + '</small>' : '') + '</b>' + (r.mill && !hasMill(g) ? '<div class="cx-muted" style="font-size:11px">要先在花園佈置裡蓋小風車</div>' : '') + '<div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>' + (r.mill ? '磨' : '做') + '</button></div>';
+      return '<div class="cx-k-r' + (ok ? ' ok' : '') + '">' + dishSvg(r.out && r.out !== 'butter' && r.out !== 'sugar' && r.out !== 'bait' ? r.out : r.k) + '<div class="tx"><b>' + r.n + (lv ? ' <small class="cx-k-love">❤ ' + lv + '最愛</small>' : '') + (r.out ? '<small class="cx-muted">　放進食材櫃' + (r.outN > 1 ? ' ×' + r.outN : '') + '</small>' : '') + '</b>' + (r.mill && !hasMill(g) ? '<div class="cx-muted" style="font-size:11px">要先在花園佈置裡蓋小風車</div>' : '') + '<div class="need">' + Object.keys(r.need).map(function (k) { var hv = haveN(g, k), en = hv >= r.need[k]; return '<span class="' + (en ? 'en' : '') + '">' + iname(k) + ' ' + Math.min(hv, r.need[k]) + '/' + r.need[k] + '</span>'; }).join('') + '</div></div><button type="button" class="cx-btn pri" data-cook="' + r.k + '"' + (ok ? '' : ' disabled') + '>' + (r.mill ? '磨' : '做') + '</button></div>';
     }).join('') + '</div>';
     return h;
   }
@@ -1997,7 +2066,7 @@
     if ((b = e.target.closest('[data-kcat]'))) { kCat = b.dataset.kcat; render(); return true; }
     if ((b = e.target.closest('[data-cook]'))) {
       var r = RECIPES.find(function (x) { return x.k === b.dataset.cook; }); if (!r || !canCook(g, r)) return true;
-      Object.keys(r.need).forEach(function (k) { if (PANTRY[k]) g.pantry[k] -= r.need[k]; else g.inv[k] -= r.need[k]; });
+      Object.keys(r.need).forEach(function (k) { if (PANTRY[k]) g.pantry[k] -= r.need[k]; else if (FISH[k]) g.fish[k] -= r.need[k]; else g.inv[k] -= r.need[k]; });
       if (r.out) { var on = r.outN || 1; g.pantry[r.out] = (g.pantry[r.out] || 0) + on; log(g, (r.mill ? '🌾 風車磨好了 ' : '🧈 做好了 ') + on + ' 份' + PANTRY[r.out][0]); save(); toast((r.mill ? '風車轉呀轉，' : '') + PANTRY[r.out][0] + ' +' + on + '，放進食材櫃了', 'success'); render(); return true; }
       g.dishes[r.k] = (g.dishes[r.k] || 0) + 1; g.dexDish = g.dexDish || {}; var dd = g.dexDish[r.k] || (g.dexDish[r.k] = { n: 0, first: Date.now() }); dd.n++;
       tick(g, 'cook');
@@ -2046,6 +2115,7 @@
   }
   function gClick(e) {
     var g = G(), now = Date.now(), b;
+    if (area === 'f' && gTab === 'field' && fishClick(e, g)) return;
     if ((b = e.target.closest('[data-dexrw]'))) {
       var need = +b.dataset.dexrw, m = DEX_RW.filter(function (x) { return (x[0] || dexCount(g)[1]) === need; })[0]; g.dexRw = g.dexRw || {};
       if (!m || g.dexRw[need] || dexCount(g)[0] < need) return;
@@ -3218,6 +3288,11 @@
     '.cx-k-r .need{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:11px;color:var(--text-secondary);margin-top:2px}.cx-k-r .need .en{color:#3f9e6a}.cx-k-r .cx-btn{padding:8px 14px}' +
     '.cx-g-bqmk [data-slot]{cursor:pointer}.cx-g-bqtip{font-size:12px;text-align:center}.cx-g-bqtip a{color:var(--accent-color)}' +
     '.cx-g-area{display:flex;gap:6px}.cx-g-area button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:13px;padding:7px 4px;border-radius:12px;cursor:pointer;position:relative;white-space:nowrap}.cx-g-area button.on{color:#fff;background:var(--accent-color);border-color:var(--accent-color);font-weight:600}.cx-g-area i{font-style:normal;position:absolute;top:-6px;right:-4px;background:#e0a526;color:#fff;font-size:10px;border-radius:99px;padding:0 6px;line-height:16px}' +
+    '.cx-fish-top{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:13px}.cx-fish-top span{flex:1}.cx-pond{position:relative;border-radius:18px;overflow:hidden;background:#cfe8ef;aspect-ratio:900/473}.cx-pond .rod{position:absolute;left:5%;top:22%;width:40%;pointer-events:none;filter:drop-shadow(2px 3px 2px #0002)}.cx-pond .ln{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.cx-pond .bg{width:100%;height:100%;object-fit:cover;display:block}.cx-pond.gold{box-shadow:0 0 0 3px #f2c94c,0 0 18px #f2c94c88}' +
+    '.cx-pond .bob{position:absolute;left:49%;top:47%;width:14px;height:26px;margin-left:-7px;animation:cxbob 1.4s ease-in-out infinite}.cx-pond .bob i{display:block;width:14px;height:14px;border-radius:50%;background:linear-gradient(#e2554f 50%,#fff 50%);border:1.5px solid #7a4a3a}.cx-pond.bite .bob{animation:cxbite .25s ease-in-out infinite}' +
+    '.cx-pond .rip{position:absolute;left:49%;top:53%;width:60px;height:16px;margin-left:-30px;border:2px solid #ffffffaa;border-radius:50%;animation:cxrip 1.6s ease-out infinite}.cx-pond.gold .rip{border-color:#f2c94c}.cx-pond .got{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#ffffffb8;text-align:center;padding:10px}.cx-pond .got img{max-height:46%;max-width:60%}.cx-pond .got b{font-size:16px;color:#5b4636}.cx-pond .got b small{color:#d0607a;font-size:12px}.cx-pond .got>small{font-size:12px;color:#8a7a6a}' +
+    '@keyframes cxbob{50%{transform:translateY(3px)}}@keyframes cxbite{0%{transform:translateY(6px)}50%{transform:translateY(14px)}100%{transform:translateY(6px)}}@keyframes cxrip{from{transform:scale(.4);opacity:1}to{transform:scale(1.6);opacity:0}}' +
+    '.cx-fish-act{margin:8px 0}.cx-fish-act .big{width:100%;font-size:17px;padding:12px}.cx-fish-dex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.cx-fish-dex div{background:#faf6ee;border-radius:10px;padding:6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-fish-dex img{height:30px;max-width:100%;object-fit:contain;filter:brightness(0) opacity(.18)}.cx-fish-dex .on img{filter:none}.cx-fish-dex small{font-size:10px;color:#8a7a6a}' +
     '.cx-k-cat{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}.cx-k-cat button{flex-shrink:0;border:1px solid #e6dccb;background:#fff;border-radius:99px;padding:4px 11px;font-size:12px;color:#7a6a5a;white-space:nowrap}.cx-k-cat button.on{background:#c9a77f;color:#fff;border-color:transparent}.cx-k-cat small{opacity:.7}.cx-k-pg{font-size:12px;color:#a08a74;margin:6px 0 2px}.cx-k-love{font-size:11px;color:#d0607a;font-weight:600}' +
     '.cx-mm-set{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;font-size:12px;color:#8a7a6a}.cx-mm-set div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.cx-mm-set span{min-width:44px}.cx-mm-set button{border:1px solid #e6dccb;background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;color:#7a6a5a}.cx-mm-set button.on{background:#c9a77f;color:#fff;border-color:transparent}' +
     '.cx-mm{background:#fff;border:1px solid #eee3d3;border-radius:16px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}.cx-mm .hd{display:flex;gap:10px;align-items:center}.cx-mm .hd .av{width:40px;height:40px;border-radius:50%;background:#f6efe4;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}.cx-mm .hd .av img{height:120%;margin-bottom:-14%}.cx-mm .hd div{display:flex;flex-direction:column}.cx-mm .hd small{color:#a8998a;font-size:11px}.cx-mm .tx{font-size:14px;line-height:1.6}.cx-mm .pic{border-radius:12px;background:#faf6ee;display:flex;justify-content:center;padding:8px}.cx-mm .pic img{max-height:200px;max-width:100%;object-fit:contain}.cx-mm .act{display:flex;align-items:center;gap:8px;font-size:12px;color:#b07a8a}.cx-mm .act button{border:1px solid #f0d9df;background:#fff;border-radius:99px;padding:2px 12px;color:#c0607a;font-size:14px}.cx-mm .act button.on{background:#fbe9ee}.cx-mm .cm{background:#faf6ee;border-radius:10px;padding:6px 10px;font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-mm .cm b{color:#8a6a52}.cx-mm .in{display:flex;gap:6px}.cx-mm .in input{flex:1;border:1px solid #e6dccb;border-radius:99px;padding:6px 12px;font-size:13px;min-width:0}.cx-mm .in button{border:0;background:#c9a77f;color:#fff;border-radius:99px;padding:0 14px;font-size:13px}' +
