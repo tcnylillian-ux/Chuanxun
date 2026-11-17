@@ -747,12 +747,25 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
         }
     }
 
+    // 主動來電頻率：[代號, 名稱, 最短分鐘, 最長分鐘]
+    const CALL_FREQ = [['often', '常常（約 30 分鐘）', 15, 45], ['some', '偶爾（約 2 小時）', 60, 180], ['rare', '很少（約半天）', 300, 720], ['off', '不主動打', 0, 0]];
+    function callFreq() { try { return localStorage.getItem('cxCallFreq') || 'some'; } catch (e) { return 'some'; } }
+    function addFreqRow() {
+        const row = document.getElementById('call-feature-toggle-row'); if (!row || document.getElementById('call-freq-row')) return;
+        const d = document.createElement('div'); d.className = 'setting-pill-row'; d.id = 'call-freq-row';
+        d.innerHTML = '<span class="setting-pill-icon"><i class="fas fa-phone-volume"></i></span><span class="setting-pill-label">他主動打來</span><select id="call-freq-select" style="border:1px solid var(--border-color);border-radius:10px;padding:4px 8px;background:var(--secondary-bg,#fff);color:var(--text-primary);font-size:13px">' +
+            CALL_FREQ.map(x => '<option value="' + x[0] + '"' + (x[0] === callFreq() ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>';
+        row.parentNode.appendChild(d);
+        d.querySelector('select').addEventListener('change', e => { try { localStorage.setItem('cxCallFreq', e.target.value); } catch (er) {} scheduleRandomCall(); showNotification?.('來電頻率已更新 ✓', 'success', 1800); });
+    }
     function scheduleRandomCall() {
         clearTimeout(S.randomCallTimer);
         if (!S.enabled) return;
-        const ms = (15 + Math.random() * 45) * 60 * 1000;
+        const F = CALL_FREQ.find(x => x[0] === callFreq()) || CALL_FREQ[1];
+        if (!F[2]) return;
+        const ms = (F[2] + Math.random() * (F[3] - F[2])) * 60 * 1000;
         S.randomCallTimer = setTimeout(() => {
-            if (S.enabled && !S.active && Math.random() < 0.25) showIncomingCall();
+            if (S.enabled && !S.active) showIncomingCall();
             scheduleRandomCall();
         }, ms);
     }
@@ -942,7 +955,7 @@ html:not([data-theme="dark"])[data-color-theme="black-white"] .message-sent{
             S.enabled ? scheduleRandomCall() : clearTimeout(S.randomCallTimer);
         });
 
-        initDrag(); initPillDrag(); initResize();
+        initDrag(); initPillDrag(); initResize(); addFreqRow(); setTimeout(addFreqRow, 1500);
     }
 
     window.callFeature = { startCall, endCall, showIncomingCall, restoreWindow, minimizeWindow };

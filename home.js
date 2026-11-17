@@ -1629,8 +1629,15 @@
     var ppl = A.groupOn() ? A.groupPeople().filter(function (p) { return p.name.indexOf('系統') < 0; }) : [];
     if (!giftTo || (ppl.length && !ppl.some(function (p) { return p.name === giftTo; }))) giftTo = A.pname();
     var h = ppl.length > 1 ? '<div class="cx-who-t">送給</div>' + A.whoChips('cx-g-who', giftTo) : '';
-    if (!any.length) return h + '<p class="cx-muted" style="text-align:center;padding:20px 0">倉庫空空的，去田裡收成吧。</p>';
-    return h + fbHtml(g) + any.map(function (k) {
+    g.pantry = g.pantry || {};
+    var pk = ['egg', 'milk', 'butter', 'honey'].filter(function (k) { return g.pantry[k] > 0; });
+    if (pk.length) h += '<div class="cx-g-pt">牧場產物<span class="cx-muted">　做料理會用到，可以留一些</span></div>' + pk.map(function (k) {
+      var n = g.pantry[k], pim = { egg: 'egg', milk: 'milk', honey: 'honey' }[k], im = pim && FI(pim) ? FI(pim) : k === 'butter' ? DI('butterX') : null;
+      return '<div class="cx-g-item">' + (im ? '<img class="cx-fi" src="' + im.src + '" alt="">' : '') + '<div class="tx"><b>' + PANTRY[k][0] + '</b> × ' + n + '<div class="cx-muted">一個賣 🪙 ' + PANTRY[k][2] + '</div></div><div class="cx-sellb">' +
+        (n > 10 ? '<button type="button" class="cx-btn" data-psell="' + k + ':k">留 10 個，其他賣掉</button>' : '') + '<button type="button" class="cx-btn" data-psell="' + k + ':a">全賣 🪙' + n * PANTRY[k][2] + '</button></div></div>';
+    }).join('');
+    if (!any.length) return h + (pk.length ? '' : '<p class="cx-muted" style="text-align:center;padding:20px 0">倉庫空空的，去田裡收成吧。</p>');
+    return h + fbHtml(g) + (pk.length ? '<div class="cx-g-pt">收成</div>' : '') + any.map(function (k) {
       var c = CROPS[k], fi = CI('f_' + k), n = g.inv[k];
       return '<div class="cx-g-item">' + (fi ? '<img class="cx-fi" src="' + fi.src + '" alt="">' : plantSvg(k, 3)) + '<div class="tx"><b>' + c.n + '</b> × ' + n + '<div class="cx-muted">一' + c.unit + '賣 🪙 ' + c.price + '</div></div>' +
         '<button type="button" class="cx-btn pri" data-gift="' + k + '">送' + (ppl.length > 1 ? '' : '他') + '</button><div class="cx-sellb"><button type="button" class="cx-btn" data-sell="' + k + '">賣一' + c.unit + '</button>' +
@@ -2105,6 +2112,7 @@
       var k = b.dataset.seed, c = CROPS[k], q = PK(g, sel); if (!q || q.crop || g.coins < c.cost) return;
       g.coins -= c.cost; plant(q, k, '', now); q.wetUntil = now + WET; g.lastSeed = k; tick(g, 'plant'); log(g, '🌱 種下' + c.n + '，澆了水'); save(); sel = ''; render(); return;
     }
+    if ((b = e.target.closest('[data-psell]'))) { var ps = b.dataset.psell.split(':'), pn = g.pantry[ps[0]] || 0, sn = ps[1] === 'k' ? Math.max(0, pn - 10) : pn; if (sn > 0) { g.pantry[ps[0]] = pn - sn; g.coins += sn * PANTRY[ps[0]][2]; tick(g, 'sell', sn); log(g, '💰 賣掉' + PANTRY[ps[0]][0] + ' ' + sn + ' 個 +' + sn * PANTRY[ps[0]][2]); save(); toast('賣了 🪙 ' + sn * PANTRY[ps[0]][2], 'success'); render(); } return; }
     if ((b = e.target.closest('[data-sell]'))) { var s = b.dataset.sell; if (g.inv[s] > 0) { g.inv[s]--; g.coins += CROPS[s].price; tick(g, 'sell'); save(); render(); } return; }
     if ((b = e.target.closest('[data-sellx]'))) { var sx = b.dataset.sellx.split(':'), sk = sx[0], have0 = g.inv[sk] || 0, q = sx[1] === 'a' ? have0 : Math.floor(have0 / 2); if (q > 0) { g.inv[sk] -= q; g.coins += q * CROPS[sk].price; tick(g, 'sell', q); log(g, '🪙 賣了 ' + CROPS[sk].n + ' × ' + q + '，+' + q * CROPS[sk].price); save(); render(); toast('賣了 ' + q + ' ' + CROPS[sk].unit + '，🪙 +' + q * CROPS[sk].price, 'success'); } return; }
     if ((b = e.target.closest('[data-fbmake]'))) { var fr = FB.filter(function (x) { return x.k === b.dataset.fbmake; })[0]; if (!fr || !fbCan(g, fr)) return; Object.keys(fr.need).forEach(function (k) { g.inv[k] -= fr.need[k]; }); g.baskets = g.baskets || {}; g.baskets[fr.k] = (g.baskets[fr.k] || 0) + 1; log(g, '🧺 包好了一籃' + fr.n); save(); render(); toast('包好一籃' + fr.n + ' 🧺', 'success'); return; }
