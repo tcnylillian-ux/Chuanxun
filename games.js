@@ -1,3 +1,5 @@
+/* 統計和詞雲不算：圖片佔位、問題箱、拍一拍/餵動物等系統動作、紅包轉帳、未接來電 */
+window.cxStatSkip = function (t) { t = String(t || '').trim(); return !t || /^［?\[?圖片(已清除|遺失)/.test(t) || /問題箱|問答箱/.test(t) || /^✦.*✦$/.test(t) || /^✿.*✿$/.test(t) || /^(🧧 紅包|💸 轉帳)/.test(t) || /未接聽.*的來電/.test(t); };
 function renderStatsContent() {
             const statsContent = DOMElements.statsModal.content;
 
@@ -26,8 +28,8 @@ function renderStatsContent() {
             const getTopReplies = (msgs) => {
                 const countMap = {};
                 msgs.forEach(msg => {
-                    const text = msg.text.trim();
-                    if (text) {
+                    const text = (msg.text || '').trim();
+                    if (text && !window.cxStatSkip(text)) {
                         countMap[text] = (countMap[text] || 0) + 1;
                     }
                 });
@@ -1622,8 +1624,8 @@ function initComboMenu() {
         var pName = (typeof settings !== 'undefined' && settings.partnerName) ? settings.partnerName : '對方';
         var mName = (typeof settings !== 'undefined' && settings.myName)      ? settings.myName      : '我';
 
-        var partnerMsgs = messages.filter(function(m) { return m.sender !== 'user' && m.text && m.type !== 'system' && m.type !== 'call-event'; });
-        var myMsgs      = messages.filter(function(m) { return m.sender === 'user' && m.text && m.type !== 'system' && m.type !== 'call-event'; });
+        var partnerMsgs = messages.filter(function(m) { return m.sender !== 'user' && m.text && m.type !== 'system' && m.type !== 'call-event' && !window.cxStatSkip(m.text); });
+        var myMsgs      = messages.filter(function(m) { return m.sender === 'user' && m.text && m.type !== 'system' && m.type !== 'call-event' && !window.cxStatSkip(m.text); });
 
         var pFreq = {}, mFreq = {};
         partnerMsgs.forEach(function(m) { pFreq = mergeFreq(pFreq, tokenize(m.text)); });
