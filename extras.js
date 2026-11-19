@@ -14,7 +14,7 @@
     combine: { on: false, min: 2, max: 3, joins: ['，', '…', '、'] },
     letters: { freq: 'off', next: null },
     rp: { chance: 0.03, list: [] },
-    dice: { n: 1, opts: '' }, qz: { list: [] }, todo: { list: [] }, sleep: { cur: 0, log: [] },
+    dice: { n: 1, opts: '' }, qz: { list: [] }, todo: { list: [] }, sleep: { cur: 0, log: [], with: 'cs', peek: [] },
     pomo: { focus: 25, short: 5, long: 15, every: 4, toChat: true, run: null, log: {},
       lines: {
         focus: ['加油，我陪著你', '專心一點喔，我在旁邊看著', '你可以的', '寫完就抱抱', '不准偷看手機', '我也在努力', '安靜陪你'],
@@ -34,7 +34,7 @@
     phone: { chance: 0.04, items: [], seen: null, unread: 0, notes: null, seeded: false },
     toss: { back: 0.35 },
     gchar: {},
-    comp: { books: [], lines: {
+    comp: { run: null, books: [], lines: {
       listen: ['這首好好聽', '這段旋律好喜歡', '跟你一起聽歌真好', '副歌要來了', '單曲循環吧', '你也喜歡這首嗎？', '想抱著你一起聽'],
       watch: ['哈哈哈哈', '這裡好好笑', '緊張死了', '這個演員好好看', '不准看別人，看我', '好感動', '抱緊我'],
       read: ['讀到哪了？', '這段寫得好好', '你看得好快', '我也想知道後面怎樣', '這個角色好可愛', '累了就休息一下', '看書的樣子好認真']
@@ -729,15 +729,35 @@
   function compOpen() {
     if (!cM) {
       cM = makeModal('cx-comp-modal', 'fa-headphones', '陪伴中心');
-      cM.onBack = function () { if (cM.view !== 'hub') { compStop(); cM.view = cM.view === 'reader' ? 'books' : 'hub'; compRender(); return true; } };
+      cM.onBack = function () { if (cM.view === 'mode' && cState.started && !cState.ending) { cM.close(); return true; } if (cM.view !== 'hub') { compStop(); cM.view = cM.view === 'reader' ? 'books' : 'hub'; compRender(); return true; } };
       cM.onClose = compStop;
       cM.body.addEventListener('click', compClick);
       cM.body.addEventListener('change', compChange);
     }
+    if (cState.kind === 'mode' && cState.started && !cState.ending) { cM.view = 'mode'; compRender(); cM.open(); modeLive(); pillUpdate(); return; }
     cM.view = 'hub'; compRender(); cM.open();
+  }
+  /* 陪伴模式關掉視窗後繼續計時：左下角的小膠囊 */
+  var pillT = null;
+  function pillUpdate() {
+    var run = cState.kind === 'mode' && cState.started && !cState.ending, el = document.getElementById('cx-comp-pill');
+    if (!run) { if (el) el.remove(); clearInterval(pillT); pillT = null; return; }
+    if (!pillT) pillT = setInterval(pillUpdate, 1000);
+    if (cM && cM.isOpen()) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement('button'); el.id = 'cx-comp-pill'; el.type = 'button'; el.className = 'cx-comp-pill'; el.onclick = async function () { await load(); compOpen(); }; document.body.appendChild(el); }
+    var s = Math.floor((Date.now() - cState.started) / 1000);
+    el.innerHTML = MODES[cState.mode].e + ' ' + MODES[cState.mode].label + '中 <b>' + (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60) + '</b>';
+    if (!pillT) pillT = setInterval(pillUpdate, 1000);
+  }
+  function compRestore() {
+    var R = X.comp && X.comp.run;
+    if (R && R.started && !(cState && cState.started) && MODES[R.mode]) { cState = { kind: 'mode', mode: R.mode, title: MODES[R.mode].label, started: R.started, toChat: !!R.toChat }; pillUpdate(); }
   }
   function compStop() {
     clearInterval(cTimer); cTimer = null;
+    if (cState.kind === 'mode' && cState.started && !cState.ending && !cState.forceEnd) { setTimeout(pillUpdate, 60); return; } // 只是關掉視窗，陪伴繼續
+    if (X.comp.run) { X.comp.run = null; save(); }
+    setTimeout(pillUpdate, 0);
     var media = cM && cM.body.querySelector('audio,video'); if (media) { try { media.pause(); } catch (e) {} }
     if (cState.url && cState.url.indexOf('blob:') === 0) URL.revokeObjectURL(cState.url);
     noiseStop();
@@ -835,7 +855,7 @@
     var b = e.target.closest('button'); if (!b) return; var c = b.dataset.c;
     if (c === 'listen' || c === 'watch' || c === 'books') { cM.view = c; compRender(); return; }
     if (b.dataset.m) { startMode(b.dataset.m); return; }
-    if (c === 'mend') { clearInterval(cTimer); noiseStop(); cState.ending = true; compRender(); return; }
+    if (c === 'mend') { clearInterval(cTimer); noiseStop(); cState.ending = true; if (X.comp.run) { X.comp.run = null; save(); } compRender(); return; }
     if (c === 'msave') { var nt = cM.body.querySelector('#cx-m-note'); cState.note = nt ? nt.value.trim() : ''; compStop(); cM.view = 'hub'; compRender(); toast('已寫進陪伴日記', 'success'); return; }
     if (c === 'diary') { cState.editNote = null; cM.view = 'diary'; compRender(); return; }
     if (b.dataset.editnote !== undefined) { var ei = +b.dataset.editnote; if (cM.view !== 'diary') cM.view = 'diary'; cState.editNote = ei; compRender(); var ta = cM.body.querySelector('#cx-hn-' + ei); if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center' }); } return; }
@@ -1112,6 +1132,7 @@
       if (await rpTick()) ch = true;
       if (await todoTick()) ch = true;
       if (await qzTick()) ch = true;
+      compRestore(); sleepRestore();
       if (periodCare()) ch = true;
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
@@ -1403,6 +1424,7 @@
   function startMode(k) {
     if (cState && cState.started) compStop();
     cState = { kind: 'mode', mode: k, title: MODES[k].label, started: Date.now(), toChat: false };
+    X.comp.run = { mode: k, started: cState.started, toChat: false }; save();
     sysSay(MODES[k].e + ' 和 ' + pname() + ' ' + MODES[k].label + '中');
     cM.view = 'mode'; compRender(); modeLive();
   }
@@ -1410,7 +1432,8 @@
     clearInterval(cTimer);
     var M = cState.mode, g = MODES[M].gap, said = 0, next = Date.now() + rnd(g[0], g[1]) * 1000;
     cTimer = setInterval(function () {
-      if (!cM.isOpen() || !cState.started) return;
+      if (!cState.started) return;
+      if (!cM.isOpen()) { pillUpdate(); return; }
       var el = cM.body.querySelector('#cx-m-clock');
       if (el) { var s = Math.floor((Date.now() - cState.started) / 1000); el.textContent = (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60); }
       if (M === 'sleep' && said >= 3) return;
@@ -2504,6 +2527,12 @@
     '.cx-qz-card{padding:16px;border-radius:14px;background:linear-gradient(135deg,#fff6ec,#f5ecfa);border:1px solid var(--border-color);text-align:center;font-size:15px}.cx-qz-it,.cx-td{position:relative;padding:10px 32px 10px 12px;border-radius:12px;background:var(--secondary-bg,#fafafa);border:1px solid var(--border-color);font-size:13px;display:flex;flex-direction:column;gap:3px}.cx-qz-it span{color:var(--accent-color);font-weight:600}.cx-qz-it .del,.cx-td .del{position:absolute;right:6px;top:6px;border:0;background:none;color:#aaa;font-size:16px}' +
     '.cx-td{flex-direction:row;align-items:center;gap:10px}.cx-td>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.cx-td small{font-size:11px;color:var(--text-secondary)}.cx-td small.late{color:#d0605a}.cx-td .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--accent-color,#c9a77f);background:#fff;color:#fff;flex-shrink:0;font-size:13px}.cx-td.done .ck{background:var(--accent-color,#c9a77f)}.cx-td.done b{text-decoration:line-through;opacity:.5}.cx-td .d{min-width:44px;text-align:center;font-weight:700;color:var(--accent-color)}' +
     '.cx-sl-top{align-items:center;text-align:center}.cx-sl-top .big{font-size:48px}.cx-sl-bars{display:flex;gap:6px;align-items:flex-end;height:120px;padding:6px 4px;border-radius:12px;background:var(--secondary-bg,#fafafa)}.cx-sl-bars>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--text-secondary)}.cx-sl-bars i{display:block;width:70%;border-radius:6px 6px 2px 2px;background:#b7a6dc}.cx-sl-bars i.low{background:#e9a3a0}' +
+    '.cx-comp-pill{position:fixed;left:12px;bottom:86px;z-index:9990;border:0;border-radius:99px;padding:8px 14px;background:#fffaf2f2;color:#6b5848;box-shadow:0 4px 14px #0003;font-size:13px}.cx-comp-pill b{margin-left:4px;font-variant-numeric:tabular-nums}' +
+    '.cx-sl-lock{position:fixed;inset:0;z-index:100001;background:linear-gradient(#1b2142,#2d3366 55%,#4a3f6e);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12vh 20px 0;overflow:hidden;user-select:none;-webkit-user-select:none}.cx-sl-lock[hidden]{display:none}' +
+    '.cx-sl-lock .sky i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:cxtw 3s ease-in-out infinite}.cx-sl-lock .sky i:nth-child(1){left:12%;top:10%}.cx-sl-lock .sky i:nth-child(2){left:30%;top:22%;animation-delay:.6s}.cx-sl-lock .sky i:nth-child(3){left:70%;top:8%;animation-delay:1.2s}.cx-sl-lock .sky i:nth-child(4){left:85%;top:28%;animation-delay:.3s}.cx-sl-lock .sky i:nth-child(5){left:50%;top:35%;animation-delay:2s}.cx-sl-lock .sky i:nth-child(6){left:20%;top:42%;animation-delay:1.6s}.cx-sl-lock .sky i:nth-child(7){left:62%;top:46%;animation-delay:.9s}.cx-sl-lock .sky i:nth-child(8){left:90%;top:52%;animation-delay:2.4s}@keyframes cxtw{50%{opacity:.2}}' +
+    '.cx-sl-lock .moon{font-size:38px}.cx-sl-lock .clk{font-size:64px;font-weight:300;letter-spacing:2px;font-variant-numeric:tabular-nums;margin-top:6px}.cx-sl-lock .dur{font-size:13px;opacity:.75}.cx-sl-lock .say{margin-top:18px;background:#ffffff22;border-radius:16px;padding:10px 16px;font-size:14px;max-width:300px;text-align:center}' +
+    '.cx-sl-lock .bed{position:absolute;left:0;right:0;bottom:0;height:42vh}.cx-sl-lock .heads{position:absolute;left:50%;bottom:16vh;transform:translateX(-50%);display:flex;align-items:flex-end}.cx-sl-lock .heads img{height:24vh;max-height:200px;margin:0 -3vh;filter:brightness(.92)}.cx-sl-lock .blanket{position:absolute;left:-10%;right:-10%;bottom:0;height:22vh;background:linear-gradient(#b9a8dc,#8f7fbf);border-radius:50% 50% 0 0/40% 40% 0 0;box-shadow:0 -6px 20px #0003}' +
+    '.cx-sl-lock .tip{position:absolute;bottom:4vh;font-size:12px;opacity:.7}.cx-sl-lock .q{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fffaf7;color:#5b4636;border-radius:18px;padding:18px;width:min(300px,86vw);text-align:center;flex-direction:column;gap:12px;z-index:2}.cx-sl-lock.ask .q{display:flex}.cx-sl-lock .q .r{display:flex;gap:8px;justify-content:center}.cx-sl-lock .q .lnk{border:0;background:none;color:#a8998a;font-size:12px;text-decoration:underline}' +
     '.cx-open .p.tf{background:linear-gradient(160deg,#f6b65a,#ef8f3c)}.cx-open .coin.tfbtn{width:auto;padding:0 22px;border-radius:999px;font-size:16px}';
     document.head.appendChild(st); })();
   /* ================= v107 新功能：骰子／問卷／待辦／睡眠／轉帳 ================= */
@@ -2660,18 +2689,70 @@
   var SLEEP_NIGHT = ['晚安，寶貝。我在這裡陪妳。', '好好睡，夢裡見。', '把手機放下，閉上眼睛，我抱著妳。', '晚安，明天見。'];
   var SLEEP_MORN = ['早安，睡得好嗎？', '起床啦，今天也要開心。', '早安寶貝，先喝杯水。', '醒了？我想妳了。'];
   var slM = null;
+  /* ---------- 睡眠鎖屏 ---------- */
+  var SL_WITH = [['cs', '昶司'], ['rm', '仁彌'], ['all', '三個人一起'], ['me', '自己睡']];
+  var SL_PEEK = { cs: ['……不是說要睡了嗎？手機放下。', '我看到了喔，快睡。', '再滑手機我就沒收了。'], rm: ['抓到了！偷偷玩手機～', '快回來躺好，我一個人好冷。', '乖，閉上眼睛。'] };
+  var slLockEl = null, slLeft = 0, slNoLock = false;
+  function himgReady(cb) {
+    if (window.__cxHIMG) return cb();
+    var sc = document.getElementById('cx-himg-js');
+    if (!sc) { sc = document.createElement('script'); sc.id = 'cx-himg-js'; sc.src = 'homeimg.js'; document.body.appendChild(sc); }
+    sc.addEventListener('load', cb);
+  }
+  function slWho() { var w = X.sleep.with || 'cs'; return w === 'all' ? ['cs', 'me', 'rm'] : w === 'me' ? ['me'] : w === 'cs' ? ['me', 'cs'] : ['rm', 'me']; }
+  function slTalker() { var w = X.sleep.with || 'cs'; return w === 'rm' ? 'rm' : w === 'all' ? pick(['cs', 'rm']) : w === 'me' ? null : 'cs'; }
+  function sleepLock(msg) {
+    if (!X.sleep.cur || slNoLock) return;
+    if (!slLockEl) {
+      slLockEl = document.createElement('div'); slLockEl.id = 'cx-sl-lock'; slLockEl.className = 'cx-sl-lock';
+      document.body.appendChild(slLockEl);
+      slLockEl.addEventListener('click', async function (e) {
+        var b = e.target.closest('[data-sll]');
+        if (!b) { slLockEl.classList.add('ask'); return; }
+        if (b.dataset.sll === 'no') { slLockEl.classList.remove('ask'); return; }
+        if (b.dataset.sll === 'cancel') { await load(); X.sleep.cur = 0; X.sleep.peek = []; await save(); sleepUnlock(); return; }
+        if (b.dataset.sll === 'wake') { sleepUnlock(); slNoLock = true; await load(); sleepOpen(); }
+      });
+      clearInterval(slLockEl._t); slLockEl._t = setInterval(slLockTick, 20e3);
+    }
+    var heads = slWho().map(function (k) { var m = window.__cxHIMG && window.__cxHIMG[k + '_sleep']; return m ? '<img src="' + m.src + '" alt="">' : ''; }).join('');
+    slLockEl.innerHTML = '<div class="sky"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="moon">🌙</div><div class="clk" id="cx-sl-clk"></div><div class="dur" id="cx-sl-dur"></div>' +
+      (msg ? '<div class="say">' + esc(msg) + '</div>' : '') +
+      '<div class="bed"><div class="heads">' + heads + '</div><div class="blanket"></div></div><div class="tip">點一下畫面就是起床 ☀️</div>' +
+      '<div class="q"><b>起床了嗎？</b><div class="r"><button type="button" class="cx-btn" data-sll="no">再睡一下</button><button type="button" class="cx-btn pri" data-sll="wake">起床了</button></div><button type="button" class="lnk" data-sll="cancel">取消這次睡眠（不記錄）</button></div>';
+    slLockEl.hidden = false; slLockTick();
+    if (!window.__cxHIMG) himgReady(function () { if (slLockEl && !slLockEl.hidden) sleepLock(msg); });
+  }
+  function slLockTick() {
+    if (!slLockEl || slLockEl.hidden) return; var d = new Date(), c = document.getElementById('cx-sl-clk'), u = document.getElementById('cx-sl-dur');
+    if (c) c.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (u && X.sleep.cur) u.textContent = '已經睡了 ' + hm(Date.now() - X.sleep.cur) + ((X.sleep.peek || []).length ? '・偷看手機 ' + X.sleep.peek.length + ' 次' : '');
+  }
+  function sleepUnlock() { if (slLockEl) { slLockEl.hidden = true; slLockEl.classList.remove('ask'); } }
+  function sleepRestore() { if (X.sleep.cur && !slNoLock && (!slLockEl || slLockEl.hidden)) sleepLock(); if (!X.sleep.cur) { slNoLock = false; sleepUnlock(); } }
+  document.addEventListener('visibilitychange', async function () {
+    if (!X || !X.sleep || !X.sleep.cur || slNoLock) return;
+    if (document.hidden) { slLeft = Date.now(); return; }
+    if (!slLeft) return; var away = Date.now() - slLeft; slLeft = 0;
+    if (away < 15e3) return;
+    await load(); if (!X.sleep.cur) return;
+    X.sleep.peek = X.sleep.peek || []; X.sleep.peek.push({ t: Date.now() - away, ms: away }); await save();
+    var w = slTalker(); sleepLock(w ? pick(SLEEP_PEEK_LINES(w)) : '去哪了？手機放下，好好睡覺。');
+  });
+  function SLEEP_PEEK_LINES(w) { return SL_PEEK[w] || SL_PEEK.cs; }
   function sleepOpen() {
     if (!slM) {
       slM = makeModal('cx-sleep-modal', 'fa-bed', '睡眠紀錄');
       slM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
-        if (b.id === 'cx-sl-go') { X.sleep.cur = Date.now(); await save(); var w = pick(who1()).name; sayAs(w === pname() ? null : w, pick(SLEEP_NIGHT)); slM.close(); return; }
+        if (b.dataset.slw) { X.sleep.with = b.dataset.slw; await save(); sleepRender(); return; }
+        if (b.id === 'cx-sl-go') { X.sleep.cur = Date.now(); X.sleep.peek = []; slNoLock = false; await save(); var w = pick(who1()).name; sayAs(w === pname() ? null : w, pick(SLEEP_NIGHT)); slM.close(); sleepLock(); return; }
         if (b.id === 'cx-sl-cancel') { X.sleep.cur = 0; await save(); sleepRender(); return; }
         if (b.dataset.slq) {
           var st = X.sleep.cur, en = Date.now(); if (!st) return;
           var wv = (slM.body.querySelector('#cx-sl-wake') || {}).value;
           if (wv) { var hm2 = wv.split(':'), wd = new Date(); wd.setHours(+hm2[0], +hm2[1], 0, 0); if (wd.getTime() > Date.now() + 6e4) wd.setDate(wd.getDate() - 1); if (wd.getTime() > st) en = Math.min(Date.now(), wd.getTime()); }
-          X.sleep.log.unshift({ s: st, e: en, q: +b.dataset.slq }); X.sleep.log = X.sleep.log.slice(0, 120); X.sleep.cur = 0; await save();
+          var pk = X.sleep.peek || []; X.sleep.log.unshift({ s: st, e: en, q: +b.dataset.slq, pk: pk.length, pm: Math.round(pk.reduce(function (a, x) { return a + x.ms; }, 0) / 6e4) }); X.sleep.peek = []; slNoLock = false; X.sleep.log = X.sleep.log.slice(0, 120); X.sleep.cur = 0; await save();
           var hrs = (en - st) / 36e5, w2 = pick(who1()).name, ln = pick(SLEEP_MORN) + (hrs < 6 ? '只睡了 ' + hrs.toFixed(1) + ' 小時，今天早點睡好不好？' : hrs > 9.5 ? '睡了好久，小懶豬。' : '');
           sayAs(w2 === pname() ? null : w2, ln); sleepRender(); return;
         }
@@ -2686,7 +2767,7 @@
     var cur = X.sleep.cur, L = X.sleep.log, h = '<div class="cx-sec cx-sl-top">';
     var nw = new Date(), nv = pad(nw.getHours()) + ':' + pad(nw.getMinutes());
     if (cur) h += '<div class="big">🌙</div><div>睡著了 ' + hm(Date.now() - cur) + '</div><label class="cx-muted" style="font-size:12px">幾點醒的？（忘了按也可以改）<input type="time" id="cx-sl-wake" class="cx-in" value="' + nv + '" style="width:auto;display:inline-block;margin-left:6px"></label><h4>醒來了嗎？睡得怎麼樣</h4><div class="cx-chips">' + [['1', '😫 很差'], ['2', '😕 不好'], ['3', '😐 普通'], ['4', '🙂 不錯'], ['5', '😴 超好']].map(function (q) { return '<button data-slq="' + q[0] + '">' + q[1] + '</button>'; }).join('') + '</div><button class="cx-btn" id="cx-sl-cancel">取消這次</button>';
-    else h += '<div class="big">☀️</div><button class="cx-btn pri" id="cx-sl-go">🌙 我要睡了</button><div class="cx-muted" style="font-size:12px">按了之後哥哥會說晚安；起床回來按「睡得怎麼樣」就會記錄下來</div>';
+    else h += '<div class="big">☀️</div><h4>今晚跟誰一起睡？</h4><div class="cx-chips">' + SL_WITH.map(function (w) { return '<button data-slw="' + w[0] + '" class="' + ((X.sleep.with || 'cs') === w[0] ? 'on' : '') + '">' + w[1] + '</button>'; }).join('') + '</div><button class="cx-btn pri" id="cx-sl-go">🌙 我要睡了</button><div class="cx-muted" style="font-size:12px">按了之後哥哥會說晚安；起床回來按「睡得怎麼樣」就會記錄下來</div>';
     h += '</div>';
     var wk = L.filter(function (x) { return x.e > Date.now() - 7 * 864e5; });
     if (wk.length) {
@@ -2695,7 +2776,7 @@
       var days = []; for (var i = 6; i >= 0; i--) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); var e2 = d.getTime() + 864e5, rec = L.filter(function (x) { return x.e >= d.getTime() && x.e < e2; }).reduce(function (a, x) { return a + (x.e - x.s); }, 0); days.push([['日', '一', '二', '三', '四', '五', '六'][d.getDay()], rec / 36e5]); }
       h += '<div class="cx-sl-bars">' + days.map(function (d) { return '<div><i style="height:' + Math.round(Math.min(1, d[1] / 10) * 80) + 'px" class="' + (d[1] && d[1] < 6 ? 'low' : '') + '"></i><small>' + (d[1] ? d[1].toFixed(1) : '') + '</small><span>' + d[0] + '</span></div>'; }).join('') + '</div>';
     }
-    h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small><span style="font-size:11px;color:var(--text-secondary)">改起床時間 <input type="time" data-slfixv="' + i + '" value="' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '" style="border:1px solid var(--border-color);border-radius:6px;font-size:11px;padding:1px 4px"> <button class="cx-btn sm" data-slfix="' + i + '" style="padding:1px 8px;font-size:11px">改</button></span></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
+    h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small>' + (x.pk ? '<small style="color:#d0605a">📱 偷看手機 ' + x.pk + ' 次・' + x.pm + ' 分鐘</small>' : '') + '<span style="font-size:11px;color:var(--text-secondary)">改起床時間 <input type="time" data-slfixv="' + i + '" value="' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '" style="border:1px solid var(--border-color);border-radius:6px;font-size:11px;padding:1px 4px"> <button class="cx-btn sm" data-slfix="' + i + '" style="padding:1px 8px;font-size:11px">改</button></span></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
     slM.body.innerHTML = h;
   }
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);

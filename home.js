@@ -2096,6 +2096,7 @@
     if (!g.log.length) return tg + '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有紀錄。</p>';
     return tg + '<div class="cx-g-log">' + g.log.map(function (l) { var d = new Date(l.t); return '<div><span class="cx-muted">' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + '</span> ' + esc(l.text) + '</div>'; }).join('') + '</div>';
   }
+  var harvestSnap = null; // 全部收成時，先記住每格原本種什麼，收掉的鄰居也算數
   function harvest(g, p) {
     var c = CROPS[p.crop], n = p.yieldLeft || c.yield;
     g.inv[p.crop] = (g.inv[p.crop] || 0) + n;
@@ -2104,7 +2105,7 @@
     var k = p.crop, idx = g.plots.indexOf(p);
     if (idx >= 0 && c.flower && !c.rare) {
       var isl = Math.floor(idx / 9), j = idx % 9, r0 = Math.floor(j / 3), c0 = j % 3, nb = [];
-      [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { var r1 = r0 + d[0], c1 = c0 + d[1]; if (r1 >= 0 && r1 < 3 && c1 >= 0 && c1 < 3) { var q = g.plots[isl * 9 + r1 * 3 + c1]; if (q && q.crop) nb.push(q.crop); } });
+      [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(function (d) { var r1 = r0 + d[0], c1 = c0 + d[1]; if (r1 >= 0 && r1 < 3 && c1 >= 0 && c1 < 3) { var q = g.plots[isl * 9 + r1 * 3 + c1]; var qc = q && (q.crop || (harvestSnap && harvestSnap.get(q))); if (qc) nb.push(qc); } });
       Object.keys(CROPS).forEach(function (rk) { var rc = CROPS[rk]; if (rc.rare && rc.base === k && nb.indexOf(rc.pair) >= 0 && (!rc.pair2 || nb.indexOf(rc.pair2) >= 0) && Math.random() < (rc.pair2 ? .2 : .3)) {
         g.inv[rk] = (g.inv[rk] || 0) + 1; var first = !g.dex[rk]; var d2 = g.dex[rk] || (g.dex[rk] = { n: 0, first: Date.now() }); d2.n++;
         log(g, '✨ ' + c.n + '和' + CROPS[rc.pair].n + (rc.pair2 ? '、' + CROPS[rc.pair2].n : '') + '種在一起，長出了一朵' + rc.n + '！'); hybridMsg = (first ? '✨ 第一次長出' : '✨ 長出了') + rc.n + '！'; hybridKey = rk; } });
@@ -2246,7 +2247,7 @@
       if (a === 'plantAll') { sel = sel === '*all' ? '' : '*all'; render(); return; }
       if (a === 'deco') { sel = sel === '*deco' ? '' : '*deco'; render(); return; }
       if (a === 'waterAll') { var n = 0; (area === 'o' ? g.orchard : g.plots).forEach(function (p) { if (p.crop && !ready(p) && (p.wetUntil || 0) < now + HR) { grow(p, now); p.wetUntil = now + WET; n++; } }); if (n) { tick(g, 'water', n); log(g, '💧 幫 ' + n + ' 格澆了水'); save(); toast('澆好了 💧', 'success'); } }
-      else if (a === 'harvestAll') { var got = []; (area === 'o' ? g.orchard : g.plots).forEach(function (p) { if (ready(p)) { var r2 = harvest(g, p); got.push(CROPS[r2[0]].n + '×' + r2[1]); } }); if (got.length) { save(); toast('收成 ' + got.join('、') + ' 🧺', 'success'); } }
+      else if (a === 'harvestAll') { var got = []; harvestSnap = new Map(); g.plots.forEach(function (q) { if (q.crop) harvestSnap.set(q, q.crop); }); (area === 'o' ? g.orchard : g.plots).forEach(function (p) { if (ready(p)) { var r2 = harvest(g, p); got.push(CROPS[r2[0]].n + '×' + r2[1]); } }); harvestSnap = null; if (got.length) { save(); toast('收成 ' + got.join('、') + ' 🧺', 'success'); } }
       else if (a === 'water') { var p1 = PK(g, sel); if (p1 && p1.crop) { grow(p1, now); p1.wetUntil = now + WET; tick(g, 'water'); log(g, '💧 幫' + CROPS[p1.crop].n + '澆了水'); save(); } }
       else if (a === 'harvest') { var p2 = PK(g, sel); if (p2 && ready(p2)) { var r3 = harvest(g, p2); save(); toast('收成 ' + CROPS[r3[0]].n + ' × ' + r3[1] + ' 🧺', 'success'); sel = ''; } }
       else if (a === 'dig') { var p3 = PK(g, sel); if (p3 && p3.crop) { if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '確定剷掉？'; return; } log(g, '剷掉了' + CROPS[p3.crop].n); p3.crop = null; p3.bug = false; p3.by = ''; save(); sel = ''; } }
@@ -2598,11 +2599,11 @@
     living: { stand: [[64, 74], [78, 86], [52, 92], [36, 94]], seat: [[27, 62], [35, 58], [43, 54]], rug: [58, 80], corner: [87, 72] },
     bed: { stand: [[40, 90], [59, 93], [79, 86]], pillow: [[26, 51], [37, 44], [47, 36]], feet: [[66, 66], [57, 71]], top: [60, 58], beside: [[36, 82], [17, 74]], catbed: [27, 77], rug: [81, 74] },
     closet: { stand: [[44, 86], [62, 89]], floor: [68, 80], stool: [52, 74] },
-    cs: { stand: [[60, 88], [42, 92]], chair: [46, 54], floor: [82, 86], arm: [80, 70] },
+    cs: { stand: [[60, 88], [42, 92]], chair: [46, 54], floor: [82, 86], arm: [76, 69] },
     rm: { stand: [[63, 86], [80, 80]], bean: [37, 64], rug: [62, 80] }
   };
   var HZ_H = { fd_lie: 9, fd_blanket: 10, fd_stretch: 14, fd_belly: 11, fd_bed: 14, fd_sleep: 9, fd_eat: 12, an_sleep: 9, an_side: 10, an_belly: 11, an_stretch: 14, an_sit: 16, an_box: 14 };
-  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['coat', '大衣'], ['win', '冬天'], ['formal', '正裝'], ['xmas', '聖誕'], ['xmas2', '聖誕居家'], ['base', '居家內搭']];
+  var HZ_OUT = [['auto', '自動'], ['def', '平常'], ['pj', '睡衣'], ['out', '出門'], ['coat', '大衣'], ['win', '冬天'], ['formal', '正裝'], ['casual', '休閒西裝'], ['sum', '夏天'], ['xmas', '聖誕'], ['xmas2', '聖誕居家'], ['base', '居家內搭']];
   /* 這套衣服有沒有坐／走的圖；沒有就回傳 null */
   function hzPoseKey(who, kind, ok) {
     if (kind === 'sleep') return HZ_POSE[who].sleep;
@@ -2627,7 +2628,7 @@
   /* 這個人現在穿哪套：手動選的優先；自動＝晚上睡衣、冬天（6～8 月）毛衣 */
   function hzOutNow(who) {
     var k = hzOutGet()[who] || 'auto';
-    if (k === 'auto') { var mo = new Date().getMonth(), fx = festNow(); k = hzNight() ? 'pj' : (fx && fx[0] === 'xmas' && HI('o_' + who + '_xmas')) ? 'xmas' : (mo >= 5 && mo <= 7) ? 'win' : 'def'; }
+    if (k === 'auto') { var mo = new Date().getMonth(), fx = festNow(); k = hzNight() ? 'pj' : (fx && fx[0] === 'xmas' && HI('o_' + who + '_xmas')) ? 'xmas' : (mo >= 5 && mo <= 7) ? 'win' : ((mo === 11 || mo <= 1) && HI('o_' + who + '_sum')) ? 'sum' : 'def'; }
     if (who === 'cs' && k === 'formal') k = 'def';
     if (k === 'base' && hzRoom !== 'closet') k = 'def'; /* 居家內搭只在衣物間試穿，其他房間穿平常的 */
     return k;
@@ -2765,7 +2766,7 @@
         HZ_OUT.filter(function (o) { return !(dw === 'cs' && o[0] === 'formal'); }).map(function (o) {
           var im = o[0] === 'auto' ? null : hzOutImg(dw, o[0]); if (o[0] !== 'auto' && !im) return '';
           return '<button type="button" class="it' + (cur === o[0] ? ' on' : '') + '" data-hzo="' + o[0] + '">' + (im ? '<img src="' + im.src + '" alt="">' : '<span class="au">🌙❄️</span>') + '<small>' + (dw === 'cs' && o[0] === 'def' ? '平常／正裝' : o[1]) + '</small></button>';
-        }).join('') + '</div><p class="cx-muted">「自動」：晚上換睡衣，聖誕節穿聖誕裝，6～8 月穿毛衣，其他時候穿平常的衣服。</p></div>';
+        }).join('') + '</div><p class="cx-muted">「自動」：晚上換睡衣，聖誕節穿聖誕裝，6～8 月穿毛衣，12～2 月穿夏天的衣服，其他時候穿平常的衣服。</p></div>';
     }
     if (hz.sel) {
       var cn = hz.sel === 'fd' ? 'Fiddi 🧡' : '安安 🤍', fish = HI('i_fish'), kib = HI('i_kibble'), wand = HI('i_wand');
@@ -2799,12 +2800,14 @@
     Object.keys(g.fbSent || {}).forEach(function (k) { var r = FB.filter(function (x) { return x.k === k; })[0]; if (r) o.push(['k:' + k, r.n]); });
     Object.keys(g.dexDish || {}).forEach(function (k) { var r = RECIPES.filter(function (x) { return x.k === k; })[0]; if (r && !r.out) o.push(['d:' + k, r.n]); });
     ORDER.forEach(function (k) { if (CROPS[k].rare && (g.dex || {})[k]) o.push(['r:' + k, CROPS[k].n]); });
+    (g.photos || []).forEach(function (p) { o.unshift(['p:' + p.id, '拍貼 ' + new Date(p.t).toLocaleDateString()]); });
     return o;
   }
   function hzWallArt(id) {
     if (!id) return ''; var g = G() || {}, k = id.slice(2), t = id.charAt(0);
     if (t === 'b') { var r = (g.bqSent || {})[k]; if (!r || !r.sample) return ''; return r.sample.recipe ? bqArt(r.sample.recipe) : bouquetSvg(r.sample); }
     if (t === 'd') return dishSvg(k);
+    if (t === 'p') { var ph = (g.photos || []).filter(function (q) { return q.id === k; })[0]; return ph ? '<img src="' + ph.src + '" alt="" style="object-fit:cover;width:100%;height:100%">' : ''; }
     var m = t === 'k' ? CI('k_' + k) : CI(k); return m ? '<img src="' + m.src + '" alt="">' : '';
   }
   /* ---- 信箱：每天一封 ---- */
@@ -2974,13 +2977,128 @@
   }
   /* ================= 小窩 ================= */
   var APPS = [
-    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
+    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['photo', 'fa-camera', '拍貼機'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
     ['qa-function', 'fa-box-open', '問題箱'],
     ['cx-comp-entry', 'fa-headphones', '陪伴'], ['cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪'], ['cx-phone-entry', 'fa-mobile-screen', 'TA 的手機'], ['cx-rp-entry', 'fa-gift', '紅包'],
     ['cx-calllog-entry', 'fa-phone', '通話紀錄'], ['cx-pomo-entry', 'fa-clock', '番茄鐘'], ['cx-period-entry', 'fa-droplet', '潮汐'], ['mood-function', 'fa-face-smile', '心晴手帳'],
     ['anniversary-function', 'fa-calendar-days', '重要日'], ['decision-function', 'fa-shuffle', '抉擇'], ['cx-dice-entry', 'fa-dice', '骰子'], ['cx-quiz-entry', 'fa-clipboard-question', '問卷'], ['cx-todo-entry', 'fa-list-check', '待辦'], ['cx-sleep-entry', 'fa-bed', '睡眠'], ['fortune-lenormand-function', 'fa-star', '運勢'], ['cx-rate-entry', 'fa-star-half-stroke', '他的評分'],
     ['cx-status-entry', 'fa-heart-pulse', '狀態檢測'], ['stats-function', 'fa-chart-simple', '訊息統計'], ['custom-replies-function', 'fa-comment-dots', '字卡'], ['cx-help-entry', 'fa-book-open', '使用手冊']
   ];
+  /* ================= 首頁大圖卡：在一起 ○ 天 ================= */
+  function togetherStart() {
+    var g = G() || {}, c = g.homeCard || {};
+    if (c.start) return c.start;
+    var list = (typeof anniversaries !== 'undefined' && Array.isArray(anniversaries)) ? anniversaries : [], best = null;
+    list.forEach(function (a) { if (a && a.date && /在一起|交往|戀愛|認識|相遇|紀念/.test(a.name || '') && (!best || a.date < best)) best = a.date; });
+    return best;
+  }
+  function togetherDays() { var s = togetherStart(); if (!s) return null; var p = String(s).split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]), t = new Date(); t.setHours(0, 0, 0, 0); return Math.floor((t - d) / 864e5) + 1; }
+  function bigCardHtml() {
+    var g = G() || {}, c = g.homeCard || {}, n = togetherDays(), img = c.img;
+    var art = img ? '<img class="bg" src="' + img + '" alt="">' : '<div class="bg def">' + ['cb_me', 'cb_changsi', 'cb_renmi'].map(function (k) { var m = CI(k); return m ? '<img src="' + m.src + '" alt="">' : ''; }).join('') + '</div>';
+    return '<div class="cx-h-big" data-hbig="1">' + art + '<div class="tx">' + (n ? '<small>我們在一起已經</small><b>' + n + '</b><small>天</small>' : '<small>點一下設定在一起的日子 ♡</small>') + '</div><button type="button" class="set" data-hbigset="1" aria-label="設定"><i class="fas fa-pen"></i></button></div>';
+  }
+  function bigCardSet() {
+    var g = G(); if (!g) return; var c = g.homeCard || {};
+    var o = document.createElement('div'); o.className = 'cx-pb-pop';
+    o.innerHTML = '<div class="card"><b>首頁大圖卡</b><label>在一起的日子<input type="date" id="cx-hb-d" value="' + (togetherStart() || '') + '"></label><label>背景圖片<input type="file" id="cx-hb-f" accept="image/*"></label>' +
+      (c.img ? '<button type="button" class="cx-btn" data-x="clr">換回預設圖</button>' : '') + '<div class="row"><button type="button" class="cx-btn" data-x="no">取消</button><button type="button" class="cx-btn pri" data-x="ok">儲存</button></div></div>';
+    document.body.appendChild(o);
+    var newImg = null;
+    o.querySelector('#cx-hb-f').addEventListener('change', function (e) { var f = e.target.files && e.target.files[0]; if (!f) return; shrinkImg(f, 900, function (u) { newImg = u; }); });
+    o.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-x]'); if (e.target === o) b = { dataset: { x: 'no' } }; if (!b) return;
+      if (b.dataset.x === 'clr') { c.img = ''; newImg = null; b.textContent = '已換回預設 ✓'; return; }
+      if (b.dataset.x === 'ok') { var d = o.querySelector('#cx-hb-d').value; c.start = d || c.start || ''; if (newImg) c.img = newImg; g.homeCard = c; save(); hRender(); }
+      o.remove();
+    });
+  }
+  function shrinkImg(file, max, cb) {
+    var r = new FileReader(); r.onload = function () { var im = new Image(); im.onload = function () { var s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * s); c.height = Math.round(im.height * s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', .82)); }; im.src = r.result; }; r.readAsDataURL(file);
+  }
+
+  /* ================= 拍貼機 ================= */
+  var PB_BG = [['pb_pink', '粉紅愛心'], ['pb_beach', '海邊'], ['pb_garden', '花園'], ['pb_night', '夜空'], ['fest:farm', '我們的農場'], ['h:r_living', '客廳']];
+  var PB_ST = ['st_heart', 'st_star', 'st_bow', 'st_crown', 'st_cloud', 'st_bubble', 'x_tree', 'x_snow', 'x_gift', 'rose', 'sunflower', 'lavender', 'rainbowrose', 'f_cherry', 'f_strawberry', 'fi_goldfish', 'fi_koi'];
+  var pb = null;
+  function pbImg(k) { if (k.indexOf('fest:') === 0) { var u = festImg('farm', '', function () { pbDraw(); }); return u ? { src: u } : null; } if (k.indexOf('h:') === 0) return HI(k.slice(2)); return CI(k) || HI(k); }
+  var pbCache = {};
+  function pbEl(k) { var m = pbImg(k); if (!m) return null; var e = pbCache[m.src]; if (!e) { e = new Image(); e.onload = function () { pbDraw(); }; e.src = m.src; pbCache[m.src] = e; } return e.complete && e.naturalWidth ? e : null; }
+  function pbPeople() {
+    var out = [['cb_me', '我'], ['cb_changsi', '昶司'], ['cb_renmi', '仁彌']];
+    if (window.__cxHIMG) Object.keys(window.__cxHIMG).forEach(function (k) { var m = /^o_(me|cs|rm)_([a-z0-9]+)$/.exec(k); if (m) out.push([k, { me: '我', cs: '昶司', rm: '仁彌' }[m[1]] + '·' + ((HZ_OUT.filter(function (o) { return o[0] === m[2]; })[0] || [0, m[2]])[1])]); });
+    return out;
+  }
+  function pbOpen() {
+    var g = G(); if (!g) return;
+    if (!window.__cxHIMG && !document.getElementById('cx-himg-js')) { var sc = document.createElement('script'); sc.id = 'cx-himg-js'; sc.src = 'homeimg.js'; sc.onload = function () { if (pb) pbUI(); }; document.body.appendChild(sc); }
+    if (!pb) {
+      var m = A.makeModal('cx-pb-modal', 'fa-camera', '拍貼機'); pb = { m: m, bg: 'pb_pink', items: [], sel: -1, tab: 'ppl', view: 'shoot' };
+      m.onBack = function () { if (pb.view !== 'shoot') { pb.view = 'shoot'; pbUI(); return true; } m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', pbClick);
+      m.body.addEventListener('input', function (e) { if (e.target.id === 'cx-pb-txt' && pb.sel >= 0 && pb.items[pb.sel]) { pb.items[pb.sel].text = e.target.value; pbDraw(); } });
+    }
+    pb.view = 'shoot'; pbUI(); pb.m.open();
+  }
+  function pbUI() {
+    var b = pb.m.body, g = G() || {};
+    if (pb.view === 'album') {
+      var P = g.photos || [];
+      b.innerHTML = '<div class="cx-pb-album">' + (P.length ? P.map(function (p) { return '<div class="ph"><img src="' + p.src + '" alt=""><small>' + new Date(p.t).toLocaleDateString() + '</small><div class="a"><button type="button" class="cx-btn sm" data-pbdl="' + p.id + '">存到手機</button><button type="button" class="cx-btn sm" data-pbdel="' + p.id + '">刪除</button></div></div>'; }).join('') : '<p class="cx-muted" style="text-align:center;padding:20px 0">還沒有拍貼，去拍一張吧！</p>') + '</div><p class="cx-muted" style="text-align:center">拍好的照片可以在「我們的家 → 回憶牆」掛起來</p>';
+      return;
+    }
+    var it = pb.sel >= 0 ? pb.items[pb.sel] : null;
+    b.innerHTML = '<div class="cx-pb-stage"><canvas id="cx-pb-cv" width="900" height="560"></canvas></div>' +
+      '<div class="cx-pb-tools">' + (it ? '<button type="button" class="cx-btn sm" data-pbz="-">－ 縮小</button><button type="button" class="cx-btn sm" data-pbz="+">＋ 放大</button><button type="button" class="cx-btn sm" data-pbf="1">↔ 翻面</button><button type="button" class="cx-btn sm" data-pbdelit="1">🗑 拿掉</button>' : '<span class="cx-muted">點下面的東西放進照片，拖曳可以移動</span>') + '</div>' +
+      (it && it.k === 'st_bubble' ? '<input class="cx-in" id="cx-pb-txt" maxlength="20" placeholder="對話框裡要寫什麼？" value="' + esc(it.text || '') + '">' : '') +
+      '<div class="cx-pb-tabs">' + [['ppl', '人物'], ['st', '貼紙'], ['bg', '背景']].map(function (t) { return '<button type="button" data-pbt="' + t[0] + '" class="' + (pb.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div><div class="cx-pb-pick">' +
+      (pb.tab === 'bg' ? PB_BG.map(function (x) { var m = pbImg(x[0]); return m ? '<button type="button" data-pbbg="' + x[0] + '" class="' + (pb.bg === x[0] ? 'on' : '') + '"><img src="' + m.src + '" alt=""><small>' + x[1] + '</small></button>' : ''; }).join('') :
+       (pb.tab === 'ppl' ? pbPeople() : PB_ST.map(function (k) { return [k, '']; })).map(function (x) { var m = pbImg(x[0]); return m ? '<button type="button" data-pbadd="' + x[0] + '"><img src="' + m.src + '" alt="">' + (x[1] ? '<small>' + x[1] + '</small>' : '') + '</button>' : ''; }).join('')) +
+      '</div><div class="cx-pb-act"><button type="button" class="cx-btn" data-pbalb="1">📒 相簿（' + (g.photos || []).length + '）</button><button type="button" class="cx-btn" data-pbclr="1">清空</button><button type="button" class="cx-btn pri" data-pbsave="1">📸 拍下來</button></div>';
+    pbBind(); pbDraw();
+  }
+  function pbDraw(forSave) {
+    var cv = pb && pb.m.body.querySelector('#cx-pb-cv'); if (!cv) return; var x = cv.getContext('2d'), W = cv.width, H = cv.height;
+    x.fillStyle = '#fff6f8'; x.fillRect(0, 0, W, H);
+    var bg = pbEl(pb.bg); if (bg) { var s = Math.max(W / bg.naturalWidth, H / bg.naturalHeight), bw = bg.naturalWidth * s, bh = bg.naturalHeight * s; x.drawImage(bg, (W - bw) / 2, (H - bh) / 2, bw, bh); }
+    pb.items.forEach(function (it, i) {
+      var e = pbEl(it.k); if (!e) return; var w = it.s, h = w * e.naturalHeight / e.naturalWidth;
+      x.save(); x.translate(it.x, it.y); if (it.flip) x.scale(-1, 1); x.drawImage(e, -w / 2, -h / 2, w, h); x.restore();
+      if (it.k === 'st_bubble' && it.text) { x.fillStyle = '#5b4636'; x.textAlign = 'center'; x.textBaseline = 'middle'; var fs = Math.max(14, w / Math.max(4, it.text.length) * .9); x.font = '600 ' + Math.min(fs, h * .3) + 'px "Noto Sans TC",sans-serif'; x.fillText(it.text, it.x, it.y - h * .06); }
+      if (!forSave && i === pb.sel) { x.strokeStyle = '#c98fa5'; x.setLineDash([8, 6]); x.lineWidth = 3; x.strokeRect(it.x - w / 2, it.y - h / 2, w, h); x.setLineDash([]); }
+    });
+    if (forSave) { x.font = '600 20px sans-serif'; x.fillStyle = 'rgba(255,255,255,.85)'; x.textAlign = 'right'; x.textBaseline = 'bottom'; var d = new Date(); x.fillText(d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate(), W - 16, H - 12); }
+  }
+  function pbHit(px, py) { for (var i = pb.items.length - 1; i >= 0; i--) { var it = pb.items[i], e = pbEl(it.k); if (!e) continue; var w = it.s, h = w * e.naturalHeight / e.naturalWidth; if (Math.abs(px - it.x) <= w / 2 && Math.abs(py - it.y) <= h / 2) return i; } return -1; }
+  function pbBind() {
+    var cv = pb.m.body.querySelector('#cx-pb-cv'), drag = null;
+    function pt(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
+    cv.addEventListener('pointerdown', function (e) { var p = pt(e), i = pbHit(p[0], p[1]); var was = pb.sel; pb.sel = i; if (i >= 0) { var it = pb.items.splice(i, 1)[0]; pb.items.push(it); pb.sel = pb.items.length - 1; drag = { dx: p[0] - it.x, dy: p[1] - it.y }; cv.setPointerCapture(e.pointerId); } if ((was >= 0) !== (pb.sel >= 0) || pb.items[pb.sel] && pb.items[pb.sel].k === 'st_bubble') pbUI(); else pbDraw(); e.preventDefault(); });
+    cv.addEventListener('pointermove', function (e) { if (!drag || pb.sel < 0) return; var p = pt(e), it = pb.items[pb.sel]; it.x = p[0] - drag.dx; it.y = p[1] - drag.dy; pbDraw(); });
+    cv.addEventListener('pointerup', function () { drag = null; });
+    cv.style.touchAction = 'none';
+  }
+  function pbClick(e) {
+    var b = e.target.closest('button'); if (!b) return; var g = G(); if (!g) return; var d = b.dataset;
+    if (d.pbt) { pb.tab = d.pbt; pbUI(); return; }
+    if (d.pbbg) { pb.bg = d.pbbg; pbUI(); return; }
+    if (d.pbadd) { var ppl = /^(cb_|o_)/.test(d.pbadd); pb.items.push({ k: d.pbadd, x: 450 + (Math.random() - .5) * 300, y: ppl ? 330 : 200 + Math.random() * 160, s: ppl ? 230 : d.pbadd === 'st_bubble' ? 220 : 110, text: '' }); pb.sel = pb.items.length - 1; pbUI(); return; }
+    var it = pb.sel >= 0 ? pb.items[pb.sel] : null;
+    if (d.pbz && it) { it.s = Math.max(40, Math.min(700, it.s * (d.pbz === '+' ? 1.15 : .87))); pbDraw(); return; }
+    if (d.pbf && it) { it.flip = !it.flip; pbDraw(); return; }
+    if (d.pbdelit && it) { pb.items.splice(pb.sel, 1); pb.sel = -1; pbUI(); return; }
+    if (d.pbclr) { pb.items = []; pb.sel = -1; pbUI(); return; }
+    if (d.pbalb) { pb.view = 'album'; pbUI(); return; }
+    if (d.pbsave) {
+      pb.sel = -1; pbDraw(true); var cv = pb.m.body.querySelector('#cx-pb-cv'), src = '';
+      try { src = cv.toDataURL('image/jpeg', .82); } catch (er) { toast('這張背景沒辦法存，換一個背景試試', 'warning'); return; }
+      g.photos = g.photos || []; g.photos.unshift({ id: 'p' + Date.now().toString(36), src: src, t: Date.now() }); g.photos = g.photos.slice(0, 30); save();
+      var fl = document.createElement('div'); fl.className = 'cx-pb-flash'; pb.m.body.querySelector('.cx-pb-stage').appendChild(fl); setTimeout(function () { fl.remove(); }, 600);
+      toast('📸 拍好了！收進相簿，也可以掛到回憶牆', 'success'); setTimeout(pbUI, 650); return;
+    }
+    if (d.pbdl) { var p = (g.photos || []).filter(function (q) { return q.id === d.pbdl; })[0]; if (p) { var a = document.createElement('a'); a.href = p.src; a.download = '拍貼-' + p.id + '.jpg'; document.body.appendChild(a); a.click(); a.remove(); } return; }
+    if (d.pbdel) { g.photos = (g.photos || []).filter(function (q) { return q.id !== d.pbdel; }); save(); pbUI(); return; }
+  }
   var home = null;
   function hello() { var h = new Date().getHours(); return h < 5 ? '夜深了' : h < 11 ? '早安' : h < 14 ? '午安' : h < 18 ? '下午好' : '晚上好'; }
   function nextAnniv() {
@@ -3006,7 +3124,7 @@
     var av = document.querySelector('#partner-avatar img'), st = (document.getElementById('partner-status') || {}).textContent || '';
     var an = nextAnniv();
     home.querySelector('.cx-h-body').innerHTML =
-      '<div class="cx-h-hi">' + hello() + '，' + esc(A.myname()) + '</div>' +
+      '<div class="cx-h-hi">' + hello() + '，' + esc(A.myname()) + '</div>' + bigCardHtml() +
       '<div class="cx-h-cards">' +
         '<button type="button" class="cx-h-card garden" data-app="garden">' + gardenSummary() + '</button>' +
         '<div class="cx-h-card him"><span class="av">' + (av ? '<img src="' + esc(av.src) + '" alt="">' : '') + '</span><div><b>' + esc(A.pname()) + '</b><span>' + esc(st.trim() || '在這裡') + '</span></div></div>' +
@@ -3029,7 +3147,7 @@
 
   /* ---------- 圖示排列與資料夾 ---------- */
   var LKEY = 'cxHomeLayout', editing = false, openFolder = -1, suppressUntil = 0;
-  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
+  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || a[0] === 'photo' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
   function meta(id) { for (var i = 0; i < APPS.length; i++) if (APPS[i][0] === id) return APPS[i]; return [id, 'fa-circle', id]; }
   function getLayout() {
     var L = null; try { L = JSON.parse(lsGet(LKEY) || 'null'); } catch (e) {}
@@ -3069,6 +3187,7 @@
     if (id === 'moyu') { A.load().then(moyuOpen); return; }
     if (id === 'house') { A.load().then(houseOpen); return; }
     if (id === 'moments') { A.load().then(momentsOpen); return; }
+    if (id === 'photo') { A.load().then(pbOpen); return; }
     fromHome = true; wrapShow();
     var el = document.getElementById(id); if (el) el.click();
   }
@@ -3188,6 +3307,7 @@
         if (amt) { g.coins += amt; log(g, '📋 完成小任務 +' + amt); save(); toast('領到 🪙 ' + amt, 'success'); hRender(); }
         return;
       }
+      if (e.target.closest('[data-hbigset]') || (e.target.closest('[data-hbig]') && !togetherStart())) { bigCardSet(); return; }
       var fb = e.target.closest('[data-folder]'); if (fb) { openFolder = +fb.dataset.folder; foldRender(); return; }
       var b = e.target.closest('[data-app]'); if (!b || editing) return;
       fromHome = false; launch(b.dataset.app);
@@ -3219,6 +3339,13 @@
     '.cx-h-x{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}' +
     '.cx-h-body{flex:1;min-height:0;overflow-y:auto;padding:4px 18px 18px;display:flex;flex-direction:column;gap:14px}' +
     '.cx-h-hi{font-size:14px;color:var(--text-secondary)}' +
+    '.cx-h-big{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:16/9;margin:4px 0 12px;cursor:pointer;box-shadow:0 4px 14px #0001}.cx-h-big .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cx-h-big .bg.def{display:flex;align-items:flex-end;justify-content:center;gap:2%;background:linear-gradient(135deg,#fde8ef,#efe6fb 60%,#e3f0fb);padding-top:8%}.cx-h-big .bg.def img{height:82%;width:auto}' +
+    '.cx-h-big .tx{position:absolute;left:16px;bottom:12px;color:#fff;text-shadow:0 1px 6px #0007;display:flex;flex-direction:column;line-height:1.1}.cx-h-big .tx b{font-size:44px;font-weight:700}.cx-h-big .tx small{font-size:13px}.cx-h-big .set{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;border:0;background:#ffffffcc;color:#8a6a7a;font-size:12px}' +
+    '.cx-pb-pop{position:fixed;inset:0;z-index:100000;background:#0006;display:flex;align-items:center;justify-content:center;padding:20px}.cx-pb-pop .card{background:#fffaf7;border-radius:18px;padding:18px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;font-size:14px}.cx-pb-pop label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#7a6a5a}.cx-pb-pop input[type=date]{border:1px solid #e6dccb;border-radius:10px;padding:6px 10px}.cx-pb-pop .row{display:flex;gap:8px;justify-content:flex-end}' +
+    '.cx-pb-stage{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 3px 12px #0002}.cx-pb-stage canvas{display:block;width:100%;height:auto}.cx-pb-flash{position:absolute;inset:0;background:#fff;animation:cxflash .6s ease-out forwards}@keyframes cxflash{from{opacity:1}to{opacity:0}}' +
+    '.cx-pb-tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:30px;align-items:center;font-size:12px}.cx-pb-tabs{display:flex;gap:6px;margin:6px 0}.cx-pb-tabs button{flex:1;border:1px solid #ecd9e0;background:#fff;border-radius:99px;padding:5px;font-size:13px;color:#8a6a7a}.cx-pb-tabs button.on{background:#e7a6b4;color:#fff;border-color:transparent}' +
+    '.cx-pb-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:190px;overflow-y:auto;padding:2px}.cx-pb-pick button{border:1px solid #eee3d3;background:#fff;border-radius:12px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-pb-pick button.on{border-color:#e7a6b4;box-shadow:0 0 0 2px #e7a6b455}.cx-pb-pick img{height:52px;max-width:100%;object-fit:contain}.cx-pb-pick small{font-size:10px;color:#8a7a6a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}' +
+    '.cx-pb-act{display:flex;gap:6px;margin-top:10px}.cx-pb-act .pri{flex:1}.cx-pb-album{display:grid;grid-template-columns:1fr;gap:12px}.cx-pb-album .ph{background:#fff;border-radius:14px;padding:8px;box-shadow:0 2px 8px #0001}.cx-pb-album img{width:100%;border-radius:10px;display:block}.cx-pb-album small{color:#a8998a;font-size:11px}.cx-pb-album .a{display:flex;gap:6px;justify-content:flex-end}' +
     '.cx-h-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
     '.cx-h-task{border:1px solid var(--border-color);background:var(--primary-bg);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}.cx-h-task .tt{display:flex;align-items:baseline;gap:8px}.cx-h-task .tt b{font-size:15px}.cx-h-task .tt span{font-size:11px;color:var(--text-secondary)}' +
     '.cx-h-task .row{display:flex;align-items:center;gap:10px}.cx-h-task .tx{flex:1;min-width:0;display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13px}.cx-h-task .tx i{grid-column:1/-1;height:6px;border-radius:9px;background:var(--secondary-bg);position:relative;overflow:hidden}.cx-h-task .tx i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--accent-color);border-radius:9px}.cx-h-task .tx small{grid-row:1;grid-column:2;color:var(--text-secondary)}' +
