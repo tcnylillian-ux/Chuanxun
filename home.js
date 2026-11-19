@@ -2977,7 +2977,7 @@
   }
   /* ================= 小窩 ================= */
   var APPS = [
-    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['photo', 'fa-camera', '拍貼機'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
+    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['photo', 'fa-camera', '拍貼機'], ['f48', 'fa-table-cells', '花花2048'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
     ['qa-function', 'fa-box-open', '問題箱'],
     ['cx-comp-entry', 'fa-headphones', '陪伴'], ['cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪'], ['cx-phone-entry', 'fa-mobile-screen', 'TA 的手機'], ['cx-rp-entry', 'fa-gift', '紅包'],
     ['cx-calllog-entry', 'fa-phone', '通話紀錄'], ['cx-pomo-entry', 'fa-clock', '番茄鐘'], ['cx-period-entry', 'fa-droplet', '潮汐'], ['mood-function', 'fa-face-smile', '心晴手帳'],
@@ -3020,6 +3020,86 @@
   /* ================= 拍貼機 ================= */
   var PB_BG = [['pb_pink', '粉紅愛心'], ['pb_beach', '海邊'], ['pb_garden', '花園'], ['pb_night', '夜空'], ['fest:farm', '我們的農場'], ['h:r_living', '客廳']];
   var PB_ST = ['st_heart', 'st_star', 'st_bow', 'st_crown', 'st_cloud', 'st_bubble', 'x_tree', 'x_snow', 'x_gift', 'rose', 'sunflower', 'lavender', 'rainbowrose', 'f_cherry', 'f_strawberry', 'fi_goldfish', 'fi_koi'];
+  /* ---------- 花花 2048 ---------- */
+  var F48 = [['sprout', '小芽'], ['bud', '花苞'], ['daisy', '雛菊'], ['tulip', '鬱金香'], ['sunflower', '向日葵'], ['lotus', '荷花'], ['peony', '牡丹'], ['rose', '玫瑰'], ['bluerose', '藍玫瑰'], ['goldrose', '金玫瑰'], ['rainbowrose', '彩虹玫瑰']];
+  var F48_PAY = { 7: 5, 8: 10, 9: 20, 10: 50, 11: 120 };
+  var F48_SAY = {
+    '昶司': { hi: ['……不錯。', '再合一次看看。', '妳比我想的還厲害。'], top: ['彩虹玫瑰？……妳真的做到了。', '今天的晚餐我做，獎勵妳。'], over: ['沒關係，再來一局。', '下次角落留一格，別急著滑。'] },
+    '仁彌': { hi: ['哇哇哇好漂亮！', '再一個！再一個！', '妳好會玩喔～'], top: ['彩虹玫瑰！！！我要拍照！', '妳是天才吧！！'], over: ['啊啊啊好可惜！', '換我玩！……我也輸了哈哈。'] }
+  };
+  var f48 = null;
+  function f48G() { var g = G(); g.f48 = g.f48 || { best: 0, top: 0, cur: null }; return g.f48; }
+  function f48New() { var b = []; for (var i = 0; i < 16; i++) b.push(0); f48Add(b); f48Add(b); return { b: b, s: 0 }; }
+  function f48Add(b) { var e = []; b.forEach(function (v, i) { if (!v) e.push(i); }); if (!e.length) return -1; var i = e[Math.floor(Math.random() * e.length)]; b[i] = Math.random() < 0.9 ? 1 : 2; return i; }
+  function f48Line(a) { /* 往左合併一列，回傳 [新列, 得分, 合併位置, 最高級] */
+    var v = a.filter(Boolean), out = [], sc = 0, mg = [], top = 0;
+    for (var i = 0; i < v.length; i++) { if (v[i] === v[i + 1]) { out.push(v[i] + 1); sc += Math.pow(2, v[i] + 1); mg.push(out.length - 1); top = Math.max(top, v[i] + 1); i++; } else out.push(v[i]); }
+    while (out.length < 4) out.push(0); return [out, sc, mg, top];
+  }
+  function f48Move(dir) {
+    var c = f48.cur, b = c.b, nb = b.slice(), sc = 0, moved = false, merged = {}, top = 0;
+    for (var r = 0; r < 4; r++) {
+      var idx = []; for (var k = 0; k < 4; k++) idx.push(dir === 'L' ? r * 4 + k : dir === 'R' ? r * 4 + 3 - k : dir === 'U' ? k * 4 + r : (3 - k) * 4 + r);
+      var res = f48Line(idx.map(function (i) { return b[i]; }));
+      idx.forEach(function (i, k) { if (nb[i] !== res[0][k]) moved = true; nb[i] = res[0][k]; });
+      res[2].forEach(function (k) { merged[idx[k]] = 1; }); sc += res[1]; top = Math.max(top, res[3]);
+    }
+    if (!moved) return;
+    c.b = nb; c.s += sc; var ni = f48Add(nb);
+    var st = f48G(); st.cur = c; if (c.s > st.best) st.best = c.s;
+    var msg = '';
+    if (top > (st.top || 0)) {
+      st.top = top; var pay = F48_PAY[top];
+      if (pay) { var g = G(); g.coins += pay; log(g, '🌸 2048 第一次合出' + F48[top - 1][1] + ' +' + pay); msg = '第一次合出' + F48[top - 1][1] + '！🪙+' + pay; f48Talk(top >= 11 ? 'top' : 'hi'); }
+    }
+    save(); f48UI(merged, ni, msg);
+    if (!f48CanMove(nb)) setTimeout(f48Over, 400);
+  }
+  function f48CanMove(b) { for (var i = 0; i < 16; i++) { if (!b[i]) return true; if (i % 4 < 3 && b[i] === b[i + 1]) return true; if (i < 12 && b[i] === b[i + 4]) return true; } return false; }
+  function f48Talk(kind) {
+    var bro = pick(BROS), lines = F48_SAY[bro[0]][kind];
+    f48.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(lines) };
+  }
+  function f48Over() {
+    var c = f48.cur, pay = Math.min(30, Math.floor(c.s / 150)), g = G();
+    if (pay) { g.coins += pay; log(g, '🌸 2048 得了 ' + c.s + ' 分 +' + pay); }
+    f48G().cur = null; save(); f48Talk('over');
+    f48.over = { s: c.s, pay: pay }; f48UI();
+  }
+  function f48Open() {
+    var g = G(); if (!g) return;
+    if (!f48) {
+      var m = A.makeModal('cx-48-modal', 'fa-table-cells', '花花 2048'); f48 = { m: m };
+      m.onBack = function () { m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-f48]'); if (!b) return;
+        if (b.dataset.f48 === 'new') { if (f48.cur && f48.cur.s > 0 && !f48.over && !b.dataset.ok) { b.dataset.ok = 1; b.textContent = '確定重來？'; return; } f48.cur = f48New(); f48G().cur = f48.cur; f48.over = null; f48.say = null; save(); f48UI(); }
+        if (b.dataset.f48 === 'help') { f48.help = !f48.help; f48UI(); }
+      });
+      var sx = 0, sy = 0, on = false;
+      m.body.addEventListener('pointerdown', function (e) { if (!e.target.closest('.cx-48-bd')) return; on = true; sx = e.clientX; sy = e.clientY; });
+      m.body.addEventListener('pointerup', function (e) { if (!on) return; on = false; var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 24 || f48.over) return; f48Move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')); });
+      document.addEventListener('keydown', function (e) { if (!f48 || !f48.m.isOpen() || f48.over) return; var d = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D' }[e.key]; if (d) { e.preventDefault(); f48Move(d); } });
+    }
+    var st = f48G(); f48.cur = st.cur || f48New(); st.cur = f48.cur; f48.over = null; f48.say = null; save();
+    f48UI(); f48.m.open();
+  }
+  function f48UI(merged, ni, msg) {
+    var c = f48.cur, st = f48G(), g = G();
+    var h = '<div class="cx-48-top"><div class="sc"><small>分數</small><b>' + c.s + '</b></div><div class="sc"><small>最高</small><b>' + st.best + '</b></div>' + coinsHtml(g) + '</div>';
+    h += '<div class="cx-48-bar"><button type="button" class="cx-btn sm" data-f48="new">重新開始</button><button type="button" class="cx-btn sm" data-f48="help">花朵順序</button></div>';
+    if (f48.help) h += '<div class="cx-48-help">' + F48.map(function (f, i) { var im = CI(f[0]); return '<span>' + (im ? '<img src="' + im.src + '" alt="">' : '') + f[1] + (F48_PAY[i + 1] ? '<i>🪙' + F48_PAY[i + 1] + '</i>' : '') + '</span>'; }).join('<em>→</em>') + '<p>兩朵一樣的花碰在一起就會長大。第一次合出牡丹以上的花有金幣獎勵！</p></div>';
+    h += '<div class="cx-48-bd">' + c.b.map(function (v, i) {
+      if (!v) return '<div class="t"></div>';
+      var f = F48[Math.min(v, F48.length) - 1], im = CI(f[0]);
+      return '<div class="t on lv' + Math.min(v, 11) + (merged && merged[i] ? ' mg' : '') + (i === ni ? ' nw' : '') + '">' + (im ? '<img src="' + im.src + '" alt="">' : '') + '<small>' + (v > 11 ? f[1] + '×' + Math.pow(2, v - 11) : f[1]) + '</small></div>';
+    }).join('') + '</div>';
+    if (msg) h += '<div class="cx-48-msg">' + esc(msg) + '</div>';
+    if (f48.say) h += '<div class="cx-48-say">' + (f48.say.img ? '<img src="' + f48.say.img + '" alt="">' : '') + '<div><b>' + esc(f48.say.n) + '</b>' + esc(f48.say.t) + '</div></div>';
+    if (f48.over) h += '<div class="cx-48-over"><b>沒有地方滑了</b><span>這局 ' + f48.over.s + ' 分' + (f48.over.pay ? '・🪙+' + f48.over.pay : '') + '</span><button type="button" class="cx-btn pri" data-f48="new">再來一局</button></div>';
+    h += '<p class="cx-muted cx-48-tip">滑動畫面或用方向鍵移動。離開也會幫你存著這局。</p>';
+    f48.m.body.innerHTML = h;
+  }
   var pb = null;
   function pbImg(k) { if (k.indexOf('fest:') === 0) { var u = festImg('farm', '', function () { pbDraw(); }); return u ? { src: u } : null; } if (k.indexOf('h:') === 0) return HI(k.slice(2)); return CI(k) || HI(k); }
   var pbCache = {};
@@ -3147,7 +3227,7 @@
 
   /* ---------- 圖示排列與資料夾 ---------- */
   var LKEY = 'cxHomeLayout', editing = false, openFolder = -1, suppressUntil = 0;
-  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || a[0] === 'photo' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
+  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || a[0] === 'photo' || a[0] === 'f48' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
   function meta(id) { for (var i = 0; i < APPS.length; i++) if (APPS[i][0] === id) return APPS[i]; return [id, 'fa-circle', id]; }
   function getLayout() {
     var L = null; try { L = JSON.parse(lsGet(LKEY) || 'null'); } catch (e) {}
@@ -3188,6 +3268,7 @@
     if (id === 'house') { A.load().then(houseOpen); return; }
     if (id === 'moments') { A.load().then(momentsOpen); return; }
     if (id === 'photo') { A.load().then(pbOpen); return; }
+    if (id === 'f48') { A.load().then(f48Open); return; }
     fromHome = true; wrapShow();
     var el = document.getElementById(id); if (el) el.click();
   }
@@ -3342,6 +3423,12 @@
     '.cx-h-big{position:relative;flex:none;min-height:150px;border-radius:20px;overflow:hidden;aspect-ratio:16/9;margin:4px 0 12px;cursor:pointer;box-shadow:0 4px 14px #0001}.cx-h-big .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cx-h-big .bg.def{display:flex;align-items:flex-end;justify-content:center;gap:2%;background:linear-gradient(135deg,#fde8ef,#efe6fb 60%,#e3f0fb);padding-top:8%}.cx-h-big .bg.def img{height:82%;width:auto}' +
     '.cx-h-big .tx{position:absolute;left:16px;bottom:12px;color:#fff;text-shadow:0 1px 6px #0007;display:flex;flex-direction:column;line-height:1.1}.cx-h-big .tx b{font-size:44px;font-weight:700}.cx-h-big .tx small{font-size:13px}.cx-h-big.dflt .bg.def{justify-content:flex-end;padding-right:3%;gap:0}.cx-h-big.dflt .bg.def img{height:72%;margin-left:-4%}.cx-h-big.dflt .tx{color:#9a6478;text-shadow:none;top:0;bottom:0;justify-content:center;left:18px}.cx-h-big.dflt .tx b{font-size:48px;color:#c0718c}.cx-h-big .set{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;border:0;background:#ffffffcc;color:#8a6a7a;font-size:12px}' +
     '.cx-pb-pop{position:fixed;inset:0;z-index:100000;background:#0006;display:flex;align-items:center;justify-content:center;padding:20px}.cx-pb-pop .card{background:#fffaf7;border-radius:18px;padding:18px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;font-size:14px}.cx-pb-pop label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#7a6a5a}.cx-pb-pop input[type=date]{border:1px solid #e6dccb;border-radius:10px;padding:6px 10px}.cx-pb-pop .row{display:flex;gap:8px;justify-content:flex-end}' +
+'.cx-48-top{display:flex;gap:8px;align-items:center}.cx-48-top .sc{background:var(--primary-bg);border:1px solid var(--border-color);border-radius:12px;padding:4px 12px;display:flex;flex-direction:column;align-items:center;min-width:64px}.cx-48-top .sc small{font-size:11px;color:var(--text-secondary)}.cx-48-top .sc b{font-size:18px}.cx-48-top .cx-g-coin{margin-left:auto}' +
+    '.cx-48-bar{display:flex;gap:6px;margin:8px 0}.cx-48-help{font-size:12px;background:var(--primary-bg);border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;align-items:center;gap:2px;margin-bottom:8px}.cx-48-help span{display:inline-flex;flex-direction:column;align-items:center;font-size:10px}.cx-48-help img{width:28px;height:28px;object-fit:contain}.cx-48-help i{font-style:normal;color:#c08a2a}.cx-48-help em{font-style:normal;opacity:.5}.cx-48-help p{width:100%;margin:6px 0 0;color:var(--text-secondary)}' +
+    '.cx-48-bd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#e9dccb;padding:8px;border-radius:16px;touch-action:none;user-select:none;-webkit-user-select:none;max-width:420px;margin:0 auto;width:100%;box-sizing:border-box}.cx-48-bd .t{aspect-ratio:1;border-radius:12px;background:#f6efe5;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}.cx-48-bd .t img{width:66%;height:66%;margin-bottom:14%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}.cx-48-bd .t small{position:absolute;bottom:3px;font-weight:600;left:0;right:0;text-align:center;font-size:10px;color:#7a5a48;pointer-events:none}' +
+    '.cx-48-bd .lv1{background:#eef6e4}.cx-48-bd .lv2{background:#e4f2d6}.cx-48-bd .lv3{background:#fff8e0}.cx-48-bd .lv4{background:#ffe8ec}.cx-48-bd .lv5{background:#fff1c9}.cx-48-bd .lv6{background:#ffe1ea}.cx-48-bd .lv7{background:#ffd4df}.cx-48-bd .lv8{background:#ffc5cf}.cx-48-bd .lv9{background:#d8e6ff}.cx-48-bd .lv10{background:#ffe9a8}.cx-48-bd .lv11{background:linear-gradient(135deg,#ffd6e0,#fff2b8,#d6f5e0,#d6e4ff,#ead6ff)}' +
+    '.cx-48-bd .nw{animation:cx48n .18s ease-out}.cx-48-bd .mg{animation:cx48m .2s ease-out}@keyframes cx48n{from{transform:scale(.3);opacity:0}}@keyframes cx48m{50%{transform:scale(1.14)}}' +
+    '.cx-48-msg{text-align:center;color:#c08a2a;font-weight:600;margin-top:8px}.cx-48-say{display:flex;gap:8px;align-items:center;margin-top:10px;background:var(--primary-bg);border-radius:14px;padding:8px 10px;font-size:13px}.cx-48-say img{width:44px;height:44px;object-fit:contain}.cx-48-say b{display:block;font-size:12px;color:var(--text-secondary)}.cx-48-over{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:10px;padding:12px;border-radius:14px;background:#fff4ec;color:#6b4b3a}.cx-48-tip{text-align:center;font-size:11px;margin-top:8px}' +
     '.cx-pb-stage{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 3px 12px #0002}.cx-pb-stage canvas{display:block;width:100%;height:auto}.cx-pb-flash{position:absolute;inset:0;background:#fff;animation:cxflash .6s ease-out forwards}@keyframes cxflash{from{opacity:1}to{opacity:0}}' +
     '.cx-pb-tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:30px;align-items:center;font-size:12px}.cx-pb-tabs{display:flex;gap:6px;margin:6px 0}.cx-pb-tabs button{flex:1;border:1px solid #ecd9e0;background:#fff;border-radius:99px;padding:5px;font-size:13px;color:#8a6a7a}.cx-pb-tabs button.on{background:#e7a6b4;color:#fff;border-color:transparent}' +
     '.cx-pb-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:190px;overflow-y:auto;padding:2px}.cx-pb-pick button{border:1px solid #eee3d3;background:#fff;border-radius:12px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-pb-pick button.on{border-color:#e7a6b4;box-shadow:0 0 0 2px #e7a6b455}.cx-pb-pick img{height:52px;max-width:100%;object-fit:contain}.cx-pb-pick small{font-size:10px;color:#8a7a6a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}' +
