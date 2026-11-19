@@ -2532,7 +2532,7 @@
     '.cx-sl-lock .sky i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:cxtw 3s ease-in-out infinite}.cx-sl-lock .sky i:nth-child(1){left:12%;top:10%}.cx-sl-lock .sky i:nth-child(2){left:30%;top:22%;animation-delay:.6s}.cx-sl-lock .sky i:nth-child(3){left:70%;top:8%;animation-delay:1.2s}.cx-sl-lock .sky i:nth-child(4){left:85%;top:28%;animation-delay:.3s}.cx-sl-lock .sky i:nth-child(5){left:50%;top:35%;animation-delay:2s}.cx-sl-lock .sky i:nth-child(6){left:20%;top:42%;animation-delay:1.6s}.cx-sl-lock .sky i:nth-child(7){left:62%;top:46%;animation-delay:.9s}.cx-sl-lock .sky i:nth-child(8){left:90%;top:52%;animation-delay:2.4s}@keyframes cxtw{50%{opacity:.2}}' +
     '.cx-sl-lock .moon{font-size:38px}.cx-sl-lock .clk{font-size:64px;font-weight:300;letter-spacing:2px;font-variant-numeric:tabular-nums;margin-top:6px}.cx-sl-lock .dur{font-size:13px;opacity:.75}.cx-sl-lock .say{margin-top:18px;background:#ffffff22;border-radius:16px;padding:10px 16px;font-size:14px;max-width:300px;text-align:center}' +
     '.cx-sl-lock .bed{position:absolute;left:0;right:0;bottom:0;height:42vh}.cx-sl-lock .heads{position:absolute;left:50%;bottom:14vh;transform:translateX(-50%);display:flex;align-items:flex-end}.cx-sl-lock .heads img{height:24vh;max-height:200px;margin:0 -3vh;filter:brightness(.92)}.cx-sl-lock .heads img{transform:rotate(40deg);transform-origin:50% 70%}.cx-sl-lock .heads.n3{bottom:16.5vh}.cx-sl-lock .heads.n3 img:nth-child(2){margin-bottom:2vh}.cx-sl-lock .heads.n3 img{height:min(24vh,31vw);margin:0 -1vw}.cx-sl-lock .blanket{position:absolute;left:-10%;right:-10%;bottom:0;height:22vh;background:linear-gradient(#b9a8dc,#8f7fbf);border-radius:50% 50% 0 0/40% 40% 0 0;box-shadow:0 -6px 20px #0003}' +
-    '.cx-sl-lock .tip{position:absolute;bottom:4vh;font-size:12px;opacity:.7}.cx-sl-lock .q{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fffaf7;color:#5b4636;border-radius:18px;padding:18px;width:min(300px,86vw);text-align:center;flex-direction:column;gap:12px;z-index:2}.cx-sl-lock.ask .q{display:flex}.cx-sl-lock .q .r{display:flex;gap:8px;justify-content:center}.cx-sl-lock .q .lnk{border:0;background:none;color:#a8998a;font-size:12px;text-decoration:underline}' +
+    '.cx-sl-lock .tip{position:absolute;bottom:4vh;font-size:12px;opacity:.7}.cx-sl-lock.pic{background:#1d1f52 center bottom/cover no-repeat}.cx-sl-lock.pic .sky,.cx-sl-lock.pic .moon,.cx-sl-lock.pic .bed{display:none}.cx-sl-lock.pic .clk,.cx-sl-lock.pic .dur,.cx-sl-lock.pic .tip{text-shadow:0 1px 8px #0009}.cx-sl-lock.pic .tip{opacity:.9;color:#fff}.cx-sl-lock.pic .say{background:#1b1d4a99;backdrop-filter:blur(4px)}.cx-sl-lock .q{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fffaf7;color:#5b4636;border-radius:18px;padding:18px;width:min(300px,86vw);text-align:center;flex-direction:column;gap:12px;z-index:2}.cx-sl-lock.ask .q{display:flex}.cx-sl-lock .q .r{display:flex;gap:8px;justify-content:center}.cx-sl-lock .q .lnk{border:0;background:none;color:#a8998a;font-size:12px;text-decoration:underline}' +
     '.cx-open .p.tf{background:linear-gradient(160deg,#f6b65a,#ef8f3c)}.cx-open .coin.tfbtn{width:auto;padding:0 22px;border-radius:999px;font-size:16px}';
     document.head.appendChild(st); })();
   /* ================= v107 新功能：骰子／問卷／待辦／睡眠／轉帳 ================= */
@@ -2720,6 +2720,9 @@
       (msg ? '<div class="say">' + esc(msg) + '</div>' : '') +
       '<div class="bed"><div class="heads' + (slWho().length > 2 ? ' n3' : '') + '">' + heads + '</div><div class="blanket"></div></div><div class="tip">點一下畫面就是起床 ☀️</div>' +
       '<div class="q"><b>起床了嗎？</b><div class="r"><button type="button" class="cx-btn" data-sll="no">再睡一下</button><button type="button" class="cx-btn pri" data-sll="wake">起床了</button></div><button type="button" class="lnk" data-sll="cancel">取消這次睡眠（不記錄）</button></div>';
+    var pk = X.sleep.with || 'cs', pu = 'fest/sl_' + pk + '.webp', pim = new Image();
+    if (slLockEl._pic === pu) { slLockEl.classList.add('pic'); }
+    else { slLockEl.classList.remove('pic'); slLockEl.style.backgroundImage = ''; pim.onload = function () { if (!slLockEl) return; slLockEl._pic = pu; slLockEl.style.backgroundImage = 'url(' + pu + ')'; slLockEl.classList.add('pic'); }; pim.src = pu; }
     slLockEl.hidden = false; slLockTick();
     if (!window.__cxHIMG) himgReady(function () { if (slLockEl && !slLockEl.hidden) sleepLock(msg); });
   }
@@ -2739,6 +2742,18 @@
     X.sleep.peek = X.sleep.peek || []; X.sleep.peek.push({ t: Date.now() - away, ms: away }); await save();
     var w = slTalker(); sleepLock(w ? pick(SLEEP_PEEK_LINES(w)) : '去哪了？手機放下，好好睡覺。');
   });
+  function slName(k) {
+    var re = k === 'rm' ? /仁彌|仁弥/ : /昶司/, all = who1().map(function (p) { return p.name; }).concat(pname());
+    return all.filter(function (n) { return re.test(n); })[0] || null;
+  }
+  function slSpeaker() {
+    var w = X.sleep.with || 'cs', ks = w === 'all' ? ['cs', 'rm'] : w === 'me' ? [] : [w];
+    var k = ks.length ? pick(ks) : null, n = k ? slName(k) : null;
+    if (!n) n = pick(who1()).name;
+    return { k: k || (/仁彌|仁弥/.test(n) ? 'rm' : /昶司/.test(n) ? 'cs' : ''), n: n };
+  }
+  var SL_NIGHT2 = { cs: ['晚安。手機放下，閉上眼睛。', '睡吧，我在。', '……過來一點，晚安。', '明天早上叫妳起床，好好睡。'], rm: ['晚安晚安～要夢到我喔！', '抱抱，然後睡覺！', '我數到三妳就要睡著喔，一、二……', '被子蓋好，不准踢被子～'] };
+  var SL_MORN2 = { cs: ['早。睡得好嗎？', '起來了？先喝杯水。', '早安，今天也要好好吃早餐。'], rm: ['早安！！太陽曬屁股了～', '醒了醒了！我好想妳！', '早安寶貝，今天要做什麼？'] };
   function SLEEP_PEEK_LINES(w) { return SL_PEEK[w] || SL_PEEK.cs; }
   function sleepOpen() {
     if (!slM) {
@@ -2746,14 +2761,14 @@
       slM.body.addEventListener('click', async function (e) {
         var b = e.target.closest('button'); if (!b) return;
         if (b.dataset.slw) { X.sleep.with = b.dataset.slw; await save(); sleepRender(); return; }
-        if (b.id === 'cx-sl-go') { X.sleep.cur = Date.now(); X.sleep.peek = []; slNoLock = false; await save(); var w = pick(who1()).name; sayAs(w === pname() ? null : w, pick(SLEEP_NIGHT)); slM.close(); sleepLock(); return; }
+        if (b.id === 'cx-sl-go') { X.sleep.cur = Date.now(); X.sleep.peek = []; slNoLock = false; await save(); var sp = slSpeaker(), w = sp.n; sayAs(w === pname() ? null : w, pick(SL_NIGHT2[sp.k] || SLEEP_NIGHT)); slM.close(); sleepLock(); return; }
         if (b.id === 'cx-sl-cancel') { X.sleep.cur = 0; await save(); sleepRender(); return; }
         if (b.dataset.slq) {
           var st = X.sleep.cur, en = Date.now(); if (!st) return;
           var wv = (slM.body.querySelector('#cx-sl-wake') || {}).value;
           if (wv) { var hm2 = wv.split(':'), wd = new Date(); wd.setHours(+hm2[0], +hm2[1], 0, 0); if (wd.getTime() > Date.now() + 6e4) wd.setDate(wd.getDate() - 1); if (wd.getTime() > st) en = Math.min(Date.now(), wd.getTime()); }
           var pk = X.sleep.peek || []; X.sleep.log.unshift({ s: st, e: en, q: +b.dataset.slq, pk: pk.length, pm: Math.round(pk.reduce(function (a, x) { return a + x.ms; }, 0) / 6e4) }); X.sleep.peek = []; slNoLock = false; X.sleep.log = X.sleep.log.slice(0, 120); X.sleep.cur = 0; await save();
-          var hrs = (en - st) / 36e5, w2 = pick(who1()).name, ln = pick(SLEEP_MORN) + (hrs < 6 ? '只睡了 ' + hrs.toFixed(1) + ' 小時，今天早點睡好不好？' : hrs > 9.5 ? '睡了好久，小懶豬。' : '');
+          var hrs = (en - st) / 36e5, sp2 = slSpeaker(), w2 = sp2.n, ln = pick(SL_MORN2[sp2.k] || SLEEP_MORN) + (hrs < 6 ? '只睡了 ' + hrs.toFixed(1) + ' 小時，今天早點睡好不好？' : hrs > 9.5 ? '睡了好久，小懶豬。' : '');
           sayAs(w2 === pname() ? null : w2, ln); sleepRender(); return;
         }
         if (b.dataset.slfix != null) { var R0 = X.sleep.log[+b.dataset.slfix], inp = slM.body.querySelector('[data-slfixv="' + b.dataset.slfix + '"]'); if (!R0 || !inp || !inp.value) return; var p2 = inp.value.split(':'), d2 = new Date(R0.e); d2.setHours(+p2[0], +p2[1], 0, 0); if (d2.getTime() <= R0.s) d2.setDate(d2.getDate() + 1); if (d2.getTime() - R0.s > 20 * 36e5) d2.setDate(d2.getDate() - 1); if (d2.getTime() > R0.s) { R0.e = d2.getTime(); await save(); toast('改好了', 'success'); sleepRender(); } return; }
