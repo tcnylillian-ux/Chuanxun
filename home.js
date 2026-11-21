@@ -2977,7 +2977,7 @@
   }
   /* ================= 小窩 ================= */
   var APPS = [
-    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['photo', 'fa-camera', '拍貼機'], ['f48', 'fa-table-cells', '花花2048'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
+    ['garden', 'fa-seedling', '花園'], ['house', 'fa-house-chimney', '我們的家'], ['moments', 'fa-images', '動態'], ['photo', 'fa-camera', '拍貼機'], ['f48', 'fa-table-cells', '花花2048'], ['pz', 'fa-puzzle-piece', '拼圖'], ['m3', 'fa-gem', '消消樂'], ['gc', 'fa-gift', '扭蛋機'], ['dr', 'fa-shirt', '換裝間'], ['moyu', 'fa-fish', '摸魚小貓'], ['envelope-function', 'fa-envelope', '寫信'], ['cx-diary-entry', 'fa-book', '他的日記'],
     ['qa-function', 'fa-box-open', '問題箱'],
     ['cx-comp-entry', 'fa-headphones', '陪伴'], ['cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪'], ['cx-phone-entry', 'fa-mobile-screen', 'TA 的手機'], ['cx-rp-entry', 'fa-gift', '紅包'],
     ['cx-calllog-entry', 'fa-phone', '通話紀錄'], ['cx-pomo-entry', 'fa-clock', '番茄鐘'], ['cx-period-entry', 'fa-droplet', '潮汐'], ['mood-function', 'fa-face-smile', '心晴手帳'],
@@ -3100,8 +3100,321 @@
     h += '<p class="cx-muted cx-48-tip">滑動畫面或用方向鍵移動。離開也會幫你存著這局。</p>';
     f48.m.body.innerHTML = h;
   }
+  /* ---------- 拼圖 ---------- */
+  var PZ_SRC = [['fest/sl_all.webp', '星空三人'], ['fest/sl_cs.webp', '和昶司'], ['fest/sl_rm.webp', '和仁彌'], ['fest/sl_me.webp', '星空'], ['fest/farm.webp', '農場'], ['c:pb_beach', '海邊'], ['c:pb_garden', '花園'], ['c:pb_night', '夜空']];
+  var PZ_PAY = { 3: 5, 4: 15, 5: 30 };
+  var PZ_SAY = { '昶司': ['拼好了？……給我看看。', '這麼快？不錯嘛，妹妹。', '下次拼更難的，我陪妳。'], '仁彌': ['好厲害，一片一片都拼回來了。', '拼得真好，我的好妹妹。', '慢慢拼也沒關係，我在旁邊看著。'] };
+  var pz = null;
+  function pzSrcList() {
+    var g = G() || {}, out = (g.photos || []).slice(0, 12).map(function (p) { return ['p:' + p.id, '我的拍貼', p.src]; });
+    PZ_SRC.forEach(function (s) { var u = s[0].indexOf('c:') === 0 ? (CI(s[0].slice(2)) || {}).src : s[0]; if (u) out.push([s[0], s[1], u]); });
+    return out;
+  }
+  function pzPrep(url, cb) {
+    var im = new Image(); im.onload = function () {
+      var s = Math.min(im.width, im.height), c = document.createElement('canvas'); c.width = c.height = 600;
+      c.getContext('2d').drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, 600, 600);
+      try { cb(c.toDataURL('image/jpeg', 0.85)); } catch (e) { cb(url); }
+    }; im.onerror = function () { cb(null); }; im.src = url;
+  }
+  function pzStart(url, n) {
+    pzPrep(url, function (sq) {
+      if (!sq) { pz.view = 'pick'; pz.err = '這張圖載不到，換一張試試'; pzUI(); return; }
+      var t = []; for (var i = 0; i < n * n; i++) t.push(i);
+      do { for (var j = t.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)), x = t[j]; t[j] = t[k]; t[k] = x; } } while (t.every(function (v, i) { return v === i; }));
+      pz.img = sq; pz.n = n; pz.t = t; pz.sel = -1; pz.moves = 0; pz.t0 = Date.now(); pz.done = null; pz.view = 'play'; pz.err = ''; pzUI();
+    });
+  }
+  function pzOpen() {
+    var g = G(); if (!g) return;
+    if (!pz) {
+      var m = A.makeModal('cx-pz-modal', 'fa-puzzle-piece', '拼圖'); pz = { m: m, view: 'pick', n: 3, src: null };
+      m.onBack = function () { if (pz.view === 'play') { pz.view = 'pick'; pzUI(); return true; } m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', function (e) {
+        var b;
+        if ((b = e.target.closest('[data-pzn]'))) { pz.n = +b.dataset.pzn; pzUI(); return; }
+        if ((b = e.target.closest('[data-pzs]'))) { pz.src = +b.dataset.pzs; pzUI(); return; }
+        if ((b = e.target.closest('[data-pzgo]'))) { var L = pzSrcList(), s = L[pz.src == null ? 0 : pz.src]; if (s) { pz.srcKey = s[0]; pzStart(s[2], pz.n); } return; }
+        if ((b = e.target.closest('[data-pzback]'))) { pz.view = 'pick'; pzUI(); return; }
+        if ((b = e.target.closest('[data-pzpeek]'))) { pz.peek = !pz.peek; pzUI(); return; }
+        if ((b = e.target.closest('[data-pzi]'))) {
+          if (pz.done) return;
+          var i = +b.dataset.pzi;
+          if (pz.sel < 0) { pz.sel = i; pzUI(); return; }
+          if (pz.sel === i) { pz.sel = -1; pzUI(); return; }
+          var a = pz.sel, x = pz.t[a]; pz.t[a] = pz.t[i]; pz.t[i] = x; pz.sel = -1; pz.moves++;
+          if (pz.t.every(function (v, k) { return v === k; })) pzWin();
+          pzUI(); return;
+        }
+      });
+    }
+    pz.view = 'pick'; pzUI(); pz.m.open();
+  }
+  function pzWin() {
+    var g = G(), sec = Math.round((Date.now() - pz.t0) / 1000), pay = PZ_PAY[pz.n] || 5;
+    g.pz = g.pz || {}; var key = pz.n + 'x' + pz.n, best = g.pz[key];
+    var nb = !best || sec < best; if (nb) g.pz[key] = sec;
+    g.coins += pay; log(g, '🧩 拼好 ' + key + ' 拼圖 +' + pay);
+    save();
+    var bro = pick(BROS); pz.done = { sec: sec, pay: pay, nb: nb, say: { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(PZ_SAY[bro[0]]) } };
+  }
+  function pzTime(s) { var r = s % 60; return Math.floor(s / 60) + ':' + (r < 10 ? '0' : '') + r; }
+  function pzUI() {
+    var b = pz.m.body, g = G() || {};
+    if (pz.view === 'pick') {
+      var L = pzSrcList(); if (pz.src == null || pz.src >= L.length) pz.src = 0;
+      b.innerHTML = '<div class="cx-pz-top"><b>選一張圖</b>' + coinsHtml(g) + '</div>' + (pz.err ? '<p class="cx-pz-err">' + esc(pz.err) + '</p>' : '') +
+        '<div class="cx-pz-pick">' + L.map(function (s, i) { return '<button type="button" data-pzs="' + i + '" class="' + (i === pz.src ? 'on' : '') + '"><img src="' + s[2] + '" alt=""><small>' + esc(s[1]) + '</small></button>'; }).join('') + '</div>' +
+        '<div class="cx-pz-lv">' + [3, 4, 5].map(function (n) { var bs = (g.pz || {})[n + 'x' + n]; return '<button type="button" data-pzn="' + n + '" class="' + (pz.n === n ? 'on' : '') + '"><b>' + n + '×' + n + '</b><small>' + (n === 3 ? '簡單' : n === 4 ? '普通' : '困難') + '・🪙' + PZ_PAY[n] + (bs ? '<br>最快 ' + pzTime(bs) : '') + '</small></button>'; }).join('') + '</div>' +
+        '<button type="button" class="cx-btn pri cx-pz-go" data-pzgo="1">開始拼</button><p class="cx-muted cx-pz-tip">拍貼機拍的照片也會出現在這裡喔。</p>';
+      return;
+    }
+    var n = pz.n, sz = 100 / (n - 1);
+    var h = '<div class="cx-pz-top"><span>步數 <b>' + pz.moves + '</b></span><button type="button" class="cx-btn sm" data-pzpeek="1">' + (pz.peek ? '收起原圖' : '看原圖') + '</button><button type="button" class="cx-btn sm" data-pzback="1">換一張</button></div>';
+    if (pz.peek) h += '<img class="cx-pz-peek" src="' + pz.img + '" alt="">';
+    h += '<div class="cx-pz-bd' + (pz.done ? ' done' : '') + '" style="grid-template-columns:repeat(' + n + ',1fr)">' + pz.t.map(function (v, i) {
+      var x = (v % n) * sz, y = Math.floor(v / n) * sz;
+      return '<button type="button" data-pzi="' + i + '" class="' + (i === pz.sel ? 'sel' : '') + (v === i ? ' ok' : '') + '" style="background-image:url(' + pz.img + ');background-size:' + (n * 100) + '% ' + (n * 100) + '%;background-position:' + x + '% ' + y + '%"></button>';
+    }).join('') + '</div>';
+    if (pz.done) {
+      var d = pz.done;
+      h += '<div class="cx-pz-win"><b>拼好了！</b><span>' + pz.moves + ' 步・' + pzTime(d.sec) + (d.nb ? '・新紀錄！' : '') + '・🪙+' + d.pay + '</span>' +
+        '<div class="cx-48-say">' + (d.say.img ? '<img src="' + d.say.img + '" alt="">' : '') + '<div><b>' + esc(d.say.n) + '</b>' + esc(d.say.t) + '</div></div>' +
+        '<button type="button" class="cx-btn pri" data-pzback="1">再拼一張</button></div>';
+    } else h += '<p class="cx-muted cx-pz-tip">點一塊，再點另一塊，兩塊就會交換位置。</p>';
+    b.innerHTML = h;
+  }
+  /* ---------- 花花消消樂 ---------- */
+  var M3_T = ['rose', 'tulip', 'sunflower', 'daisy', 'lotus', 'bluerose'], M3_W = 7, M3_H = 8, M3_MOVES = 25;
+  var M3_SAY = { '昶司': { good: ['連消？……妳很會嘛。', '這一步不錯。'], end: ['分數還行，下次我陪妳破紀錄。', '玩累了就休息，妹妹。'] }, '仁彌': { good: ['哇，好漂亮的連鎖！', '妳真的好厲害呀。'], end: ['玩得好開心，對吧？', '辛苦了，給妳揉揉手指。'] } };
+  var m3 = null;
+  function m3Rand() { return Math.floor(Math.random() * M3_T.length); }
+  function m3Find(b) {
+    var hit = {}, i, x, y, run;
+    for (y = 0; y < M3_H; y++) { run = 1; for (x = 1; x <= M3_W; x++) { var same = x < M3_W && b[y * M3_W + x] === b[y * M3_W + x - 1] && b[y * M3_W + x] >= 0; if (same) run++; else { if (run >= 3) for (i = 1; i <= run; i++) hit[y * M3_W + x - i] = run; run = 1; } } }
+    for (x = 0; x < M3_W; x++) { run = 1; for (y = 1; y <= M3_H; y++) { var s2 = y < M3_H && b[y * M3_W + x] === b[(y - 1) * M3_W + x] && b[y * M3_W + x] >= 0; if (s2) run++; else { if (run >= 3) for (i = 1; i <= run; i++) hit[(y - i) * M3_W + x] = Math.max(hit[(y - i) * M3_W + x] || 0, run); run = 1; } } }
+    return hit;
+  }
+  function m3New() { var b; do { b = []; for (var i = 0; i < M3_W * M3_H; i++) b.push(m3Rand()); } while (Object.keys(m3Find(b)).length || !m3HasMove(b)); return b; }
+  function m3Swap(b, a, c) { var t = b[a]; b[a] = b[c]; b[c] = t; }
+  function m3Adj(a, c) { var ax = a % M3_W, ay = Math.floor(a / M3_W), cx = c % M3_W, cy = Math.floor(c / M3_W); return Math.abs(ax - cx) + Math.abs(ay - cy) === 1; }
+  function m3HasMove(b) {
+    for (var i = 0; i < b.length; i++) { var nb = [i + 1, i + M3_W]; for (var k = 0; k < 2; k++) { var j = nb[k]; if (j >= b.length || (k === 0 && i % M3_W === M3_W - 1)) continue; m3Swap(b, i, j); var ok = Object.keys(m3Find(b)).length > 0; m3Swap(b, i, j); if (ok) return true; } }
+    return false;
+  }
+  function m3Resolve() {
+    var b = m3.b, combo = 0, gained = 0, big = 0;
+    for (;;) {
+      var hit = m3Find(b), ks = Object.keys(hit); if (!ks.length) break;
+      combo++; ks.forEach(function (k) { if (hit[k] >= 4) big = Math.max(big, hit[k]); b[k] = -1; });
+      gained += ks.length * 10 * combo + (big >= 5 ? 100 : big === 4 ? 40 : 0);
+      for (var x = 0; x < M3_W; x++) { var col = []; for (var y = M3_H - 1; y >= 0; y--) if (b[y * M3_W + x] >= 0) col.push(b[y * M3_W + x]); for (y = M3_H - 1; y >= 0; y--) { var v = col.shift(); b[y * M3_W + x] = v === undefined ? m3Rand() : v; } }
+    }
+    if (!m3HasMove(b)) { m3.b = m3New(); m3.msg = '沒有能消的了，幫妳重新洗牌～'; }
+    return { gained: gained, combo: combo, big: big };
+  }
+  function m3Tap(i) {
+    if (m3.over) return;
+    if (m3.sel < 0) { m3.sel = i; m3UI(); return; }
+    if (m3.sel === i) { m3.sel = -1; m3UI(); return; }
+    if (!m3Adj(m3.sel, i)) { m3.sel = i; m3UI(); return; }
+    m3Try(m3.sel, i);
+  }
+  function m3Try(a, c) {
+    var b = m3.b; m3Swap(b, a, c); m3.sel = -1; m3.msg = '';
+    if (!Object.keys(m3Find(b)).length) { m3Swap(b, a, c); m3.shake = [a, c]; m3UI(); m3.shake = null; return; }
+    m3.moves--; var r = m3Resolve(); m3.score += r.gained;
+    if (r.combo >= 3 || r.big >= 4) { var bro = pick(BROS); m3.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(M3_SAY[bro[0]].good) }; }
+    if (r.combo >= 2) m3.msg = (m3.msg ? m3.msg + '　' : '') + r.combo + ' 連鎖！+' + r.gained;
+    if (m3.moves <= 0) m3End();
+    m3UI();
+  }
+  function m3End() {
+    var g = G(); m3.over = true; var pay = Math.min(40, Math.floor(m3.score / 150));
+    g.m3 = g.m3 || { best: 0 }; var nb = m3.score > g.m3.best; if (nb) g.m3.best = m3.score;
+    if (pay) { g.coins += pay; log(g, '🌸 消消樂 ' + m3.score + ' 分 +' + pay); }
+    save(); var bro = pick(BROS); m3.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(M3_SAY[bro[0]].end) }; m3.end = { pay: pay, nb: nb };
+  }
+  function m3Start() { m3.b = m3New(); m3.score = 0; m3.moves = M3_MOVES; m3.sel = -1; m3.over = false; m3.say = null; m3.msg = ''; m3.end = null; }
+  function m3Open() {
+    var g = G(); if (!g) return;
+    if (!m3) {
+      var m = A.makeModal('cx-m3-modal', 'fa-gem', '花花消消樂'); m3 = { m: m };
+      m.onBack = function () { m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-m3i]'); if (t) { m3Tap(+t.dataset.m3i); return; }
+        if (e.target.closest('[data-m3new]')) { m3Start(); m3UI(); }
+      });
+      var sx = 0, sy = 0, si = -1;
+      m.body.addEventListener('pointerdown', function (e) { var t = e.target.closest('[data-m3i]'); si = t ? +t.dataset.m3i : -1; sx = e.clientX; sy = e.clientY; });
+      m.body.addEventListener('pointerup', function (e) {
+        if (si < 0 || m3.over) return; var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+        var j = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? (si % M3_W < M3_W - 1 ? si + 1 : -1) : (si % M3_W > 0 ? si - 1 : -1)) : (dy > 0 ? si + M3_W : si - M3_W);
+        if (j >= 0 && j < M3_W * M3_H) { e.preventDefault(); m3.sel = -1; m3Try(si, j); m3.swiped = Date.now(); } si = -1;
+      });
+      m.body.addEventListener('click', function (e) { if (m3.swiped && Date.now() - m3.swiped < 300) { e.stopImmediatePropagation(); } }, true);
+    }
+    m3Start(); m3UI(); m3.m.open();
+  }
+  function m3UI() {
+    var g = G() || {}, best = (g.m3 || {}).best || 0;
+    var h = '<div class="cx-48-top"><div class="sc"><small>分數</small><b>' + m3.score + '</b></div><div class="sc"><small>剩餘步數</small><b>' + m3.moves + '</b></div><div class="sc"><small>最高</small><b>' + best + '</b></div>' + coinsHtml(g) + '</div>';
+    h += '<div class="cx-m3-bd" style="grid-template-columns:repeat(' + M3_W + ',1fr)">' + m3.b.map(function (v, i) {
+      var im = CI(M3_T[v]); return '<button type="button" data-m3i="' + i + '" class="t' + v + (i === m3.sel ? ' sel' : '') + (m3.shake && m3.shake.indexOf(i) >= 0 ? ' shake' : '') + '">' + (im ? '<img src="' + im.src + '" alt="">' : '') + '</button>';
+    }).join('') + '</div>';
+    if (m3.msg) h += '<div class="cx-48-msg">' + esc(m3.msg) + '</div>';
+    if (m3.say) h += '<div class="cx-48-say">' + (m3.say.img ? '<img src="' + m3.say.img + '" alt="">' : '') + '<div><b>' + esc(m3.say.n) + '</b>' + esc(m3.say.t) + '</div></div>';
+    if (m3.over) h += '<div class="cx-48-over"><b>步數用完了</b><span>' + m3.score + ' 分' + (m3.end.nb ? '・新紀錄！' : '') + (m3.end.pay ? '・🪙+' + m3.end.pay : '') + '</span><button type="button" class="cx-btn pri" data-m3new="1">再玩一局</button></div>';
+    else h += '<p class="cx-muted cx-48-tip">把兩朵花對調，三朵一樣的連成一線就會消掉。也可以直接滑動。一局 ' + M3_MOVES + ' 步。</p>';
+    m3.m.body.innerHTML = h;
+  }
+  /* ---------- 扭蛋機 ---------- */
+  var GC_COST = 10, GC_RARE = [['N', 60, '#c9c3b8'], ['R', 28, '#7fb3e6'], ['SR', 10, '#c38ae6'], ['SSR', 2, '#f2b84a']];
+  var GC_POOL = {
+    N: [['p:bait', 3], ['p:egg', 2], ['p:sugar', 2], ['p:flour', 1], ['p:milk', 1], ['f:lavender', 2], ['f:daisy', 2], ['f:gypso', 2], ['f:tulip', 1], ['c', 5]],
+    R: [['f:rose', 1], ['f:peony', 1], ['f:lotus', 1], ['f:lily', 1], ['f:sunflower', 2], ['p:steak', 1], ['p:honey', 2], ['p:bait', 8], ['c', 15]],
+    SR: [['f:bluerose', 1], ['f:goldrose', 1], ['f:sakura', 1], ['f:blacktulip', 1], ['f:epiphyllum', 1], ['f:statice', 1], ['c', 40], ['n', 1]],
+    SSR: [['f:rainbowrose', 1], ['c', 100], ['n', 1], ['n', 1]]
+  };
+  var GC_NOTES = [
+    ['昶司', '會議開了一整天，想到晚上能跟妳說話，就還好。'], ['昶司', '卡給妳了，喜歡什麼就買，不准替我省。'], ['昶司', '妳睡著的樣子……我看了很久。'],
+    ['昶司', '不准跟別人走太近。我說真的。'], ['昶司', '加班的時候，桌上放著妳的照片。'], ['昶司', '妹妹，過來，讓我抱一下就好。'],
+    ['仁彌', '今天的天空，很像妳笑起來的樣子。'], ['仁彌', '妳不用一直堅強，在我這裡可以哭。'], ['仁彌', '偷偷寫了一首歌，只唱給妳聽。'],
+    ['仁彌', '吃飯了沒？沒吃的話，我現在就過去。'], ['仁彌', '想把妳藏起來，只有我知道。'], ['仁彌', '晚安，好妹妹。夢裡也要有我。']
+  ];
+  var GC_PITY = 50, gc = null;
+  function gcG() { var g = G(); g.gc = g.gc || { n: 0, since: 0, notes: {} }; g.gc.notes = g.gc.notes || {}; return g.gc; }
+  function gcRoll() {
+    var st = gcG(), r = Math.random() * 100, rar = 'N', acc = 0;
+    for (var i = 0; i < GC_RARE.length; i++) { acc += GC_RARE[i][1]; if (r < acc) { rar = GC_RARE[i][0]; break; } }
+    st.since++; if (st.since >= GC_PITY) rar = 'SSR'; if (rar === 'SSR') st.since = 0; st.n++;
+    var it = pick(GC_POOL[rar]), g = G(), out = { rar: rar };
+    if (it[0] === 'c') { g.coins += it[1]; out.t = '金幣 ×' + it[1]; out.ic = '🪙'; }
+    else if (it[0] === 'n') {
+      var miss = GC_NOTES.map(function (x, i) { return i; }).filter(function (i) { return !st.notes[i]; }), idx = miss.length ? pick(miss) : Math.floor(Math.random() * GC_NOTES.length);
+      st.notes[idx] = (st.notes[idx] || 0) + 1; var N = GC_NOTES[idx]; out.note = N; out.t = N[0] + '的小紙條' + (miss.length ? '（新！）' : ''); out.ic = '💌';
+    } else {
+      var k = it[0].slice(2);
+      if (it[0][0] === 'f') { g.inv[k] = (g.inv[k] || 0) + it[1]; out.t = CROPS[k].n + ' ×' + it[1]; out.img = (CI(k) || CI('f_' + k) || {}).src; }
+      else { g.pantry = g.pantry || {}; g.pantry[k] = (g.pantry[k] || 0) + it[1]; out.t = PANTRY[k][0] + ' ×' + it[1]; out.img = (DI(k) || CI(k) || {}).src; out.ic = { egg: '🥚', milk: '🥛', honey: '🍯' }[k]; }
+    }
+    return out;
+  }
+  function gcSpin(times) {
+    var g = G(), cost = times === 10 ? GC_COST * 9 : GC_COST;
+    if (g.coins < cost) { gc.msg = '金幣不夠……去花園賺一點再來吧'; gcUI(); return; }
+    g.coins -= cost; var res = []; for (var i = 0; i < times; i++) res.push(gcRoll());
+    var best = res.reduce(function (a, b) { return 'N R SR SSR'.split(' ').indexOf(b.rar) > 'N R SR SSR'.split(' ').indexOf(a) ? b.rar : a; }, 'N');
+    log(g, '🥚 扭蛋 ' + times + ' 次' + (best === 'SSR' || best === 'SR' ? '，抽到 ' + best + '！' : '')); save();
+    gc.res = res; gc.best = best; gc.msg = ''; gc.anim = true; gcUI();
+    setTimeout(function () { gc.anim = false; gc.view = 'res'; gcUI(); }, 1100);
+  }
+  function gcOpen() {
+    var g = G(); if (!g) return;
+    if (!gc) {
+      var m = A.makeModal('cx-gc-modal', 'fa-gift', '扭蛋機'); gc = { m: m, view: 'main' };
+      m.onBack = function () { if (gc.view !== 'main') { gc.view = 'main'; gcUI(); return true; } m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-gc]'); if (!b || gc.anim) return; var a = b.dataset.gc;
+        if (a === '1' || a === '10') gcSpin(+a); else if (a === 'book') { gc.view = 'book'; gcUI(); } else if (a === 'back') { gc.view = 'main'; gcUI(); }
+      });
+    }
+    gc.view = 'main'; gc.msg = ''; gcUI(); gc.m.open();
+  }
+  function gcCard(r) {
+    var R = GC_RARE.filter(function (x) { return x[0] === r.rar; })[0];
+    return '<div class="cx-gc-card r' + r.rar + '" style="--rc:' + R[2] + '"><i>' + r.rar + '</i>' + (r.img ? '<img src="' + r.img + '" alt="">' : '<span class="ic">' + (r.ic || '🎁') + '</span>') + '<b>' + esc(r.t) + '</b>' + (r.note ? '<p>「' + esc(r.note[1]) + '」</p>' : '') + '</div>';
+  }
+  function gcUI() {
+    var g = G() || {}, st = gcG(), b = gc.m.body;
+    if (gc.view === 'book') {
+      var got = Object.keys(st.notes).length;
+      b.innerHTML = '<div class="cx-pz-top"><b>💌 小紙條收藏 ' + got + '/' + GC_NOTES.length + '</b></div><div class="cx-gc-book">' + GC_NOTES.map(function (N, i) {
+        var has = st.notes[i]; return '<div class="' + (has ? 'on' : '') + '"><b>' + (has ? N[0] : '？？？') + '</b><span>' + (has ? esc(N[1]) : 'SR 或 SSR 才抽得到') + '</span></div>';
+      }).join('') + '</div><button type="button" class="cx-btn" data-gc="back">回扭蛋機</button>';
+      return;
+    }
+    var h = '<div class="cx-pz-top"><span>已經扭了 <b>' + st.n + '</b> 次</span>' + coinsHtml(g) + '</div>';
+    h += '<div class="cx-gc-mach' + (gc.anim ? ' spin' : '') + '"><div class="dome">' + ['#f6a5c0', '#a5d8f6', '#f6e3a5', '#c9a5f6', '#a5f6c4', '#f6c3a5', '#f6a5c0', '#a5d8f6', '#f6e3a5'].map(function (c, i) { return '<span style="background:' + c + ';left:' + (12 + (i % 3) * 28) + '%;top:' + (18 + Math.floor(i / 3) * 24) + '%"></span>'; }).join('') + '</div><div class="body"><div class="knob"></div><div class="slot">' + (gc.anim ? '<span class="drop" style="background:' + (GC_RARE.filter(function (x) { return x[0] === gc.best; })[0] || GC_RARE[0])[2] + '"></span>' : '') + '</div></div></div>';
+    if (gc.view === 'res' && gc.res) h += '<div class="cx-gc-res">' + gc.res.map(gcCard).join('') + '</div>';
+    if (gc.msg) h += '<p class="cx-pz-err" style="text-align:center">' + esc(gc.msg) + '</p>';
+    h += '<div class="cx-gc-btns"><button type="button" class="cx-btn pri" data-gc="1">扭一次 🪙' + GC_COST + '</button><button type="button" class="cx-btn pri" data-gc="10">扭十次 🪙' + GC_COST * 9 + '</button></div>';
+    h += '<div class="cx-gc-btns"><button type="button" class="cx-btn" data-gc="book">💌 小紙條收藏（' + Object.keys(st.notes).length + '/' + GC_NOTES.length + '）</button></div>';
+    h += '<p class="cx-muted cx-48-tip">N 60%・R 28%・SR 10%・SSR 2%<br>花放進倉庫，食材放進廚房。SR 以上有機會抽到哥哥的小紙條。<br>連續 ' + GC_PITY + ' 次沒中 SSR，下一次一定中（還差 ' + (GC_PITY - st.since) + ' 次）。</p>';
+    b.innerHTML = h;
+  }
+  /* ---------- 換裝間 ---------- */
+  var DR_WHO = [['me', '我'], ['cs', '昶司'], ['rm', '仁彌']];
+  var DR_CAT = [['set', '套裝'], ['top', '上衣'], ['bottom', '下身'], ['outer', '外套'], ['shoes', '鞋子'], ['acc', '飾品']];
+  var DR_Z = { shoes: 1, bottom: 2, top: 3, set: 4, outer: 5, acc: 6 };
+  var DR_ITEMS = [{ id: 'redset', who: 'me', cat: 'set', n: '酒紅外套套裝', img: 'dr_me_redset' }];
+  var DR_SAY = {
+    me: { '昶司': ['這件好看。……出門外套扣好。', '妳穿什麼都好看，不過這件我最喜歡。', '穿這麼漂亮要去見誰？'], '仁彌': ['好漂亮，我的妹妹今天像公主。', '這個顏色好適合妳。', '可以拍一張給我嗎？我想存起來。'] },
+    cs: ['……妳挑的？那我就穿。', '只穿給妳看。'], rm: ['妳幫我挑的嗎？好開心。', '好看嗎？那我今天都穿這件。']
+  };
+  var dr = null;
+  function DRI(k) { return (window.__cxDRIMG || {})[k]; }
+  function drG() { var g = G(); g.dress = g.dress || { me: [], cs: [], rm: [] }; DR_WHO.forEach(function (w) { g.dress[w[0]] = g.dress[w[0]] || []; }); return g.dress; }
+  function drLayers(who) {
+    var on = drG()[who] || [], L = [DRI('dr_' + who + '_base')];
+    DR_ITEMS.filter(function (it) { return on.indexOf(it.id) >= 0; }).sort(function (a, b) { return DR_Z[a.cat] - DR_Z[b.cat]; }).forEach(function (it) { L.push(DRI(it.img)); });
+    return L.filter(Boolean);
+  }
+  function drOpen() {
+    var g = G(); if (!g) return;
+    if (!window.__cxDRIMG && !document.getElementById('cx-drimg-js')) { var sc = document.createElement('script'); sc.id = 'cx-drimg-js'; sc.src = 'dressimg.js'; sc.onload = function () { if (dr) drUI(); }; document.body.appendChild(sc); }
+    if (!dr) {
+      var m = A.makeModal('cx-dr-modal', 'fa-shirt', '換裝間'); dr = { m: m, who: 'me', cat: 'set', say: null };
+      m.onBack = function () { m.close(); homeOpen(); return true; };
+      m.body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-dr]'); if (!b) return; var a = b.dataset.dr, v = b.dataset.v, st = drG();
+        if (a === 'who') { dr.who = v; dr.say = null; }
+        else if (a === 'cat') dr.cat = v;
+        else if (a === 'item') {
+          var it = DR_ITEMS.filter(function (x) { return x.id === v; })[0], on = st[dr.who], i = on.indexOf(v);
+          if (i >= 0) on.splice(i, 1);
+          else {
+            var block = it.cat === 'set' ? ['set', 'top', 'bottom'] : (it.cat === 'top' || it.cat === 'bottom') ? ['set', it.cat] : [it.cat];
+            st[dr.who] = on = on.filter(function (id) { var o = DR_ITEMS.filter(function (x) { return x.id === id; })[0]; return o && block.indexOf(o.cat) < 0; });
+            on.push(v);
+            var bro = pick(BROS), lines = dr.who === 'me' ? DR_SAY.me[bro[0]] : DR_SAY[dr.who];
+            var sp = dr.who === 'me' ? bro : (dr.who === 'cs' ? BROS[0] : BROS[1]);
+            dr.say = { n: sp[0], img: (CI(sp[1]) || {}).src, t: pick(lines) };
+          }
+          save();
+        } else if (a === 'off') { st[dr.who] = []; dr.say = null; save(); }
+        else if (a === 'shot') { drShot(); return; }
+        drUI();
+      });
+    }
+    drUI(); dr.m.open();
+  }
+  function drShot() {
+    var L = drLayers(dr.who); if (!L.length) return;
+    var c = document.createElement('canvas'); c.width = 600; c.height = 840; var x = c.getContext('2d');
+    var gr = x.createLinearGradient(0, 0, 0, 840); gr.addColorStop(0, '#fff0f5'); gr.addColorStop(1, '#f6e3ff'); x.fillStyle = gr; x.fillRect(0, 0, 600, 840);
+    var n = 0, imgs = L.map(function (m) { var im = new Image(); im.onload = function () { if (++n === L.length) done(); }; im.src = m.src; return im; });
+    function done() {
+      var h = 780, w = h * L[0].w / L[0].h; imgs.forEach(function (im) { x.drawImage(im, (600 - w) / 2, 40, w, h); });
+      var g = G(); g.photos = g.photos || []; g.photos.unshift({ id: 'p' + Date.now().toString(36), src: c.toDataURL('image/jpeg', 0.85), t: Date.now() }); g.photos = g.photos.slice(0, 30); save();
+      toast('拍好了，放進拍貼機的相簿囉 📸');
+    }
+  }
+  function drUI() {
+    var b = dr.m.body;
+    if (!window.__cxDRIMG) { b.innerHTML = '<p class="cx-muted" style="text-align:center;padding:40px 0">衣櫃打開中……</p>'; return; }
+    var st = drG(), on = st[dr.who], L = drLayers(dr.who);
+    var h = '<div class="cx-dr-who">' + DR_WHO.map(function (w) { return '<button type="button" data-dr="who" data-v="' + w[0] + '" class="' + (dr.who === w[0] ? 'on' : '') + '">' + w[1] + '</button>'; }).join('') + '</div>';
+    h += '<div class="cx-dr-stage">' + L.map(function (m) { return '<img src="' + m.src + '" alt="">'; }).join('') + '</div>';
+    if (dr.say) h += '<div class="cx-48-say">' + (dr.say.img ? '<img src="' + dr.say.img + '" alt="">' : '') + '<div><b>' + esc(dr.say.n) + '</b>' + esc(dr.say.t) + '</div></div>';
+    h += '<div class="cx-pb-tabs cx-dr-cats">' + DR_CAT.map(function (c) { return '<button type="button" data-dr="cat" data-v="' + c[0] + '" class="' + (dr.cat === c[0] ? 'on' : '') + '">' + c[1] + '</button>'; }).join('') + '</div>';
+    var items = DR_ITEMS.filter(function (it) { return it.who === dr.who && it.cat === dr.cat; });
+    h += '<div class="cx-dr-items">' + (items.length ? items.map(function (it) { var m = DRI(it.img); return '<button type="button" data-dr="item" data-v="' + it.id + '" class="' + (on.indexOf(it.id) >= 0 ? 'on' : '') + '">' + (m ? '<img src="' + m.src + '" alt="">' : '') + '<small>' + esc(it.n) + '</small></button>'; }).join('') : '<p class="cx-muted">這一格還空空的，等妳用豆包畫新衣服 ✏️</p>') + '</div>';
+    h += '<div class="cx-gc-btns"><button type="button" class="cx-btn" data-dr="off">全部脫掉</button><button type="button" class="cx-btn pri" data-dr="shot">📸 拍照存相簿</button></div>';
+    b.innerHTML = h;
+  }
   var pb = null;
-  function pbImg(k) { if (k.indexOf('fest:') === 0) { var u = festImg('farm', '', function () { pbDraw(); }); return u ? { src: u } : null; } if (k.indexOf('h:') === 0) return HI(k.slice(2)); return CI(k) || HI(k); }
+  function pbImg(k) { if (k.indexOf('u:') === 0) { var ub = ((G() || {}).pbBgs || []).filter(function (b) { return b.id === k.slice(2); })[0]; return ub ? { src: ub.src } : null; } if (k.indexOf('fest:') === 0) { var u = festImg('farm', '', function () { pbDraw(); }); return u ? { src: u } : null; } if (k.indexOf('h:') === 0) return HI(k.slice(2)); return CI(k) || HI(k); }
   var pbCache = {};
   function pbEl(k) { var m = pbImg(k); if (!m) return null; var e = pbCache[m.src]; if (!e) { e = new Image(); e.onload = function () { pbDraw(); }; e.src = m.src; pbCache[m.src] = e; } return e.complete && e.naturalWidth ? e : null; }
   function pbPeople() {
@@ -3116,6 +3429,7 @@
       var m = A.makeModal('cx-pb-modal', 'fa-camera', '拍貼機'); pb = { m: m, bg: 'pb_pink', items: [], sel: -1, tab: 'ppl', view: 'shoot' };
       m.onBack = function () { if (pb.view !== 'shoot') { pb.view = 'shoot'; pbUI(); return true; } m.close(); homeOpen(); return true; };
       m.body.addEventListener('click', pbClick);
+      m.body.addEventListener('change', function (e) { if (e.target.id !== 'cx-pb-up' || !e.target.files[0]) return; shrinkImg(e.target.files[0], 1200, function (src) { var g = G(); g.pbBgs = g.pbBgs || []; var id = 'u' + Date.now().toString(36); g.pbBgs.unshift({ id: id, src: src }); g.pbBgs = g.pbBgs.slice(0, 6); pb.bg = 'u:' + id; save(); pbUI(); pbDraw(); }); });
       m.body.addEventListener('input', function (e) { if (e.target.id === 'cx-pb-txt' && pb.sel >= 0 && pb.items[pb.sel]) { pb.items[pb.sel].text = e.target.value; pbDraw(); } });
     }
     pb.view = 'shoot'; pbUI(); pb.m.open();
@@ -3132,7 +3446,7 @@
       '<div class="cx-pb-tools">' + (it ? '<button type="button" class="cx-btn sm" data-pbz="-">－ 縮小</button><button type="button" class="cx-btn sm" data-pbz="+">＋ 放大</button><button type="button" class="cx-btn sm" data-pbf="1">↔ 翻面</button><button type="button" class="cx-btn sm" data-pbdelit="1">🗑 拿掉</button>' : '<span class="cx-muted">點下面的東西放進照片，拖曳可以移動</span>') + '</div>' +
       (it && it.k === 'st_bubble' ? '<input class="cx-in" id="cx-pb-txt" maxlength="20" placeholder="對話框裡要寫什麼？" value="' + esc(it.text || '') + '">' : '') +
       '<div class="cx-pb-tabs">' + [['ppl', '人物'], ['st', '貼紙'], ['bg', '背景']].map(function (t) { return '<button type="button" data-pbt="' + t[0] + '" class="' + (pb.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div><div class="cx-pb-pick">' +
-      (pb.tab === 'bg' ? PB_BG.map(function (x) { var m = pbImg(x[0]); return m ? '<button type="button" data-pbbg="' + x[0] + '" class="' + (pb.bg === x[0] ? 'on' : '') + '"><img src="' + m.src + '" alt=""><small>' + x[1] + '</small></button>' : ''; }).join('') :
+      (pb.tab === 'bg' ? '<label class="cx-pb-up"><input type="file" accept="image/*" id="cx-pb-up" hidden><span>＋</span><small>上傳照片</small></label>' + ((g.pbBgs || []).map(function (u) { return '<button type="button" data-pbbg="u:' + u.id + '" class="' + (pb.bg === 'u:' + u.id ? 'on' : '') + '"><img src="' + u.src + '" alt=""><small>我的照片</small><i data-pbbgdel="' + u.id + '">×</i></button>'; }).join('')) + PB_BG.map(function (x) { var m = pbImg(x[0]); return m ? '<button type="button" data-pbbg="' + x[0] + '" class="' + (pb.bg === x[0] ? 'on' : '') + '"><img src="' + m.src + '" alt=""><small>' + x[1] + '</small></button>' : ''; }).join('') :
        (pb.tab === 'ppl' ? pbPeople() : PB_ST.map(function (k) { return [k, '']; })).map(function (x) { var m = pbImg(x[0]); return m ? '<button type="button" data-pbadd="' + x[0] + '"><img src="' + m.src + '" alt="">' + (x[1] ? '<small>' + x[1] + '</small>' : '') + '</button>' : ''; }).join('')) +
       '</div><div class="cx-pb-act"><button type="button" class="cx-btn" data-pbalb="1">📒 相簿（' + (g.photos || []).length + '）</button><button type="button" class="cx-btn" data-pbclr="1">清空</button><button type="button" class="cx-btn pri" data-pbsave="1">📸 拍下來</button></div>';
     pbBind(); pbDraw();
@@ -3161,6 +3475,7 @@
   function pbClick(e) {
     var b = e.target.closest('button'); if (!b) return; var g = G(); if (!g) return; var d = b.dataset;
     if (d.pbt) { pb.tab = d.pbt; pbUI(); return; }
+    var dl = e.target.closest('[data-pbbgdel]'); if (dl) { var did = dl.dataset.pbbgdel; g.pbBgs = (g.pbBgs || []).filter(function (u) { return u.id !== did; }); if (pb.bg === 'u:' + did) pb.bg = 'pb_pink'; save(); pbUI(); pbDraw(); return; }
     if (d.pbbg) { pb.bg = d.pbbg; pbUI(); return; }
     if (d.pbadd) { var ppl = /^(cb_|o_)/.test(d.pbadd); pb.items.push({ k: d.pbadd, x: 450 + (Math.random() - .5) * 300, y: ppl ? 330 : 200 + Math.random() * 160, s: ppl ? 230 : d.pbadd === 'st_bubble' ? 220 : 110, text: '' }); pb.sel = pb.items.length - 1; pbUI(); return; }
     var it = pb.sel >= 0 ? pb.items[pb.sel] : null;
@@ -3227,7 +3542,7 @@
 
   /* ---------- 圖示排列與資料夾 ---------- */
   var LKEY = 'cxHomeLayout', editing = false, openFolder = -1, suppressUntil = 0;
-  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || a[0] === 'photo' || a[0] === 'f48' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
+  function availIds() { return APPS.filter(function (a) { return a[0] === 'garden' || a[0] === 'moyu' || a[0] === 'house' || a[0] === 'moments' || a[0] === 'photo' || a[0] === 'f48' || a[0] === 'pz' || a[0] === 'm3' || a[0] === 'gc' || a[0] === 'dr' || document.getElementById(a[0]); }).map(function (a) { return a[0]; }); }
   function meta(id) { for (var i = 0; i < APPS.length; i++) if (APPS[i][0] === id) return APPS[i]; return [id, 'fa-circle', id]; }
   function getLayout() {
     var L = null; try { L = JSON.parse(lsGet(LKEY) || 'null'); } catch (e) {}
@@ -3269,6 +3584,10 @@
     if (id === 'moments') { A.load().then(momentsOpen); return; }
     if (id === 'photo') { A.load().then(pbOpen); return; }
     if (id === 'f48') { A.load().then(f48Open); return; }
+    if (id === 'pz') { A.load().then(pzOpen); return; }
+    if (id === 'm3') { A.load().then(m3Open); return; }
+    if (id === 'gc') { A.load().then(gcOpen); return; }
+    if (id === 'dr') { A.load().then(drOpen); return; }
     fromHome = true; wrapShow();
     var el = document.getElementById(id); if (el) el.click();
   }
@@ -3429,6 +3748,20 @@
     '.cx-48-bd .lv1{background:#eef6e4}.cx-48-bd .lv2{background:#e4f2d6}.cx-48-bd .lv3{background:#fff8e0}.cx-48-bd .lv4{background:#ffe8ec}.cx-48-bd .lv5{background:#fff1c9}.cx-48-bd .lv6{background:#ffe1ea}.cx-48-bd .lv7{background:#ffd4df}.cx-48-bd .lv8{background:#ffc5cf}.cx-48-bd .lv9{background:#d8e6ff}.cx-48-bd .lv10{background:#ffe9a8}.cx-48-bd .lv11{background:linear-gradient(135deg,#ffd6e0,#fff2b8,#d6f5e0,#d6e4ff,#ead6ff)}' +
     '.cx-48-bd .nw{animation:cx48n .18s ease-out}.cx-48-bd .mg{animation:cx48m .2s ease-out}@keyframes cx48n{from{transform:scale(.3);opacity:0}}@keyframes cx48m{50%{transform:scale(1.14)}}' +
     '.cx-48-msg{text-align:center;color:#c08a2a;font-weight:600;margin-top:8px}.cx-48-say{display:flex;gap:8px;align-items:center;margin-top:10px;background:var(--primary-bg);border-radius:14px;padding:8px 10px;font-size:13px}.cx-48-say img{width:44px;height:44px;object-fit:contain}.cx-48-say b{display:block;font-size:12px;color:var(--text-secondary)}.cx-48-over{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:10px;padding:12px;border-radius:14px;background:#fff4ec;color:#6b4b3a}.cx-48-tip{text-align:center;font-size:11px;margin-top:8px}' +
+'.cx-pz-top{display:flex;gap:8px;align-items:center;margin-bottom:8px}.cx-pz-top .cx-g-coin{margin-left:auto}.cx-pz-top>span{margin-right:auto}.cx-pz-err{color:#c0392b;font-size:13px}' +
+    '.cx-pz-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cx-pz-pick button{border:2px solid transparent;border-radius:12px;padding:0;background:none;overflow:hidden;position:relative;cursor:pointer}.cx-pz-pick button.on{border-color:#e8799a}.cx-pz-pick img{width:100%;aspect-ratio:1;object-fit:cover;display:block}.cx-pz-pick small{position:absolute;left:0;right:0;bottom:0;background:#0006;color:#fff;font-size:10px;padding:2px}' +
+    '.cx-pz-lv{display:flex;gap:6px;margin:12px 0}.cx-pz-lv button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:12px;padding:8px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center}.cx-pz-lv button.on{border-color:#e8799a;background:#fff0f4}.cx-pz-lv small{font-size:11px;color:var(--text-secondary);text-align:center}.cx-pz-go{width:100%}.cx-pz-tip{text-align:center;font-size:11px;margin-top:8px}' +
+    '.cx-pz-peek{width:40%;border-radius:10px;display:block;margin:0 auto 8px}.cx-pz-bd{display:grid;gap:2px;max-width:420px;margin:0 auto;background:#e9dccb;padding:4px;border-radius:12px;width:100%;box-sizing:border-box}.cx-pz-bd button{aspect-ratio:1;border:0;padding:0;border-radius:4px;cursor:pointer;background-repeat:no-repeat;transition:transform .12s}.cx-pz-bd button.sel{outline:3px solid #e8799a;transform:scale(.92)}.cx-pz-bd.done{gap:0}.cx-pz-bd.done button{border-radius:0}' +
+    '.cx-pz-win{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:10px;padding:12px;border-radius:14px;background:#fff4ec;color:#6b4b3a}.cx-pz-win .cx-48-say{width:100%;box-sizing:border-box}' +
+'.cx-pb-up{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #e8a3b8;border-radius:10px;cursor:pointer;color:#c06080;min-height:60px}.cx-pb-up span{font-size:22px;line-height:1}.cx-pb-up small{font-size:10px}.cx-pb-pick button{position:relative}.cx-pb-pick button i{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#0008;color:#fff;font-style:normal;font-size:12px;line-height:18px;text-align:center}' +
+'.cx-m3-bd{display:grid;gap:3px;max-width:420px;margin:8px auto 0;background:#e9dccb;padding:5px;border-radius:14px;width:100%;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}.cx-m3-bd button{aspect-ratio:1;border:0;padding:0;border-radius:9px;background:#f6efe5;cursor:pointer;display:flex;align-items:center;justify-content:center;animation:cxm3in .18s ease-out}.cx-m3-bd img{width:86%;height:86%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}.cx-m3-bd .t0{background:#ffe3e8}.cx-m3-bd .t1{background:#ffeede}.cx-m3-bd .t2{background:#fff6cf}.cx-m3-bd .t3{background:#f3f6ea}.cx-m3-bd .t4{background:#e6f4e6}.cx-m3-bd .t5{background:#e2ebff}.cx-m3-bd .sel{background:#ffd6e3;outline:2px solid #e8799a}.cx-m3-bd .shake{animation:cxm3sh .25s}@keyframes cxm3in{from{transform:scale(.85);opacity:.6}}@keyframes cxm3sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}' +
+'.cx-gc-mach{width:180px;margin:6px auto 10px;position:relative}.cx-gc-mach .dome{width:180px;height:150px;border-radius:90px 90px 14px 14px;background:radial-gradient(circle at 35% 30%,#fff,#fde8ef 60%,#f7cfdc);border:4px solid #e8799a;position:relative;overflow:hidden}.cx-gc-mach .dome span{position:absolute;width:38px;height:38px;border-radius:50%;box-shadow:inset -4px -4px 0 #0001,inset 3px 3px 0 #fff8}.cx-gc-mach .body{height:80px;background:#e8799a;border-radius:0 0 18px 18px;position:relative}.cx-gc-mach .knob{position:absolute;left:24px;top:18px;width:44px;height:44px;border-radius:50%;background:#fff;border:6px solid #f6c3d2}.cx-gc-mach .knob:after{content:"";position:absolute;left:14px;top:2px;width:6px;height:28px;background:#e8799a;border-radius:3px}.cx-gc-mach .slot{position:absolute;right:20px;top:20px;width:58px;height:40px;background:#9c4a63;border-radius:10px;overflow:hidden}.cx-gc-mach .drop{position:absolute;left:12px;top:-40px;width:34px;height:34px;border-radius:50%;animation:cxgcd .6s .4s ease-in forwards;box-shadow:inset -4px -4px 0 #0002}' +
+    '.cx-gc-mach.spin .knob{animation:cxgck .5s ease-in-out 2}.cx-gc-mach.spin .dome span{animation:cxgcs .25s infinite alternate}@keyframes cxgck{to{transform:rotate(360deg)}}@keyframes cxgcs{to{transform:translate(4px,-5px)}}@keyframes cxgcd{to{top:4px}}' +
+    '.cx-gc-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:4px 0 10px}.cx-gc-card{border:2px solid var(--rc);border-radius:12px;padding:6px;text-align:center;background:var(--primary-bg);position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;animation:cxm3in .3s}.cx-gc-card i{position:absolute;top:3px;left:5px;font-style:normal;font-size:10px;font-weight:700;color:var(--rc)}.cx-gc-card img{width:48px;height:48px;object-fit:contain}.cx-gc-card .ic{font-size:30px;line-height:48px}.cx-gc-card b{font-size:12px}.cx-gc-card p{font-size:11px;margin:2px 0 0;color:var(--text-secondary)}.cx-gc-card.rSSR{background:linear-gradient(135deg,#fff7e0,#ffe9f2);box-shadow:0 0 10px #f2b84a88}.cx-gc-card.rSR{background:#faf2ff}' +
+    '.cx-gc-btns{display:flex;gap:8px;justify-content:center;margin:6px 0}.cx-gc-btns .cx-btn{flex:1}.cx-gc-book{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.cx-gc-book div{border:1px dashed var(--border-color);border-radius:12px;padding:8px 10px;font-size:13px;color:var(--text-secondary)}.cx-gc-book div.on{border-style:solid;border-color:#f2b84a;background:#fffaf0;color:var(--text-primary)}.cx-gc-book b{display:block;font-size:12px;margin-bottom:2px}' +
+'.cx-dr-who{display:flex;gap:6px;margin-bottom:8px}.cx-dr-who button{flex:1;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:6px;font:inherit;cursor:pointer}.cx-dr-who button.on{background:#e8a3b8;color:#fff;border-color:#e8a3b8}' +
+    '.cx-dr-stage{position:relative;width:min(62%,260px);aspect-ratio:493/751;margin:0 auto;background:radial-gradient(ellipse 30% 3% at 50% 93%,#ead3dc 0,#ead3dc 70%,transparent 100%),linear-gradient(#fff6f9,#f7eefc);border-radius:20px}.cx-dr-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}.cx-dr-cats{margin:10px 0 6px;flex-wrap:wrap}.cx-dr-cats button{flex:1 0 28%}' +
+    '.cx-dr-items{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;min-height:60px}.cx-dr-items p{grid-column:1/-1;text-align:center;font-size:12px;margin:14px 0}.cx-dr-items button{border:2px solid #eee3d3;background:#fff;border-radius:12px;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-dr-items button.on{border-color:#e8799a;background:#fff0f4}.cx-dr-items img{width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 70%}.cx-dr-items small{font-size:10px;color:#8a6a7a}' +
     '.cx-pb-stage{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 3px 12px #0002}.cx-pb-stage canvas{display:block;width:100%;height:auto}.cx-pb-flash{position:absolute;inset:0;background:#fff;animation:cxflash .6s ease-out forwards}@keyframes cxflash{from{opacity:1}to{opacity:0}}' +
     '.cx-pb-tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;min-height:30px;align-items:center;font-size:12px}.cx-pb-tabs{display:flex;gap:6px;margin:6px 0}.cx-pb-tabs button{flex:1;border:1px solid #ecd9e0;background:#fff;border-radius:99px;padding:5px;font-size:13px;color:#8a6a7a}.cx-pb-tabs button.on{background:#e7a6b4;color:#fff;border-color:transparent}' +
     '.cx-pb-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:190px;overflow-y:auto;padding:2px}.cx-pb-pick button{border:1px solid #eee3d3;background:#fff;border-radius:12px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px}.cx-pb-pick button.on{border-color:#e7a6b4;box-shadow:0 0 0 2px #e7a6b455}.cx-pb-pick img{height:52px;max-width:100%;object-fit:contain}.cx-pb-pick small{font-size:10px;color:#8a7a6a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}' +

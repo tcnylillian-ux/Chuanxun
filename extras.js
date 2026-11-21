@@ -1039,7 +1039,7 @@
 
   /* ================= 回覆與來信設定 ================= */
   var sM = null;
-  var JOINS = ['，', '…', '、', '～', '。', '！', '/', '　'];
+  var JOINS = ['', '，', '…', '、', '～', '。', '！', '/', '　'];
   function setOpen() {
     if (!sM) {
       sM = makeModal('cx-set-modal', 'fa-wand-magic-sparkles', '回覆與來信');
@@ -1087,7 +1087,7 @@
     sM.body.innerHTML = '<div class="cx-sec"><h4>拼字卡模式</h4><label class="qa-chk"><input type="checkbox" id="cx-cb-on"' + (c.on ? ' checked' : '') + '>開啟：每次回覆抽好幾張字卡接成一句話</label>' +
       '<label class="cx-row"><span>最少幾張</span><input type="number" id="cx-cb-min" min="1" max="6" value="' + c.min + '"></label>' +
       '<label class="cx-row"><span>最多幾張</span><input type="number" id="cx-cb-max" min="1" max="6" value="' + c.max + '"></label>' +
-      '<div class="cx-muted">連接符號（可多選，每次隨機用一個）</div><div class="cx-chips">' + JOINS.map(function (j) { return '<button data-j="' + esc(j) + '" class="' + (c.joins.indexOf(j) >= 0 ? 'on' : '') + '">' + (j === '　' ? '空格' : esc(j)) + '</button>'; }).join('') + '</div>' +
+      '<div class="cx-muted">連接符號（可多選，每次隨機用一個）</div><div class="cx-chips">' + JOINS.map(function (j) { return '<button data-j="' + esc(j) + '" class="' + (c.joins.indexOf(j) >= 0 ? 'on' : '') + '">' + (j === '' ? '直接連起來' : j === '　' ? '空格' : esc(j)) + '</button>'; }).join('') + '</div>' +
       '<div class="cx-muted">用哪些分組來拼（不選就用全部字卡；關掉的分組也能拿來拼）</div><div class="cx-chips">' +
       '<button data-cg="" class="' + (comboGroups().length ? '' : 'on') + '">全部字卡</button>' +
       replyGroups().map(function (g) { return '<button data-cg="' + esc(g.name) + '" class="' + (comboGroups().indexOf(g.name) >= 0 ? 'on' : '') + '">' + esc(g.name) + '</button>'; }).join('') + '</div>' +
