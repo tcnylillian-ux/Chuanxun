@@ -3202,32 +3202,60 @@
     for (var i = 0; i < b.length; i++) { var nb = [i + 1, i + M3_W]; for (var k = 0; k < 2; k++) { var j = nb[k]; if (j >= b.length || (k === 0 && i % M3_W === M3_W - 1)) continue; m3Swap(b, i, j); var ok = Object.keys(m3Find(b)).length > 0; m3Swap(b, i, j); if (ok) return true; } }
     return false;
   }
-  function m3Resolve() {
-    var b = m3.b, combo = 0, gained = 0, big = 0;
-    for (;;) {
-      var hit = m3Find(b), ks = Object.keys(hit); if (!ks.length) break;
-      combo++; ks.forEach(function (k) { if (hit[k] >= 4) big = Math.max(big, hit[k]); b[k] = -1; });
-      gained += ks.length * 10 * combo + (big >= 5 ? 100 : big === 4 ? 40 : 0);
-      for (var x = 0; x < M3_W; x++) { var col = []; for (var y = M3_H - 1; y >= 0; y--) if (b[y * M3_W + x] >= 0) col.push(b[y * M3_W + x]); for (y = M3_H - 1; y >= 0; y--) { var v = col.shift(); b[y * M3_W + x] = v === undefined ? m3Rand() : v; } }
+  function m3Gravity(b) {
+    var fall = {};
+    for (var x = 0; x < M3_W; x++) {
+      var col = []; for (var y = M3_H - 1; y >= 0; y--) if (b[y * M3_W + x] >= 0) col.push([b[y * M3_W + x], y]);
+      var miss = M3_H - col.length;
+      for (y = M3_H - 1; y >= 0; y--) {
+        var i = y * M3_W + x, c = col.shift();
+        if (c) { b[i] = c[0]; if (c[1] !== y) fall[i] = y - c[1]; }
+        else { b[i] = m3Rand(); fall[i] = miss; }
+      }
     }
-    if (!m3HasMove(b)) { m3.b = m3New(); m3.msg = '沒有能消的了，幫妳重新洗牌～'; }
-    return { gained: gained, combo: combo, big: big };
+    return fall;
+  }
+  function m3Cascade() {
+    var b = m3.b, hit = m3Find(b), ks = Object.keys(hit);
+    if (!ks.length) { m3Settle(); return; }
+    m3.combo++; var big = 0; ks.forEach(function (k) { if (hit[k] >= 4) big = Math.max(big, hit[k]); });
+    var gain = ks.length * 10 * m3.combo + (big >= 5 ? 100 : big === 4 ? 40 : 0); m3.score += gain; m3.gain += gain; if (big > m3.big) m3.big = big;
+    var an = {}; ks.forEach(function (k) { an[k] = { c: 'pop' }; });
+    if (m3.combo >= 2) m3.msg = m3.combo + ' 連鎖！+' + m3.gain;
+    m3UI(an);
+    setTimeout(function () {
+      ks.forEach(function (k) { b[k] = -1; });
+      var fall = m3Gravity(b), an2 = {}; Object.keys(fall).forEach(function (i) { an2[i] = { c: 'fall', dy: fall[i] }; });
+      m3UI(an2); setTimeout(m3Cascade, 480);
+    }, 430);
+  }
+  function m3Settle() {
+    if ((m3.combo >= 3 || m3.big >= 4) && !m3.over) { var bro = pick(BROS); m3.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(M3_SAY[bro[0]].good) }; }
+    if (!m3HasMove(m3.b)) { m3.b = m3New(); m3.msg = '沒有能消的了，幫妳重新洗牌～'; }
+    m3.busy = false;
+    if (m3.moves <= 0) m3End();
+    m3UI();
   }
   function m3Tap(i) {
-    if (m3.over) return;
+    if (m3.over || m3.busy) return;
     if (m3.sel < 0) { m3.sel = i; m3UI(); return; }
     if (m3.sel === i) { m3.sel = -1; m3UI(); return; }
     if (!m3Adj(m3.sel, i)) { m3.sel = i; m3UI(); return; }
     m3Try(m3.sel, i);
   }
+  function m3SwapAn(a, c) {
+    var ax = a % M3_W, ay = Math.floor(a / M3_W), cx = c % M3_W, cy = Math.floor(c / M3_W), an = {};
+    an[a] = { c: 'sw', dx: cx - ax, dy: cy - ay }; an[c] = { c: 'sw', dx: ax - cx, dy: ay - cy }; return an;
+  }
   function m3Try(a, c) {
-    var b = m3.b; m3Swap(b, a, c); m3.sel = -1; m3.msg = '';
-    if (!Object.keys(m3Find(b)).length) { m3Swap(b, a, c); m3.shake = [a, c]; m3UI(); m3.shake = null; return; }
-    m3.moves--; var r = m3Resolve(); m3.score += r.gained;
-    if (r.combo >= 3 || r.big >= 4) { var bro = pick(BROS); m3.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(M3_SAY[bro[0]].good) }; }
-    if (r.combo >= 2) m3.msg = (m3.msg ? m3.msg + '　' : '') + r.combo + ' 連鎖！+' + r.gained;
-    if (m3.moves <= 0) m3End();
-    m3UI();
+    if (m3.busy || m3.over) return;
+    var b = m3.b; m3.busy = true; m3.sel = -1; m3.msg = ''; m3Swap(b, a, c); m3UI(m3SwapAn(a, c));
+    setTimeout(function () {
+      if (!Object.keys(m3Find(b)).length) {
+        m3Swap(b, a, c); m3UI(m3SwapAn(a, c)); setTimeout(function () { m3.busy = false; }, 280); return;
+      }
+      m3.moves--; m3.combo = 0; m3.gain = 0; m3.big = 0; m3Cascade();
+    }, 300);
   }
   function m3End() {
     var g = G(); m3.over = true; var pay = Math.min(40, Math.floor(m3.score / 150));
@@ -3235,7 +3263,7 @@
     if (pay) { g.coins += pay; log(g, '🌸 消消樂 ' + m3.score + ' 分 +' + pay); }
     save(); var bro = pick(BROS); m3.say = { n: bro[0], img: (CI(bro[1]) || {}).src, t: pick(M3_SAY[bro[0]].end) }; m3.end = { pay: pay, nb: nb };
   }
-  function m3Start() { m3.b = m3New(); m3.score = 0; m3.moves = M3_MOVES; m3.sel = -1; m3.over = false; m3.say = null; m3.msg = ''; m3.end = null; }
+  function m3Start() { m3.busy = false; m3.b = m3New(); m3.score = 0; m3.moves = M3_MOVES; m3.sel = -1; m3.over = false; m3.say = null; m3.msg = ''; m3.end = null; }
   function m3Open() {
     var g = G(); if (!g) return;
     if (!m3) {
@@ -3248,19 +3276,19 @@
       var sx = 0, sy = 0, si = -1;
       m.body.addEventListener('pointerdown', function (e) { var t = e.target.closest('[data-m3i]'); si = t ? +t.dataset.m3i : -1; sx = e.clientX; sy = e.clientY; });
       m.body.addEventListener('pointerup', function (e) {
-        if (si < 0 || m3.over) return; var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+        if (si < 0 || m3.over || m3.busy) return; var dx = e.clientX - sx, dy = e.clientY - sy; if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
         var j = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? (si % M3_W < M3_W - 1 ? si + 1 : -1) : (si % M3_W > 0 ? si - 1 : -1)) : (dy > 0 ? si + M3_W : si - M3_W);
-        if (j >= 0 && j < M3_W * M3_H) { e.preventDefault(); m3.sel = -1; m3Try(si, j); m3.swiped = Date.now(); } si = -1;
+        if (j >= 0 && j < M3_W * M3_H) { e.preventDefault(); m3Try(si, j); m3.swiped = Date.now(); } si = -1;
       });
       m.body.addEventListener('click', function (e) { if (m3.swiped && Date.now() - m3.swiped < 300) { e.stopImmediatePropagation(); } }, true);
     }
     m3Start(); m3UI(); m3.m.open();
   }
-  function m3UI() {
+  function m3UI(an) {
     var g = G() || {}, best = (g.m3 || {}).best || 0;
     var h = '<div class="cx-48-top"><div class="sc"><small>分數</small><b>' + m3.score + '</b></div><div class="sc"><small>剩餘步數</small><b>' + m3.moves + '</b></div><div class="sc"><small>最高</small><b>' + best + '</b></div>' + coinsHtml(g) + '</div>';
     h += '<div class="cx-m3-bd" style="grid-template-columns:repeat(' + M3_W + ',1fr)">' + m3.b.map(function (v, i) {
-      var im = CI(M3_T[v]); return '<button type="button" data-m3i="' + i + '" class="t' + v + (i === m3.sel ? ' sel' : '') + (m3.shake && m3.shake.indexOf(i) >= 0 ? ' shake' : '') + '">' + (im ? '<img src="' + im.src + '" alt="">' : '') + '</button>';
+      var im = CI(M3_T[v]), a = an && an[i]; return '<button type="button" data-m3i="' + i + '" class="t' + v + (i === m3.sel ? ' sel' : '') + (a ? ' ' + a.c : '') + '"' + (a ? ' style="--dx:' + (a.dx || 0) + ';--dy:' + (a.dy || 0) + '"' : '') + '>' + (im ? '<img src="' + im.src + '" alt="">' : '') + '</button>';
     }).join('') + '</div>';
     if (m3.msg) h += '<div class="cx-48-msg">' + esc(m3.msg) + '</div>';
     if (m3.say) h += '<div class="cx-48-say">' + (m3.say.img ? '<img src="' + m3.say.img + '" alt="">' : '') + '<div><b>' + esc(m3.say.n) + '</b>' + esc(m3.say.t) + '</div></div>';
@@ -3347,7 +3375,7 @@
   var DR_WHO = [['me', '我'], ['cs', '昶司'], ['rm', '仁彌']];
   var DR_CAT = [['set', '套裝'], ['top', '上衣'], ['bottom', '下身'], ['outer', '外套'], ['shoes', '鞋子'], ['acc', '飾品']];
   var DR_Z = { shoes: 1, bottom: 2, top: 3, set: 4, outer: 5, acc: 6 };
-  var DR_ITEMS = [{ id: 'redset', who: 'me', cat: 'set', n: '酒紅外套套裝', img: 'dr_me_redset' }];
+  var DR_ITEMS = [{"id": "redset", "who": "me", "cat": "set", "n": "酒紅外套套裝", "img": "dr_me_redset"}, {"id": "cscasual", "who": "cs", "cat": "set", "n": "休閒", "img": "dr_cs_casual"}, {"id": "csout", "who": "cs", "cat": "set", "n": "出門西裝", "img": "dr_cs_out"}, {"id": "cspj", "who": "cs", "cat": "set", "n": "睡衣", "img": "dr_cs_pj"}, {"id": "cssum", "who": "cs", "cat": "set", "n": "夏天", "img": "dr_cs_sum"}, {"id": "cswin", "who": "cs", "cat": "set", "n": "冬天毛衣", "img": "dr_cs_win"}, {"id": "csxmas", "who": "cs", "cat": "set", "n": "聖誕", "img": "dr_cs_xmas"}, {"id": "meformal", "who": "me", "cat": "set", "n": "洋裝", "img": "dr_me_formal"}, {"id": "meout", "who": "me", "cat": "set", "n": "出門裝", "img": "dr_me_out"}, {"id": "mepj", "who": "me", "cat": "set", "n": "睡衣", "img": "dr_me_pj"}, {"id": "mesum", "who": "me", "cat": "set", "n": "夏天", "img": "dr_me_sum", "full": 1}, {"id": "mewin", "who": "me", "cat": "set", "n": "冬天毛衣", "img": "dr_me_win"}, {"id": "mexmas", "who": "me", "cat": "set", "n": "聖誕", "img": "dr_me_xmas", "full": 1}, {"id": "rmcoat", "who": "rm", "cat": "set", "n": "大衣", "img": "dr_rm_coat"}, {"id": "rmformal", "who": "rm", "cat": "set", "n": "正裝", "img": "dr_rm_formal"}, {"id": "rmout", "who": "rm", "cat": "set", "n": "出門裝", "img": "dr_rm_out"}, {"id": "rmpj", "who": "rm", "cat": "set", "n": "睡衣", "img": "dr_rm_pj"}, {"id": "rmsum", "who": "rm", "cat": "set", "n": "夏天", "img": "dr_rm_sum"}, {"id": "rmwin", "who": "rm", "cat": "set", "n": "冬天毛衣", "img": "dr_rm_win"}, {"id": "rmxmas", "who": "rm", "cat": "set", "n": "聖誕", "img": "dr_rm_xmas"}];
   var DR_SAY = {
     me: { '昶司': ['這件好看。……出門外套扣好。', '妳穿什麼都好看，不過這件我最喜歡。', '穿這麼漂亮要去見誰？'], '仁彌': ['好漂亮，我的妹妹今天像公主。', '這個顏色好適合妳。', '可以拍一張給我嗎？我想存起來。'] },
     cs: ['……妳挑的？那我就穿。', '只穿給妳看。'], rm: ['妳幫我挑的嗎？好開心。', '好看嗎？那我今天都穿這件。']
@@ -3356,8 +3384,8 @@
   function DRI(k) { return (window.__cxDRIMG || {})[k]; }
   function drG() { var g = G(); g.dress = g.dress || { me: [], cs: [], rm: [] }; DR_WHO.forEach(function (w) { g.dress[w[0]] = g.dress[w[0]] || []; }); return g.dress; }
   function drLayers(who) {
-    var on = drG()[who] || [], L = [DRI('dr_' + who + '_base')];
-    DR_ITEMS.filter(function (it) { return on.indexOf(it.id) >= 0; }).sort(function (a, b) { return DR_Z[a.cat] - DR_Z[b.cat]; }).forEach(function (it) { L.push(DRI(it.img)); });
+    var on = drG()[who] || [], wear = DR_ITEMS.filter(function (it) { return it.who === who && on.indexOf(it.id) >= 0; }), L = wear.some(function (it) { return it.full; }) ? [] : [DRI('dr_' + who + '_base')];
+    wear.sort(function (a, b) { return DR_Z[a.cat] - DR_Z[b.cat]; }).forEach(function (it) { L.push(DRI(it.img)); });
     return L.filter(Boolean);
   }
   function drOpen() {
@@ -3754,7 +3782,7 @@
     '.cx-pz-peek{width:40%;border-radius:10px;display:block;margin:0 auto 8px}.cx-pz-bd{display:grid;gap:2px;max-width:420px;margin:0 auto;background:#e9dccb;padding:4px;border-radius:12px;width:100%;box-sizing:border-box}.cx-pz-bd button{aspect-ratio:1;border:0;padding:0;border-radius:4px;cursor:pointer;background-repeat:no-repeat;transition:transform .12s}.cx-pz-bd button.sel{outline:3px solid #e8799a;transform:scale(.92)}.cx-pz-bd.done{gap:0}.cx-pz-bd.done button{border-radius:0}' +
     '.cx-pz-win{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:10px;padding:12px;border-radius:14px;background:#fff4ec;color:#6b4b3a}.cx-pz-win .cx-48-say{width:100%;box-sizing:border-box}' +
 '.cx-pb-up{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #e8a3b8;border-radius:10px;cursor:pointer;color:#c06080;min-height:60px}.cx-pb-up span{font-size:22px;line-height:1}.cx-pb-up small{font-size:10px}.cx-pb-pick button{position:relative}.cx-pb-pick button i{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#0008;color:#fff;font-style:normal;font-size:12px;line-height:18px;text-align:center}' +
-'.cx-m3-bd{display:grid;gap:3px;max-width:420px;margin:8px auto 0;background:#e9dccb;padding:5px;border-radius:14px;width:100%;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}.cx-m3-bd button{aspect-ratio:1;border:0;padding:0;border-radius:9px;background:#f6efe5;cursor:pointer;display:flex;align-items:center;justify-content:center;animation:cxm3in .18s ease-out}.cx-m3-bd img{width:86%;height:86%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}.cx-m3-bd .t0{background:#ffe3e8}.cx-m3-bd .t1{background:#ffeede}.cx-m3-bd .t2{background:#fff6cf}.cx-m3-bd .t3{background:#f3f6ea}.cx-m3-bd .t4{background:#e6f4e6}.cx-m3-bd .t5{background:#e2ebff}.cx-m3-bd .sel{background:#ffd6e3;outline:2px solid #e8799a}.cx-m3-bd .shake{animation:cxm3sh .25s}@keyframes cxm3in{from{transform:scale(.85);opacity:.6}}@keyframes cxm3sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}' +
+'.cx-m3-bd{display:grid;gap:3px;max-width:420px;margin:8px auto 0;background:#e9dccb;padding:5px;border-radius:14px;width:100%;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none}.cx-m3-bd button{aspect-ratio:1;border:0;padding:0;border-radius:9px;background:#f6efe5;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}.cx-m3-bd .sw{animation:cxm3sw .28s ease-in-out;z-index:2}.cx-m3-bd .pop{animation:cxm3pop .42s ease-in forwards;z-index:2}.cx-m3-bd .fall{animation:cxm3fall .45s cubic-bezier(.35,.1,.5,1.15)}@keyframes cxm3sw{from{transform:translate(calc(var(--dx) * (100% + 3px)),calc(var(--dy) * (100% + 3px)))}}@keyframes cxm3pop{0%{transform:scale(1)}35%{transform:scale(1.18);filter:brightness(1.15)}100%{transform:scale(.15);opacity:0}}@keyframes cxm3fall{from{transform:translateY(calc(var(--dy) * -1 * (100% + 3px)))}}.cx-m3-bd{overflow:hidden}.cx-m3-bd img{width:86%;height:86%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}.cx-m3-bd .t0{background:#ffe3e8}.cx-m3-bd .t1{background:#ffeede}.cx-m3-bd .t2{background:#fff6cf}.cx-m3-bd .t3{background:#f3f6ea}.cx-m3-bd .t4{background:#e6f4e6}.cx-m3-bd .t5{background:#e2ebff}.cx-m3-bd .sel{background:#ffd6e3;outline:2px solid #e8799a}@keyframes cxm3in{from{transform:scale(.85);opacity:.6}}@keyframes cxm3sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}' +
 '.cx-gc-mach{width:180px;margin:6px auto 10px;position:relative}.cx-gc-mach .dome{width:180px;height:150px;border-radius:90px 90px 14px 14px;background:radial-gradient(circle at 35% 30%,#fff,#fde8ef 60%,#f7cfdc);border:4px solid #e8799a;position:relative;overflow:hidden}.cx-gc-mach .dome span{position:absolute;width:38px;height:38px;border-radius:50%;box-shadow:inset -4px -4px 0 #0001,inset 3px 3px 0 #fff8}.cx-gc-mach .body{height:80px;background:#e8799a;border-radius:0 0 18px 18px;position:relative}.cx-gc-mach .knob{position:absolute;left:24px;top:18px;width:44px;height:44px;border-radius:50%;background:#fff;border:6px solid #f6c3d2}.cx-gc-mach .knob:after{content:"";position:absolute;left:14px;top:2px;width:6px;height:28px;background:#e8799a;border-radius:3px}.cx-gc-mach .slot{position:absolute;right:20px;top:20px;width:58px;height:40px;background:#9c4a63;border-radius:10px;overflow:hidden}.cx-gc-mach .drop{position:absolute;left:12px;top:-40px;width:34px;height:34px;border-radius:50%;animation:cxgcd .6s .4s ease-in forwards;box-shadow:inset -4px -4px 0 #0002}' +
     '.cx-gc-mach.spin .knob{animation:cxgck .5s ease-in-out 2}.cx-gc-mach.spin .dome span{animation:cxgcs .25s infinite alternate}@keyframes cxgck{to{transform:rotate(360deg)}}@keyframes cxgcs{to{transform:translate(4px,-5px)}}@keyframes cxgcd{to{top:4px}}' +
     '.cx-gc-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:4px 0 10px}.cx-gc-card{border:2px solid var(--rc);border-radius:12px;padding:6px;text-align:center;background:var(--primary-bg);position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;animation:cxm3in .3s}.cx-gc-card i{position:absolute;top:3px;left:5px;font-style:normal;font-size:10px;font-weight:700;color:var(--rc)}.cx-gc-card img{width:48px;height:48px;object-fit:contain}.cx-gc-card .ic{font-size:30px;line-height:48px}.cx-gc-card b{font-size:12px}.cx-gc-card p{font-size:11px;margin:2px 0 0;color:var(--text-secondary)}.cx-gc-card.rSSR{background:linear-gradient(135deg,#fff7e0,#ffe9f2);box-shadow:0 0 10px #f2b84a88}.cx-gc-card.rSR{background:#faf2ff}' +
