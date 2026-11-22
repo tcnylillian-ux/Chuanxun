@@ -14,7 +14,7 @@
     combine: { on: false, min: 2, max: 3, joins: ['，', '…', '、'] },
     letters: { freq: 'off', next: null },
     rp: { chance: 0.03, list: [] },
-    dice: { n: 1, opts: '' }, qz: { list: [] }, todo: { list: [] }, sleep: { cur: 0, log: [], with: 'cs', peek: [] },
+    dice: { n: 1, opts: '' }, qz: { list: [] }, todo: { list: [] }, sleep: { cur: 0, log: [], with: 'cs', peek: [] }, health: { days: {}, goal: 8, remind: true, rd: {} },
     pomo: { focus: 25, short: 5, long: 15, every: 4, toChat: true, run: null, log: {},
       lines: {
         focus: ['加油，我陪著你', '專心一點喔，我在旁邊看著', '你可以的', '寫完就抱抱', '不准偷看手機', '我也在努力', '安靜陪你'],
@@ -1134,6 +1134,7 @@
       if (await qzTick()) ch = true;
       compRestore(); sleepRestore();
       if (periodCare()) ch = true;
+      if (healthTick()) ch = true;
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
       if (phoneTick()) ch = true;
@@ -2752,8 +2753,8 @@
     if (!n) n = pick(who1()).name;
     return { k: k || (/仁彌|仁弥/.test(n) ? 'rm' : /昶司/.test(n) ? 'cs' : ''), n: n };
   }
-  var SL_NIGHT2 = { cs: ['晚安。手機放下，閉上眼睛。', '睡吧，我在。', '……過來一點，晚安。', '明天早上叫妳起床，好好睡。'], rm: ['晚安晚安～要夢到我喔！', '抱抱，然後睡覺！', '我數到三妳就要睡著喔，一、二……', '被子蓋好，不准踢被子～'] };
-  var SL_MORN2 = { cs: ['早。睡得好嗎？', '起來了？先喝杯水。', '早安，今天也要好好吃早餐。'], rm: ['早安！！太陽曬屁股了～', '醒了醒了！我好想妳！', '早安寶貝，今天要做什麼？'] };
+  var SL_NIGHT2 = { cs: ['晚安，好妹妹。手機放下，我看著妳睡。', '還不睡？……要我過去哄妳嗎（笑）', '閉眼睛。再偷看手機，我可就要沒收了。', '過來，靠著我睡。', '晚安，愛妳。明天早上我叫妳。'], rm: ['晚安，好妹妹。夢裡也要有我。', '被子蓋好了嗎？我幫妳掖一掖。', '睡吧，我在旁邊陪著妳，哪都不去。', '今天辛苦了，好好睡一覺。', '（輕輕摸摸妳的頭）晚安。'] };
+  var SL_MORN2 = { cs: ['早，傻妹妹。睡得好嗎？', '醒了？早餐我讓人準備好了，先吃飯。', '睡得真熟，我看了好久（笑）', '早安。今天也要乖乖的。'], rm: ['早安，好妹妹。睡得好嗎？', '醒啦？先喝杯溫水，別空腹。', '早安，今天也想妳。', '（笑盈盈）起床啦，我等妳好久了。'] };
   function SLEEP_PEEK_LINES(w) { return SL_PEEK[w] || SL_PEEK.cs; }
   function sleepOpen() {
     if (!slM) {
@@ -2794,12 +2795,174 @@
     h += '<div class="cx-sec"><h4>紀錄</h4><div class="cx-list">' + (L.length ? L.slice(0, 30).map(function (x, i) { var s = new Date(x.s), e = new Date(x.e); return '<div class="cx-td"><span class="d">' + ['', '😫', '😕', '😐', '🙂', '😴'][x.q] + '</span><div><b>' + hm(x.e - x.s) + '</b><small>' + (s.getMonth() + 1) + '/' + s.getDate() + ' ' + pad(s.getHours()) + ':' + pad(s.getMinutes()) + ' → ' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '</small>' + (x.pk ? '<small style="color:#d0605a">📱 偷看手機 ' + x.pk + ' 次・' + x.pm + ' 分鐘</small>' : '') + '<span style="font-size:11px;color:var(--text-secondary)">改起床時間 <input type="time" data-slfixv="' + i + '" value="' + pad(e.getHours()) + ':' + pad(e.getMinutes()) + '" style="border:1px solid var(--border-color);border-radius:6px;font-size:11px;padding:1px 4px"> <button class="cx-btn sm" data-slfix="' + i + '" style="padding:1px 8px;font-size:11px">改</button></span></div><button class="del" data-sldel="' + i + '">×</button></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄。</div>') + '</div></div>';
     slM.body.innerHTML = h;
   }
+  /* ================= 健康小本 ================= */
+  var HB_SICK = ['頭痛', '肚子痛', '生理痛', '感冒', '喉嚨痛', '過敏', '很累', '失眠'];
+  var HB_MOOD = ['😢', '😕', '😐', '🙂', '😆'];
+  var HB_SAY = {
+    w_half: ['喝了一半了，好妹妹真乖。', '水喝得不錯，繼續保持（笑）'],
+    w_goal: ['今天的水喝完了？真乖，獎勵一個抱抱。', '做得好，妹妹。今天很聽話嘛。'],
+    w_low: ['才喝這麼一點？過來，先喝杯水。', '水呢？我看著妳喝完這杯。'],
+    meal_skip: ['又沒吃飯？……傻妹妹，現在去吃。', '餓壞了怎麼辦，先吃點東西。'],
+    meal_all: ['三餐都吃了，好乖。', '今天有好好吃飯，我放心了。'],
+    sick: ['哪裡不舒服？躺著別動，我在。', '不舒服要說，別硬撐。', '要不要我過去陪妳？'],
+    mood_low: ['怎麼了？跟我說說。', '過來，抱一下就好了。', '誰讓妳不開心了？'],
+    mood_hi: ['今天心情很好嘛（笑）', '看妳開心，我也開心。'],
+    sleep_short: ['昨晚才睡這麼一點？今晚早點睡。', '睡太少了，今天別太累。'],
+    sleep_ok: ['昨晚睡得不錯，乖。'],
+    per: ['這幾天別吃冰的，熱水袋準備好。', '肚子還疼嗎？我幫妳揉揉。'],
+    remind: ['好妹妹，喝水了沒？', '該喝水了，我看著。', '吃飯了沒？別又忘了。']
+  };
+  function hbG() { X.health = X.health || {}; var H = X.health; H.days = H.days || {}; if (H.goal == null) H.goal = 8; if (H.remind == null) H.remind = true; H.rd = H.rd || {}; return H; }
+  function hbDay(d) { var H = hbG(); H.days[d] = H.days[d] || { w: 0, m: {}, mood: 0, mt: '', sick: [] }; var o = H.days[d]; o.m = o.m || {}; o.sick = o.sick || []; if (!o.sx) { o.sx = o.sick.map(function (k) { return { k: k, t: '', lv: 2 }; }); } return o; }
+  function hbSx(d) { var o = (hbG().days[d] || {}); return o.sx || (o.sick || []).map(function (k) { return { k: k, t: '', lv: 2 }; }); }
+  var HB_LV = ['輕微', '普通', '很痛'], hbLv = 2;
+  function hbSleep(d) {
+    var L = (X.sleep.log || []).filter(function (r) { return ymd(new Date(r.e)) === d; });
+    if (!L.length) return null; var ms = L.reduce(function (a, r) { return a + (r.e - r.s); }, 0);
+    return { ms: ms, q: L[0].q, pk: L.reduce(function (a, r) { return a + (r.pk || 0); }, 0) };
+  }
+  function hbPer(d) { try { var st = pMap(), t = st.map[d]; if (t !== 'per') return t || null; var cur = st.ps.filter(function (p) { return d >= p.start && d <= p.end; })[0]; return cur ? { day: diffDays(cur.start, d) + 1 } : 'per'; } catch (e) { return null; } }
+  function hbSpeaker() { var n = pick(who1()).name; return n; }
+  var hbM = null, hbSel = null, hbMon = null, hbSay = null;
+  function hbTalk(k) { hbSay = { n: hbSpeaker(), t: pick(HB_SAY[k]) }; }
+  function hbOpen() {
+    if (!hbM) {
+      hbM = makeModal('cx-health-modal', 'fa-heart', '健康小本');
+      hbM.onBack = function () { if (hbM.view && hbM.view !== 'main') { hbM.view = 'main'; hbRender(); return true; } };
+      hbM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        var H = hbG(), D = hbDay(hbSel), ds = b.dataset;
+        if (ds.hw != null) {
+          var before = D.w; D.w = +ds.hw === D.w ? D.w - 1 : +ds.hw;
+          if (D.w >= H.goal && before < H.goal) hbTalk('w_goal'); else if (D.w >= H.goal / 2 && before < H.goal / 2) hbTalk('w_half');
+        } else if (ds.hm) {
+          D.m[ds.hm] = !D.m[ds.hm];
+          if (D.m.b && D.m.l && D.m.d) hbTalk('meal_all');
+        } else if (ds.hmood) {
+          D.mood = +ds.hmood === D.mood ? 0 : +ds.hmood;
+          if (D.mood && D.mood <= 2) hbTalk('mood_low'); else if (D.mood >= 5) hbTalk('mood_hi');
+        } else if (ds.hsick) {
+          var tin = hbM.body.querySelector('#cx-hb-st'), tv = tin && tin.value ? tin.value : (pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()));
+          D.sx.push({ k: ds.hsick, t: tv, lv: hbLv }); D.sx.sort(function (a, b) { return a.t < b.t ? -1 : 1; });
+          D.sick = D.sx.map(function (x) { return x.k; }).filter(function (k, i, a) { return a.indexOf(k) === i; });
+          var cnt = D.sx.filter(function (x) { return x.k === ds.hsick; }).length;
+          hbSay = { n: hbSpeaker(), t: cnt >= 2 ? '今天第 ' + cnt + ' 次' + ds.hsick + '了……躺下休息，我陪著妳。' : pick(HB_SAY.sick) };
+        } else if (ds.hlv) { hbLv = +ds.hlv; hbRender(); return;
+        } else if (ds.hsxdel != null) {
+          D.sx.splice(+ds.hsxdel, 1); D.sick = D.sx.map(function (x) { return x.k; }).filter(function (k, i, a) { return a.indexOf(k) === i; });
+        } else if (ds.hmon) { hbMon.setMonth(hbMon.getMonth() + (+ds.hmon)); hbRender(); return; }
+        else if (ds.hd) { hbSel = ds.hd; hbSay = null; hbRender(); return; }
+        else if (ds.hv) { hbM.view = ds.hv; hbRender(); return; }
+        else if (ds.hgoal) { H.goal = Math.max(4, Math.min(15, H.goal + (+ds.hgoal))); }
+        else if (ds.hrem) { H.remind = !H.remind; }
+        else return;
+        await save(); hbRender();
+      });
+      hbM.body.addEventListener('change', async function (e) { if (e.target.id === 'cx-hb-mt') { hbDay(hbSel).mt = e.target.value.slice(0, 60); await save(); } });
+    }
+    hbSel = ymd(new Date()); hbMon = new Date(); hbMon.setDate(1); hbM.view = 'main'; hbSay = null;
+    var D0 = hbDay(hbSel), sl = hbSleep(hbSel), pr = hbPer(hbSel);
+    if (pr && pr.day) hbTalk('per'); else if (sl && sl.ms < 6 * 36e5) hbTalk('sleep_short'); else if (sl) hbTalk('sleep_ok');
+    else if (new Date().getHours() >= 14 && D0.w < 3) hbTalk('w_low');
+    hbRender(); hbM.open();
+  }
+  function hbWeek() {
+    var t = ymd(new Date()), days = [], H = hbG();
+    for (var i = 6; i >= 0; i--) days.push(addDays(t, -i));
+    var sl = days.map(hbSleep).filter(Boolean), ws = days.map(function (d) { return (H.days[d] || {}).w || 0; });
+    var moods = days.map(function (d) { return (H.days[d] || {}).mood || 0; }).filter(Boolean);
+    var meals = days.reduce(function (a, d) { var m = (H.days[d] || {}).m || {}; return a + (m.b ? 1 : 0) + (m.l ? 1 : 0) + (m.d ? 1 : 0); }, 0);
+    var sick = days.reduce(function (a, d) { return a + (hbSx(d).length ? 1 : 0); }, 0), sxc = {}, sxt = { 早上: 0, 下午: 0, 晚上: 0 };
+    days.forEach(function (d) { hbSx(d).forEach(function (x) { sxc[x.k] = (sxc[x.k] || 0) + 1; if (x.t) { var hh = +x.t.slice(0, 2); sxt[hh < 12 ? '早上' : hh < 18 ? '下午' : '晚上']++; } }); });
+    return { days: days, sl: sl.length ? sl.reduce(function (a, r) { return a + r.ms; }, 0) / sl.length : 0, sln: sl.length, w: ws.reduce(function (a, x) { return a + x; }, 0) / 7, ws: ws,
+      mood: moods.length ? moods.reduce(function (a, x) { return a + x; }, 0) / moods.length : 0, meals: meals, sick: sick, sxc: sxc, sxt: sxt };
+  }
+  function hbComment(s) {
+    var H = hbG(), out = [];
+    if (s.sln) out.push(s.sl < 6 * 36e5 ? '這週睡太少了，今晚開始早點睡，我陪妳。' : s.sl >= 7 * 36e5 ? '這週睡得很好，乖。' : '睡眠還可以，再早一點睡就更好了。');
+    out.push(s.w >= H.goal * 0.8 ? '水喝得很好，繼續保持。' : '水喝得太少了，好妹妹，每天多喝幾杯。');
+    out.push(s.meals >= 18 ? '三餐都有好好吃，我很放心。' : '有幾頓沒吃，下次不准再跳過。');
+    if (s.sick) { var hd = s.sxc['頭痛'] || 0, tk = Object.keys(s.sxt).sort(function (a, b) { return s.sxt[b] - s.sxt[a]; })[0];
+      out.push(hd >= 3 ? '這週頭痛了 ' + hd + ' 次' + (s.sxt[tk] ? '，大多在' + tk : '') + '……多喝水、早點睡，一直這樣要去看醫生，我陪妳去。' : '這週有 ' + s.sick + ' 天不太舒服，要好好照顧自己，不舒服就叫我。'); }
+    if (s.mood && s.mood < 2.8) out.push('這週心情好像不太好……過來，抱抱。');
+    return out.join('');
+  }
+  function hbRender() {
+    var H = hbG(), b = hbM.body, today = ymd(new Date());
+    if (hbM.view === 'week') {
+      var s = hbWeek(), mx = Math.max(H.goal, Math.max.apply(null, s.ws));
+      b.innerHTML = '<div class="cx-sec"><h4>最近 7 天</h4><div class="cx-hb-sum">' +
+        '<div><small>平均睡眠</small><b>' + (s.sln ? (s.sl / 36e5).toFixed(1) + 'h' : '—') + '</b></div>' +
+        '<div><small>平均喝水</small><b>' + s.w.toFixed(1) + ' 杯</b></div>' +
+        '<div><small>吃了幾餐</small><b>' + s.meals + '/21</b></div>' +
+        '<div><small>心情</small><b>' + (s.mood ? HB_MOOD[Math.round(s.mood) - 1] : '—') + '</b></div></div>' +
+        '<div class="cx-hb-bars">' + s.days.map(function (d, i) { return '<div><i style="height:' + Math.round(s.ws[i] / mx * 100) + '%"></i><small>' + d.slice(8) + '</small></div>'; }).join('') + '</div><div class="cx-muted" style="font-size:11px;text-align:center">每天喝水杯數</div>' +
+        (Object.keys(s.sxc).length ? '<h4>不舒服紀錄</h4><div class="cx-hb-chips">' + Object.keys(s.sxc).map(function (k) { return '<button class="on sick">' + k + ' ×' + s.sxc[k] + '</button>'; }).join('') + '</div><div class="cx-muted" style="font-size:12px">時段：早上 ' + s.sxt['早上'] + '・下午 ' + s.sxt['下午'] + '・晚上 ' + s.sxt['晚上'] + '</div>' : '') +
+        sayBy(hbSpeaker(), hbComment(s)) +
+        '<h4>設定</h4><div class="cx-row"><span>每天喝水目標</span><span><button class="cx-btn sm" data-hgoal="-1">－</button> <b>' + H.goal + '</b> 杯 <button class="cx-btn sm" data-hgoal="1">＋</button></span></div>' +
+        '<div class="cx-row"><span>哥哥提醒喝水、吃飯</span><button class="cx-btn sm' + (H.remind ? ' pri' : '') + '" data-hrem="1">' + (H.remind ? '開' : '關') + '</button></div>' +
+        '<p class="cx-muted" style="font-size:11px">只是給自己看的紀錄，不是醫療建議。不舒服持續好幾天要去看醫生喔。</p></div>';
+      return;
+    }
+    var D = hbDay(hbSel), sl = hbSleep(hbSel), pr = hbPer(hbSel), isT = hbSel === today;
+    var h = '<div class="cx-sec">';
+    h += '<div class="cx-hb-date"><b>' + (isT ? '今天' : hbSel.slice(5).replace('-', '月') + '日') + '</b>' + (pr && pr.day ? '<span class="per">🩸 經期第 ' + pr.day + ' 天</span>' : pr === 'pred' ? '<span class="pred">經期快到了</span>' : '') + '</div>';
+    if (hbSay) h += sayBy(hbSay.n, hbSay.t);
+    h += '<h4>💧 喝水 ' + D.w + '/' + H.goal + ' 杯</h4><div class="cx-hb-cups">';
+    for (var i = 1; i <= Math.max(H.goal, D.w); i++) h += '<button data-hw="' + i + '" class="' + (i <= D.w ? 'on' : '') + '">' + (i <= D.w ? '🥛' : '🫙') + '</button>';
+    h += '</div><h4>🍚 三餐</h4><div class="cx-hb-chips">' + [['b', '早餐'], ['l', '午餐'], ['d', '晚餐']].map(function (m) { return '<button data-hm="' + m[0] + '" class="' + (D.m[m[0]] ? 'on' : '') + '">' + (D.m[m[0]] ? '✓ ' : '') + m[1] + '</button>'; }).join('') + '</div>';
+    h += '<h4>😊 心情</h4><div class="cx-hb-mood">' + HB_MOOD.map(function (e, i) { return '<button data-hmood="' + (i + 1) + '" class="' + (D.mood === i + 1 ? 'on' : '') + '">' + e + '</button>'; }).join('') + '</div>';
+    h += '<input class="cx-in" id="cx-hb-mt" maxlength="60" placeholder="想說點什麼……" value="' + esc(D.mt) + '">';
+    var nw = new Date(), tdef = isT ? pad(nw.getHours()) + ':' + pad(nw.getMinutes()) : '';
+    h += '<h4>🤒 不舒服（點一次記一次）</h4><div class="cx-hb-lv"><span>程度</span>' + HB_LV.map(function (l, i) { return '<button data-hlv="' + (i + 1) + '" class="' + (hbLv === i + 1 ? 'on' : '') + '">' + l + '</button>'; }).join('') + '<span>時間</span><input type="time" id="cx-hb-st" value="' + tdef + '"></div>';
+    h += '<div class="cx-hb-chips">' + HB_SICK.map(function (s) { var c = D.sx.filter(function (x) { return x.k === s; }).length; return '<button data-hsick="' + s + '" class="' + (c ? 'on sick' : '') + '">' + s + (c ? ' ×' + c : '') + '</button>'; }).join('') + '</div>';
+    if (D.sx.length) h += '<div class="cx-hb-sx">' + D.sx.map(function (x, i) { return '<div><span>' + (x.t || '—') + '</span><b>' + esc(x.k) + '</b><em class="lv' + x.lv + '">' + HB_LV[x.lv - 1] + '</em><button data-hsxdel="' + i + '">×</button></div>'; }).join('') + '</div>';
+    h += '<h4>🌙 睡眠</h4><div class="cx-muted">' + (sl ? '這天早上醒來，睡了 ' + hm(sl.ms) + (sl.q ? '・品質 ' + '⭐'.repeat(sl.q) : '') + (sl.pk ? '・偷看手機 ' + sl.pk + ' 次' : '') : '沒有睡眠紀錄（用「睡眠」記錄就會自動出現）') + '</div>';
+    // calendar
+    var y = hbMon.getFullYear(), mo = hbMon.getMonth(), first = new Date(y, mo, 1).getDay(), n = new Date(y, mo + 1, 0).getDate(), pm = {};
+    try { pm = pMap().map; } catch (e) {}
+    h += '<div class="cx-hb-calhd"><button class="cx-btn sm" data-hmon="-1">‹</button><b>' + y + ' 年 ' + (mo + 1) + ' 月</b><button class="cx-btn sm" data-hmon="1">›</button></div><div class="cx-hb-cal">' + '日一二三四五六'.split('').map(function (w) { return '<span class="wd">' + w + '</span>'; }).join('');
+    for (var k = 0; k < first; k++) h += '<span></span>';
+    for (var dd = 1; dd <= n; dd++) {
+      var ds = y + '-' + pad(mo + 1) + '-' + pad(dd), o = H.days[ds] || {}, s2 = hbSleep(ds), wv = Math.min(1, (o.w || 0) / H.goal);
+      h += '<button data-hd="' + ds + '" class="' + (ds === hbSel ? 'sel ' : '') + (ds === today ? 'td ' : '') + (pm[ds] === 'per' ? 'per' : pm[ds] === 'pred' ? 'pred' : '') + (hbSx(ds).length >= 3 ? ' many' : '') + '"><em>' + dd + '</em><span>' + (function () { var n2 = hbSx(ds).length; return n2 >= 2 ? '🤒' + n2 : o.mood ? HB_MOOD[o.mood - 1] : n2 ? '🤒' : ''; })() + '</span><i style="--w:' + Math.round(wv * 100) + '%"></i>' + (s2 ? '<small>' + (s2.ms / 36e5).toFixed(1) + 'h</small>' : '') + '</button>';
+    }
+    h += '</div><div class="cx-muted" style="font-size:11px">藍條＝喝水進度　紅框＝經期　數字＝睡了幾小時</div>';
+    h += '<button class="cx-btn pri" data-hv="week">📊 這週小結</button></div>';
+    b.innerHTML = h;
+  }
+  function healthTick() {
+    var H = hbG(); if (!H.remind) return false;
+    var now = new Date(), hr = now.getHours(), t = ymd(now), D = H.days[t] || { w: 0, m: {} }, slot = null, line = null;
+    if (hr === 10 && D.w < 2) { slot = 'w10'; line = pick(HB_SAY.remind.slice(0, 2)); }
+    else if (hr === 13 && !(D.m || {}).l) { slot = 'm13'; line = '吃午餐了沒？別又忘了。'; }
+    else if (hr === 16 && D.w < H.goal / 2) { slot = 'w16'; line = pick(HB_SAY.w_low); }
+    else if (hr === 19 && !(D.m || {}).d) { slot = 'm19'; line = '晚餐吃了嗎？吃了記得跟我說。'; }
+    if (!slot || H.rd[t + slot]) return false;
+    if (X.sleep.cur) return false;
+    H.rd = {}; H.rd[t + slot] = 1; var n = hbSpeaker(); sayAs(n === pname() ? null : n, line); return true;
+  }
+  var hbCss = document.createElement('style');
+  hbCss.textContent = '#cx-health-modal .cx-btn.sm{flex:none;padding:4px 10px;font-size:13px;border-radius:10px}#cx-health-modal .cx-row{justify-content:space-between}.cx-hb-date{display:flex;gap:8px;align-items:center}.cx-hb-date b{font-size:16px}.cx-hb-date .per{color:#c0392b;font-size:12px}.cx-hb-date .pred{color:#c06080;font-size:12px}' +
+    '.cx-hb-cups{display:flex;flex-wrap:wrap;gap:4px}.cx-hb-cups button{width:38px;height:38px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);font-size:20px;cursor:pointer;opacity:.55}.cx-hb-cups button.on{opacity:1;background:#e3f1ff;border-color:#9cc8f0}' +
+    '.cx-hb-chips{display:flex;flex-wrap:wrap;gap:6px}.cx-hb-chips button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}.cx-hb-chips button.on{background:#e8f6e8;border-color:#9fd39f}.cx-hb-chips button.sick{background:#ffe9e6;border-color:#f0a59a}' +
+    '.cx-hb-mood{display:flex;gap:6px}.cx-hb-mood button{flex:1;font-size:24px;border:1px solid var(--border-color);background:var(--primary-bg);border-radius:12px;padding:4px;cursor:pointer;opacity:.5}.cx-hb-mood button.on{opacity:1;background:#fff3d6;border-color:#f0cf7a}' +
+    '.cx-hb-calhd{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.cx-hb-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.cx-hb-cal .wd{text-align:center;font-size:11px;color:var(--text-secondary)}' +
+    '.cx-hb-cal button{position:relative;aspect-ratio:1;border:1px solid var(--border-color);background:var(--primary-bg);border-radius:8px;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;color:var(--text-primary);font:inherit}.cx-hb-cal em{position:absolute;top:1px;left:3px;font-style:normal;font-size:9px;color:var(--text-secondary)}.cx-hb-cal span{font-size:15px;line-height:1}.cx-hb-cal small{font-size:8px;color:#7a6a9a}' +
+    '.cx-hb-cal i{position:absolute;left:0;bottom:0;height:3px;width:var(--w);background:#7fb3e6}.cx-hb-cal .per{border:2px solid #e57373}.cx-hb-cal .pred{border:2px dashed #f0a0b0}.cx-hb-cal .sel{background:#fff0f4;box-shadow:0 0 0 2px #e8799a inset}.cx-hb-cal .td em{color:#e8799a;font-weight:700}' +
+    '.cx-hb-lv{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary)}.cx-hb-lv button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}.cx-hb-lv button.on{background:#ffe9e6;border-color:#f0a59a}.cx-hb-lv input{border:1px solid var(--border-color);border-radius:8px;padding:3px 6px;font:inherit;font-size:12px;background:var(--primary-bg);color:var(--text-primary)}' +
+    '.cx-hb-sx{display:flex;flex-direction:column;gap:4px}.cx-hb-sx div{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 8px;border-radius:10px;background:var(--primary-bg)}.cx-hb-sx span{color:var(--text-secondary);width:42px}.cx-hb-sx em{font-style:normal;font-size:11px;padding:1px 6px;border-radius:6px}.cx-hb-sx .lv1{background:#fff4d6}.cx-hb-sx .lv2{background:#ffe3d6}.cx-hb-sx .lv3{background:#ffd0d0;color:#b03030}.cx-hb-sx button{margin-left:auto;border:0;background:none;color:var(--text-secondary);font-size:16px;cursor:pointer}.cx-hb-cal .many{background:#fff0ee}' +
+    '.cx-hb-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cx-hb-sum div{background:var(--primary-bg);border:1px solid var(--border-color);border-radius:12px;padding:6px;text-align:center;display:flex;flex-direction:column}.cx-hb-sum small{font-size:10px;color:var(--text-secondary)}.cx-hb-sum b{font-size:16px}' +
+    '.cx-hb-bars{display:flex;gap:6px;align-items:flex-end;height:90px;padding:6px;border-radius:12px;background:var(--primary-bg)}.cx-hb-bars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.cx-hb-bars i{width:70%;background:#9cc8f0;border-radius:4px 4px 0 0;min-height:2px}.cx-hb-bars small{font-size:9px}';
+  document.head.appendChild(hbCss);
+
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
   addEntry('cx-dice-entry', 'fa-dice', '骰子', diceOpen);
   addEntry('cx-quiz-entry', 'fa-clipboard-question', '問卷', quizOpen);
   addEntry('cx-todo-entry', 'fa-list-check', '待辦', todoOpen);
   addEntry('cx-sleep-entry', 'fa-bed', '睡眠', sleepOpen);
   addEntry('cx-period-entry', 'fa-droplet', '潮汐', pOpen);
+  addEntry('cx-health-entry', 'fa-heart', '健康小本', hbOpen);
   addEntry('cx-pomo-entry', 'fa-clock', '番茄鐘', pomoOpen);
   addEntry('cx-comp-entry', 'fa-headphones', '陪伴中心', compOpen);
   addEntry('cx-rp-entry', 'fa-gift', '紅包', rpOpen);

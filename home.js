@@ -3024,8 +3024,8 @@
   var F48 = [['sprout', '小芽'], ['bud', '花苞'], ['daisy', '雛菊'], ['tulip', '鬱金香'], ['sunflower', '向日葵'], ['lotus', '荷花'], ['peony', '牡丹'], ['rose', '玫瑰'], ['bluerose', '藍玫瑰'], ['goldrose', '金玫瑰'], ['rainbowrose', '彩虹玫瑰']];
   var F48_PAY = { 7: 5, 8: 10, 9: 20, 10: 50, 11: 120 };
   var F48_SAY = {
-    '昶司': { hi: ['……不錯。', '再合一次看看。', '妳比我想的還厲害。'], top: ['彩虹玫瑰？……妳真的做到了。', '今天的晚餐我做，獎勵妳。'], over: ['沒關係，再來一局。', '下次角落留一格，別急著滑。'] },
-    '仁彌': { hi: ['哇哇哇好漂亮！', '再一個！再一個！', '妳好會玩喔～'], top: ['彩虹玫瑰！！！我要拍照！', '妳是天才吧！！'], over: ['啊啊啊好可惜！', '換我玩！……我也輸了哈哈。'] }
+    '昶司': { hi: ['不錯嘛，妹妹。', '這步走得好（笑）', '妳比我想的還厲害。'], top: ['彩虹玫瑰？……做得好，想要什麼獎勵？', '真厲害，這個我要拍下來。'], over: ['沒關係，再來一局，我陪妳。', '傻妹妹，角落要留一格（笑）'] },
+    '仁彌': { hi: ['好漂亮呀。', '慢慢來，妳做得很好。', '好妹妹真厲害。'], top: ['彩虹玫瑰……真的好美，跟妳一樣。', '妳好厲害，給妳揉揉手指。'], over: ['沒關係，我們再玩一次。', '辛苦了，休息一下也好。'] }
   };
   var f48 = null;
   function f48G() { var g = G(); g.f48 = g.f48 || { best: 0, top: 0, cur: null }; return g.f48; }
@@ -3186,7 +3186,7 @@
   }
   /* ---------- 花花消消樂 ---------- */
   var M3_T = ['rose', 'tulip', 'sunflower', 'daisy', 'lotus', 'bluerose'], M3_W = 7, M3_H = 8, M3_MOVES = 25;
-  var M3_SAY = { '昶司': { good: ['連消？……妳很會嘛。', '這一步不錯。'], end: ['分數還行，下次我陪妳破紀錄。', '玩累了就休息，妹妹。'] }, '仁彌': { good: ['哇，好漂亮的連鎖！', '妳真的好厲害呀。'], end: ['玩得好開心，對吧？', '辛苦了，給妳揉揉手指。'] } };
+  var M3_SAY = { '昶司': { good: ['連消？……妳很會嘛。', '這一步不錯。'], end: ['分數還行，下次我陪妳破紀錄。', '玩累了就休息，妹妹。'] }, '仁彌': { good: ['好漂亮的連鎖呀。', '妳真的好厲害，好妹妹。'], end: ['玩得好開心，對吧？', '辛苦了，給妳揉揉手指。'] } };
   var m3 = null;
   function m3Rand() { return Math.floor(Math.random() * M3_T.length); }
   function m3Find(b) {
@@ -3378,8 +3378,8 @@
   var DR_POS = { hair: ['50% 0%', 1.25], top: ['50% 73%', 1.9], bottom: ['50% 93%', 2.1], dress: ['50% 90%', 1.5], outer: ['50% 82%', 1.6], shoes: ['50% 100%', 2.4], acc: ['50% 64%', 2.2] };
   var DR_ITEMS = [{"id": "hlong", "who": "me", "cat": "hair", "n": "長髮", "img": "d2_me_hairF_long", "back": "d2_me_hairB_long"}, {"id": "hbun", "who": "me", "cat": "hair", "n": "丸子頭", "img": "d2_me_hairF_bun", "back": "d2_me_hairB_bun"}, {"id": "hbraid", "who": "me", "cat": "hair", "n": "側麻花辮", "img": "d2_me_hairF_braid", "back": "d2_me_hairB_braid"}, {"id": "me_top_beige", "who": "me", "cat": "top", "n": "米色針織毛衣", "img": "d2_me_top_beige"}, {"id": "me_top_pink", "who": "me", "cat": "top", "n": "粉色短T", "img": "d2_me_top_pink"}, {"id": "me_top_bluecable", "who": "me", "cat": "top", "n": "淺藍麻花毛衣", "img": "d2_me_top_bluecable"}, {"id": "me_bottom_plaid", "who": "me", "cat": "bottom", "n": "紅格子百褶裙", "img": "d2_me_bot_plaid"}, {"id": "me_bottom_jeans", "who": "me", "cat": "bottom", "n": "牛仔短褲", "img": "d2_me_bot_jeans"}, {"id": "me_bottom_tier", "who": "me", "cat": "bottom", "n": "藍色蛋糕裙", "img": "d2_me_bot_tier"}, {"id": "me_bottom_longblue", "who": "me", "cat": "bottom", "n": "淺藍長裙", "img": "d2_me_bot_longblue"}, {"id": "me_bottom_redshort", "who": "me", "cat": "bottom", "n": "酒紅短裙", "img": "d2_me_bot_redshort"}, {"id": "me_dress_white", "who": "me", "cat": "dress", "n": "白色洋裝", "img": "d2_me_dress_white"}, {"id": "me_dress_red", "who": "me", "cat": "dress", "n": "酒紅泡泡袖洋裝", "img": "d2_me_dress_red"}, {"id": "me_outer_denim", "who": "me", "cat": "outer", "n": "牛仔外套", "img": "d2_me_out_denim"}, {"id": "me_outer_beige", "who": "me", "cat": "outer", "n": "米色大衣", "img": "d2_me_out_beige"}, {"id": "me_outer_red", "who": "me", "cat": "outer", "n": "紅色短外套", "img": "d2_me_out_red"}, {"id": "me_shoes_sneaker", "who": "me", "cat": "shoes", "n": "小白鞋", "img": "d2_me_shoe_sneaker"}, {"id": "me_shoes_fluffy", "who": "me", "cat": "shoes", "n": "毛毛拖鞋", "img": "d2_me_shoe_fluffy"}, {"id": "me_shoes_mary", "who": "me", "cat": "shoes", "n": "瑪莉珍鞋", "img": "d2_me_shoe_mary"}, {"id": "me_shoes_boot", "who": "me", "cat": "shoes", "n": "雪靴", "img": "d2_me_shoe_boot"}, {"id": "me_shoes_sandal", "who": "me", "cat": "shoes", "n": "涼鞋", "img": "d2_me_shoe_sandal"}, {"id": "me_acc_scarf", "who": "me", "cat": "acc", "n": "紅格紋圍巾", "img": "d2_me_acc_scarf"}, {"id": "cs_top_shirt", "who": "cs", "cat": "top", "n": "白襯衫", "img": "d2_cs_top_shirt"}, {"id": "cs_top_gray", "who": "cs", "cat": "top", "n": "深灰毛衣", "img": "d2_cs_top_gray"}, {"id": "cs_top_turtle", "who": "cs", "cat": "top", "n": "黑色高領毛衣", "img": "d2_cs_top_turtle"}, {"id": "cs_bottom_navy", "who": "cs", "cat": "bottom", "n": "深藍短褲", "img": "d2_cs_bot_navy"}, {"id": "cs_bottom_black", "who": "cs", "cat": "bottom", "n": "黑色短褲", "img": "d2_cs_bot_black"}, {"id": "cs_outer_cream", "who": "cs", "cat": "outer", "n": "米白西裝外套", "img": "d2_cs_out_cream"}, {"id": "cs_outer_black", "who": "cs", "cat": "outer", "n": "黑色西裝外套", "img": "d2_cs_out_black"}, {"id": "rm_top_tee", "who": "rm", "cat": "top", "n": "白色長袖T", "img": "d2_rm_top_tee"}, {"id": "rm_top_vest", "who": "rm", "cat": "top", "n": "米色針織背心", "img": "d2_rm_top_vest"}, {"id": "rm_top_cream", "who": "rm", "cat": "top", "n": "奶油色毛衣", "img": "d2_rm_top_cream"}, {"id": "rm_top_hoodie", "who": "rm", "cat": "top", "n": "白色帽T", "img": "d2_rm_top_hoodie"}, {"id": "rm_bottom_black", "who": "rm", "cat": "bottom", "n": "黑色短褲", "img": "d2_rm_bot_black"}, {"id": "rm_bottom_beige", "who": "rm", "cat": "bottom", "n": "米色寬褲", "img": "d2_rm_bot_beige"}, {"id": "rm_bottom_denim", "who": "rm", "cat": "bottom", "n": "牛仔短褲", "img": "d2_rm_bot_denim"}, {"id": "rm_outer_gray", "who": "rm", "cat": "outer", "n": "灰色大衣", "img": "d2_rm_out_gray"}];
   var DR_SAY = {
-    me: { '昶司': ['這件好看。……出門外套扣好。', '妳穿什麼都好看，不過這件我最喜歡。', '穿這麼漂亮要去見誰？'], '仁彌': ['好漂亮，我的妹妹今天像公主。', '這個顏色好適合妳。', '可以拍一張給我嗎？我想存起來。'] },
-    cs: ['……妳挑的？那我就穿。', '只穿給妳看。'], rm: ['妳幫我挑的嗎？好開心。', '好看嗎？那我今天都穿這件。']
+    me: { '昶司': ['這件好看。……出門外套扣好。', '妳穿什麼都好看，不過這件我最喜歡。', '穿這麼漂亮要去見誰？（瞇了瞇眼睛）', '喜歡就再買幾件，我付。'], '仁彌': ['好漂亮，我的好妹妹。', '這個顏色好適合妳。', '可以拍一張給我嗎？我想存起來。', '（笑盈盈）只給我看就好。'] },
+    cs: ['妳挑的？那我就穿。', '只穿給妳看（笑）', '眼光不錯嘛，妹妹。'], rm: ['妳幫我挑的嗎？好開心。', '好看嗎？那我今天都穿這件。', '妳喜歡就好。']
   };
   var dr = null;
   function DRI(k) { return (window.__cxDRIMG || {})[k]; }
