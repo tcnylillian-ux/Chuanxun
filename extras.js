@@ -3057,7 +3057,7 @@
   function acIn(bk, e) { return acConv(e.amt, e.cur, bk.main, bk); }
   function acMon(d) { return (d || ymd(new Date())).slice(0, 7); }
   function acRange(bk) { return bk.type === 'daily' ? function (e) { return e.d.slice(0, 7) === acMon(); } : function () { return true; }; }
-  function acSpent(bk, day) { var f = acRange(bk); return bk.ex.filter(function (e) { return !e.inc && (day ? e.d === day : f(e)); }).reduce(function (a, e) { return a + acIn(bk, e); }, 0); }
+  function acSpent(bk, day) { var f = acRange(bk); return bk.ex.filter(function (e) { return !e.inc && !e.fx && (day ? e.d === day : f(e)); }).reduce(function (a, e) { return a + acIn(bk, e); }, 0); }
   function acDaysLeft(bk) {
     var td = ymd(new Date());
     if (bk.type === 'daily') { var n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate() + 1; }
@@ -3074,8 +3074,40 @@
     if (!m) return null;
     var cur = bk.main, tag = (m[3] || '') + (m[5] || '');
     if (/A\$|AU|澳|aud/i.test(tag)) cur = 'AUD'; else if (/NT|台|twd/i.test(tag)) cur = 'TWD'; else if (/¥|￥|rmb|cny|人民/i.test(tag)) cur = 'CNY'; else if (/^rm$|馬幣|令吉|myr/i.test(tag)) cur = 'MYR';
-    var note = (m[1] + ' ' + m[6]).replace(/\s+/g, ' ').trim().slice(0, 40);
+    var note = (m[1] + ' ' + m[6]).replace(/\s+/g, ' ').trim();
+    if (!tag) { var cw = acCurWord(note); if (cw) { cur = cw.cur; note = note.replace(cw.w, ' ').replace(/\s+/g, ' ').trim(); } }
+    note = note.slice(0, 40);
     return { amt: parseFloat(m[4]), cur: cur, note: note, inc: !!m[2] || /^收入|薪水|工資|退款/.test(note) };
+  }
+  function acCurWord(t) {
+    var L = [[/人民幣|人民币|rmb|cny|¥|￥/i, 'CNY'], [/台幣|新台幣|twd|NT\$/i, 'TWD'], [/澳幣|澳元|aud|A\$/i, 'AUD'], [/馬幣|令吉|myr|\bRM\b/i, 'MYR']];
+    for (var i = 0; i < L.length; i++) { var mm = t.match(L[i][0]); if (mm) return { cur: L[i][1], w: mm[0] }; }
+    return null;
+  }
+  /* 換錢：「換錢 A$26 → ¥100」記成換匯，不算花費，順便更新匯率 */
+  function acFx(t, bk) {
+    if (!/換錢|换钱|換匯|换汇|兌換|兑换|exchange/i.test(t)) return null;
+    t = t.replace(/[+＋]/g, ' ');
+    var re = /(A\$|AU\$|NT\$|¥|￥|RM|澳幣?|澳元|台幣?|人民幣|馬幣|令吉)?\s*(\d+(?:\.\d+)?)\s*(澳幣?|澳元|台幣?|人民幣|rmb|馬幣|令吉|aud|twd|cny|myr)?/gi, out = [], mm;
+    while ((mm = re.exec(t)) && out.length < 3) {
+      if (!mm[2]) { re.lastIndex++; continue; }
+      var w = (mm[1] || '') + (mm[3] || ''), c = null;
+      if (/A\$|AU|澳|aud/i.test(w)) c = 'AUD'; else if (/NT|台|twd/i.test(w)) c = 'TWD'; else if (/¥|￥|人民|rmb|cny/i.test(w)) c = 'CNY'; else if (/RM|馬|令吉|myr/i.test(w)) c = 'MYR';
+      out.push({ amt: parseFloat(mm[2]), cur: c });
+    }
+    if (!out.length) return null;
+    if (out.length === 1) { var cw1 = acCurWord(t); out[0].cur = out[0].cur || (cw1 && cw1.cur) || bk.main; return { from: out[0], to: null }; }
+    var a = out[0], b = out[1];
+    if (!a.cur && b.cur) a.cur = b.cur === bk.main ? 'AUD' : bk.main; if (!b.cur && a.cur) b.cur = a.cur === bk.main ? (bk.main === 'AUD' ? 'TWD' : 'AUD') : bk.main;
+    a.cur = a.cur || bk.main; b.cur = b.cur || bk.main;
+    return { from: a, to: a.cur !== b.cur ? b : null };
+  }
+  function acFxRate(bk, a, b) {
+    var x = {}; x[a.cur] = a.amt; x[b.cur] = b.amt;
+    if (x.AUD && x.TWD) { bk.rate = Math.round(x.TWD / x.AUD * 100) / 100; return '1 澳幣 = ' + bk.rate + ' 台幣'; }
+    if (x.AUD && x.CNY) { bk.rc = Math.round(x.AUD / x.CNY * 10000) / 10000; return '1 人民幣 = ' + bk.rc + ' 澳幣'; }
+    if (x.AUD && x.MYR) { bk.rm = Math.round(x.MYR / x.AUD * 100) / 100; return '1 澳幣 = ' + bk.rm + ' 馬幣'; }
+    return '';
   }
   function acTb(t) {
     if (!/m\.tb\.cn|taobao|淘宝|淘寶|tmall|天猫|天貓/i.test(t)) return null;
@@ -3148,6 +3180,15 @@
     var inp = acM.body.querySelector('#cx-ac-in'), t = inp ? inp.value.trim() : ''; if (!t) return;
     var A0 = acG(), bk = acBook(), tb = acTb(t), p = tb ? (tb.rest ? acParse(tb.rest, bk) : null) : acParse(t, bk), ppl = acPeople(), who = pick(ppl), url = '';
     inp.value = '';
+    var fx = !tb && acFx(t, bk);
+    if (fx) {
+      var fe = { id: 'e' + Date.now(), d: ymd(new Date()), amt: fx.from.amt, cur: fx.from.cur, cat: '換匯', note: '換錢', fx: 1 };
+      if (fx.to) fe.to = fx.to;
+      bk.ex.push(fe); acPush({ who: 'me', kind: 'ex', ex: fe.id, text: t });
+      var rr = fx.to ? acFxRate(bk, fx.from, fx.to) : '';
+      acSys('💱 記成換匯，不算花費' + (rr ? '，匯率更新成 ' + rr : '（寫「換錢 A$26 換 ¥100」可以順便算匯率）'));
+      await save(); acRender(true); return;
+    }
     if (tb) {
       if (!p || !(p.amt > 0)) { A0.pendTb = { title: tb.title, url: tb.url, b: A0.cur }; acPush({ who: 'me', text: '🛒 ' + tb.title }); acSys('抓到淘寶商品「' + tb.title + '」，多少錢？直接打數字（預設人民幣 ¥）'); await save(); acRender(true); return; }
       if (!/¥|￥|rmb|cny|人民|A\$|AU|澳|NT|台/i.test(tb.rest)) p.cur = 'CNY';
@@ -3222,7 +3263,8 @@
       var inner = esc(m.text);
       if (m.kind === 'ex') {
         var ex = bk.ex.filter(function (x) { return x.id === m.ex; })[0];
-        if (ex) inner = '<span class="amt' + (ex.inc ? ' inc' : '') + '">' + (ex.inc ? '+' : '') + acFmt(ex.amt, ex.cur) + '</span>' + (ex.cur !== bk.main ? '<small>≈' + acFmt(acIn(bk, ex), bk.main) + '</small>' : '') + '<span class="note">' + esc(ex.note || '') + (ex.url ? ' <a class="tb" href="' + esc(ex.url) + '" target="_blank" rel="noopener">淘</a>' : '') + '</span>' +
+        if (ex && ex.fx) inner = '<span class="amt">💱 ' + acFmt(ex.amt, ex.cur) + (ex.to ? ' → ' + acFmt(ex.to.amt, ex.to.cur) : '') + '</span><span class="note">換錢（不算花費）</span><button class="del" data-acdel="' + ex.id + '">×</button>';
+        else if (ex) inner = '<span class="amt' + (ex.inc ? ' inc' : '') + '">' + (ex.inc ? '+' : '') + acFmt(ex.amt, ex.cur) + '</span>' + (ex.cur !== bk.main ? '<small>≈' + acFmt(acIn(bk, ex), bk.main) + '</small>' : '') + '<span class="note">' + esc(ex.note || '') + (ex.url ? ' <a class="tb" href="' + esc(ex.url) + '" target="_blank" rel="noopener">淘</a>' : '') + '</span>' +
           (ex.inc ? '<em class="cat">💰 收入</em>' : '<em class="cat" data-acx="' + ex.id + '">' + acIcon(ex.cat) + ' ' + ex.cat + '</em>') + '<button class="del" data-acdel="' + ex.id + '">×</button>';
       } else if (m.kind === 'app') {
         var ap2 = A.apps.filter(function (x) { return x.id === m.ap; })[0];
@@ -3244,7 +3286,7 @@
     if (acView === 'chat') {
       var log = A.chat.filter(function (m) { return m.b === bk.id; }).slice(-150);
       var h = top + sum + '<div class="cx-ac-log">' + (log.length ? log.map(function (m) { return acBubble(m, bk); }).join('') :
-        '<div class="cx-ac-tip">在下面直接打就能記帳：<br><b>120 珍奶</b>、<b>A$12 咖啡</b>、<b>¥89 毛衣</b>、<b>RM15 炒粿條</b>、<b>+500 薪水</b><br>淘寶「分享 › 複製連結」整段貼上，會自動抓商品名<br>會自動分類，點分類可以改。<br>想買東西先按上面的「📝 花錢申請單」，讓哥哥審批。</div>') + '</div>' +
+        '<div class="cx-ac-tip">在下面直接打就能記帳：<br><b>120 珍奶</b>、<b>A$12 咖啡</b>、<b>¥89 毛衣</b>、<b>RM15 炒粿條</b>、<b>+500 薪水</b>、<b>換錢 A$26 換 ¥100</b><br>淘寶「分享 › 複製連結」整段貼上，會自動抓商品名<br>會自動分類，點分類可以改。<br>想買東西先按上面的「📝 花錢申請單」，讓哥哥審批。</div>') + '</div>' +
         '<div class="cx-ac-bar"><input type="date" id="cx-ac-d" value="' + today + '"><input class="cx-in" id="cx-ac-in" placeholder="例：120 珍奶" autocomplete="off"><button class="cx-btn pri" data-acsend="1">記</button></div>';
       var keep = keepScroll && b.querySelector('#cx-ac-in') ? b.querySelector('#cx-ac-in').value : '';
       b.innerHTML = h; var l = b.querySelector('.cx-ac-log'); if (l) l.scrollTop = l.scrollHeight;
@@ -3262,7 +3304,7 @@
       return;
     }
     if (acView === 'stat') {
-      var f2 = acRange(bk), L = bk.ex.filter(function (e) { return !e.inc && f2(e); }), byc = {};
+      var f2 = acRange(bk), L = bk.ex.filter(function (e) { return !e.inc && !e.fx && f2(e); }), byc = {};
       L.forEach(function (e) { byc[e.cat] = (byc[e.cat] || 0) + acIn(bk, e); });
       var mx = Math.max.apply(null, Object.keys(byc).map(function (k) { return byc[k]; }).concat([1]));
       var inc = bk.ex.filter(function (e) { return e.inc && f2(e); }).reduce(function (a, e) { return a + acIn(bk, e); }, 0);
@@ -3298,7 +3340,7 @@
     '.cx-ac-him{display:flex;gap:6px;max-width:85%}.cx-ac-him .av{width:30px;height:30px;border-radius:50%;overflow:hidden;flex:none;background:var(--secondary-bg);display:flex;align-items:center;justify-content:center}.cx-ac-him .av img{width:100%;height:100%;object-fit:cover}.cx-ac-him .n{font-size:10px;color:var(--text-secondary)}.cx-ac-him .b{background:var(--secondary-bg);color:var(--text-primary);border-radius:14px 14px 14px 4px;padding:6px 10px;font-size:14px}' +
     '.cx-ac-res{align-self:center;text-align:center;background:#fffaf0;border:1px dashed #e0c48a;border-radius:14px;padding:8px 12px;font-size:13px;color:#333;max-width:92%}.cx-ac-res .acts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px;align-items:center}.cx-ac-res small{color:#888}' +
     '.stamp{display:inline-block;border:2px solid;border-radius:8px;padding:0 8px;font-weight:700;transform:rotate(-8deg);margin-right:6px}.stamp.ok{color:#d0342c;border-color:#d0342c}.stamp.no{color:#666;border-color:#666}.stamp.wait{color:#c08a00;border-color:#c08a00}' +
-    '.cx-ac-bar{display:flex;gap:6px;margin-top:8px;align-items:center}.cx-ac-bar .cx-in{flex:1;min-width:0}.cx-ac-bar input[type=date]{width:36px;flex:none;border:1px solid var(--border-color);border-radius:10px;padding:6px 2px;background:var(--primary-bg);color:var(--text-primary);font-size:0}.cx-ac-bar input[type=date]::-webkit-calendar-picker-indicator{margin:0 auto;font-size:16px}' +
+    '.cx-ac-bar{display:flex;gap:6px;margin-top:8px;align-items:center}.cx-ac-bar .cx-in{flex:1;min-width:0}.cx-ac-bar input[type=date]{width:112px;flex:none;border:1px solid var(--border-color);border-radius:10px;padding:6px 4px;background:var(--primary-bg);color:var(--text-primary);font:inherit;font-size:12px}' +
     '.cx-tp-form{display:flex;flex-direction:column;gap:8px}.cx-tp-form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--text-secondary)}.cx-tp-add{display:flex;gap:6px;align-items:center}.cx-tp-add .cx-in{flex:1;min-width:0}.cx-tp-cur{display:flex;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;flex:none}.cx-tp-cur button{border:0;background:var(--primary-bg);color:var(--text-primary);padding:7px 10px;font:inherit;font-size:13px;cursor:pointer}.cx-tp-cur button.on{background:#e8799a;color:#fff}' +
     '.cx-tp-btns{display:flex;gap:6px;margin-top:8px}.cx-tp-btns .cx-btn{flex:1}.cx-tp-bar{height:8px;border-radius:99px;background:var(--primary-bg);border:1px solid var(--border-color);overflow:hidden}.cx-tp-bar i{display:block;height:100%;background:#8fd19e}.cx-tp-bar i.warm{background:#f5c26b}.cx-tp-bar i.hot{background:#ef7c6c}' +
     '.cx-tp-saved{font-size:13px;padding:6px 10px;border-radius:10px;background:#fff3d6;margin:6px 0}.cx-tp-cat{display:grid;grid-template-columns:72px 1fr auto 34px;gap:6px;align-items:center;font-size:13px;margin:4px 0}.cx-tp-cat i{height:10px;border-radius:99px;background:#f0a8bd;min-width:2px}.cx-tp-cat small{color:var(--text-secondary);font-size:11px;text-align:right}';
