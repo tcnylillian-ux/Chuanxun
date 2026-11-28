@@ -2982,7 +2982,7 @@
     ['cx-comp-entry', 'fa-headphones', '陪伴'], ['cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪'], ['cx-phone-entry', 'fa-mobile-screen', 'TA 的手機'], ['cx-rp-entry', 'fa-gift', '紅包'],
     ['cx-calllog-entry', 'fa-phone', '通話紀錄'], ['cx-pomo-entry', 'fa-clock', '番茄鐘'], ['cx-period-entry', 'fa-droplet', '潮汐'], ['mood-function', 'fa-face-smile', '心晴手帳'],
     ['anniversary-function', 'fa-calendar-days', '重要日'], ['decision-function', 'fa-shuffle', '抉擇'], ['cx-dice-entry', 'fa-dice', '骰子'], ['cx-quiz-entry', 'fa-clipboard-question', '問卷'], ['cx-todo-entry', 'fa-list-check', '待辦'], ['cx-sleep-entry', 'fa-bed', '睡眠'], ['fortune-lenormand-function', 'fa-star', '運勢'], ['cx-rate-entry', 'fa-star-half-stroke', '他的評分'],
-    ['cx-status-entry', 'fa-heart-pulse', '狀態檢測'], ['stats-function', 'fa-chart-simple', '訊息統計'], ['custom-replies-function', 'fa-comment-dots', '字卡'], ['cx-help-entry', 'fa-book-open', '使用手冊']
+    ['cx-health-entry', 'fa-heart', '健康小本'], ['cx-acct-entry', 'fa-wallet', '記帳本'], ['cx-vote-entry', 'fa-square-poll-vertical', '投票'], ['stats-function', 'fa-chart-simple', '訊息統計'], ['custom-replies-function', 'fa-comment-dots', '字卡'], ['cx-help-entry', 'fa-book-open', '使用手冊']
   ];
   /* ================= 首頁大圖卡：在一起 ○ 天 ================= */
   function togetherStart() {

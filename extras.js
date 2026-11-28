@@ -143,9 +143,13 @@
     '.cx-stage{position:relative;overflow:hidden;border-radius:12px}.cx-dm{position:absolute;white-space:nowrap;font-size:15px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);pointer-events:none;animation:cxdm 8s linear forwards}' +
     '@keyframes cxdm{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}' +
     '.cx-feed{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto}' +
-    '.cx-adv-tabs{display:flex;gap:6px;position:sticky;top:-1px;z-index:5;background:var(--secondary-bg);padding:4px 0 10px;margin-bottom:4px}' +
-    '.cx-adv-tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border:1px solid var(--border-color);border-radius:14px;background:var(--primary-bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;position:relative;white-space:nowrap}' +
-    '.cx-adv-tabs button span{font-size:18px;line-height:1.2}.cx-adv-tabs button.on{background:var(--accent-color);border-color:var(--accent-color);color:#fff}' +
+    '.cx-adv-tabs{display:flex;gap:3px;position:sticky;top:-1px;z-index:5;background:var(--secondary-bg);padding:6px 4px 0;margin-bottom:0}' +
+    '.cx-adv-tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px 6px;border:1px solid rgba(0,0,0,.08);border-bottom:0;border-radius:12px 12px 0 0;background:var(--tb,#f3e6ee);color:#6a5560;font:inherit;font-size:12px;cursor:pointer;position:relative;white-space:nowrap;transform:translateY(4px);transition:transform .15s}' +
+    '.cx-adv-tabs button:nth-child(1){--tb:#fde2e4}.cx-adv-tabs button:nth-child(2){--tb:#dff3e4}.cx-adv-tabs button:nth-child(3){--tb:#ffe8d6}.cx-adv-tabs button:nth-child(4){--tb:#e2ecfb}.cx-adv-tabs button:nth-child(5){--tb:#ece6f6}' +
+    '.cx-adv-tabs button span{font-size:18px;line-height:1.2}.cx-adv-tabs button.on{transform:none;font-weight:700;color:#4a3a42;box-shadow:0 -2px 6px rgba(0,0,0,.06)}' +
+    '.cx-adv-paper{border-radius:0 0 14px 14px;padding:8px!important;background:repeating-linear-gradient(transparent 0 31px,rgba(150,120,140,.12) 31px 32px),var(--pp,#fffaf6)!important;border:1px solid rgba(0,0,0,.06);border-top:0}' +
+    '.cx-adv-paper .settings-item{background:rgba(255,255,255,.75)!important;color:#4a3a42!important}.cx-adv-paper .settings-item i{color:#b06a86}' +
+    '[data-theme="dark"] .cx-adv-tabs button{filter:brightness(.55) saturate(1.2);color:#fff}[data-theme="dark"] .cx-adv-tabs button.on{filter:brightness(.75) saturate(1.2)}[data-theme="dark"] .cx-adv-paper{background:repeating-linear-gradient(transparent 0 31px,rgba(255,255,255,.05) 31px 32px),var(--secondary-bg)!important}[data-theme="dark"] .cx-adv-paper .settings-item{background:var(--primary-bg)!important;color:var(--text-primary)!important}' +
     '.cx-adv-tabs .dot{position:absolute;top:5px;right:8px;width:8px;height:8px;border-radius:50%;background:#ff7b93;display:none}.cx-adv-tabs button.has .dot{display:block}.cx-tab-hide{display:none!important}' +
     '.cx-env-star{position:absolute;bottom:6px;right:36px;z-index:2;background:transparent;border:none;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--text-secondary)}#env-fav-list .cx-env-star{right:8px}' +
     '.cx-env-star.on{color:#e0a52e}.cx-env-vstar{display:inline-flex;align-items:center;gap:4px}.cx-fav-count{background:#f2b544!important}' +
@@ -1135,6 +1139,7 @@
       compRestore(); sleepRestore();
       if (periodCare()) ch = true;
       if (healthTick()) ch = true;
+      try { if (acTick()) ch = true; if (vtTick()) ch = true; } catch (e) { console.warn('[cx] acct/vote', e); }
       if (linkTick()) ch = true;
       if (diaryTick()) ch = true;
       if (phoneTick()) ch = true;
@@ -2051,35 +2056,43 @@
       ['輸入框左邊的按鈕', '📹 視訊通話、🖼 傳圖片、😊 表情和拍一拍。', null],
       ['輸入框右邊的按鈕', '⋯ 展開更多、📚 批次傳送（一次打好幾句再送出）、➤ 傳送。', null]
     ] },
-    { s: '聊天', items: [
-      ['自定義回覆（字卡）', '他回話用的句子都在這裡，可以分組、停用整組。', ['entry', 'custom-replies-function']],
-      ['他的評分', '他幫每張字卡打 1～10 分，附一句短評（隨機的）。可以篩出他不滿意的，自己決定要改還是刪。「讓他挑一挑」會列出他最不想說和最喜歡的幾張。群聊裡每個人各打各的。', ['entry', 'cx-rate-entry']],
-      ['回覆與來信', '他主動來信、發紅包、連結狀態、自己掛電話的設定，都在這一頁。', ['entry', 'cx-set-entry']],
-      ['訊息統計', '總共聊了幾則、高頻詞、搜尋訊息、收藏、詞雲。', ['entry', 'stats-function']],
-      ['通話紀錄', '每通電話打了多久、哪些沒接。點一通會跳回聊天裡那一則。', ['entry', 'cx-calllog-entry']],
-      ['懸浮音樂播放器', '在聊天畫面放歌。', ['entry', 'music-player-toggle']],
-      ['拍一拍', '點 😊 › 拍一拍。快捷動作就是你拍一拍庫裡的動作，點了直接送出，「你」會換成你拍的人。「自定義動作」只要打動作，例如「抱抱」會變成「乖寶 抱抱仁彌」；想指定位置就打「你」，例如「摸摸你的頭」會變成「乖寶 摸摸仁彌的頭」。群聊裡上面可以選拍誰。', null],
-      ['視訊通話', '點輸入框左邊的 📹。電腦上右上角的按鈕可以縮小或隱藏通話視窗。通話功能的開關在 設定 › 聊天設定 › 通話功能。', ['card', 'chat-settings']]
+    { s: '高階功能是一本手帳', items: [
+      ['五個索引頁', '設定 › 高階功能，上面五張彩色索引貼：📖 回憶、🌿 生活、💞 和哥哥、🎲 好玩、⚙️ 設定。點一張就翻到那一頁。有新東西的頁籤會出現小紅點。', null],
+      ['合在一起的功能', '潮汐和睡眠在「健康小本」標題右邊；番茄鐘在「陪伴中心」標題右邊；骰子在「抉擇」裡；字卡評分在「他的日記」標題右邊。小窩首頁的圖示照樣可以直接點進去。', null]
     ] },
-    { s: '我們倆', items: [
-      ['他的日記', '每天固定時間收到一篇他寫的日記，可以在下面留言，他寫下一篇時會回你。', ['entry', 'cx-diary-entry']],
-      ['TA 的手機', '他會偷偷收藏你說過的話，還寫一句小備註。群聊裡每個人有自己的手機，上面可以選要看誰的。', ['entry', 'cx-phone-entry']],
+    { s: '📖 回憶', items: [
+      ['他的日記', '每天固定時間收到一篇他寫的日記，可以在下面留言，他寫下一篇時會回你。標題右邊「⭐ 字卡評分」：他幫每張字卡打分數、寫短評。', ['entry', 'cx-diary-entry']],
+      ['重要日', '紀念日倒數。', ['entry', 'anniversary-function']],
+      ['心晴手帳', '記錄每天的心情。', ['entry', 'mood-function']],
       ['信封投遞（寫信）', '寫信給他，10～24 小時內回信。群聊裡可以選寄給誰，回信用他自己的字卡。每封信右下角的星星可以收藏。', ['entry', 'envelope-function']],
-      ['問題箱', '問他問題、設定他多久回答（幾秒到 6 小時）；他也會用字卡問你問題。常用的問題可以收藏。', ['entry', 'qa-function']],
-      ['紅包', '發紅包給他，或收他發的紅包。群聊裡可以選發給誰。', ['entry', 'cx-rp-entry']],
-      ['狀態檢測', '看看他現在的狀態。', ['entry', 'cx-status-entry']],
-      ['重要日', '紀念日倒數。', ['entry', 'anniversary-function']]
+      ['通話紀錄', '每通電話打了多久、哪些沒接。點一通會跳回聊天裡那一則。', ['entry', 'cx-calllog-entry']],
+      ['訊息統計', '總共聊了幾則、高頻詞、搜尋訊息、收藏、詞雲。', ['entry', 'stats-function']]
     ] },
-    { s: '生活', items: [
-      ['陪伴中心', '一起聽歌、看影片、看小說，還有一起讀書、工作、運動、睡覺四種陪伴模式（有計時和白噪音）。結束後可以寫進陪伴日記。他也會在適合的時間主動約你，頻率在陪伴中心最下面調。', ['entry', 'cx-comp-entry']],
-      ['番茄鐘', '專心工作、休息的計時器，他會陪你。', ['entry', 'cx-pomo-entry']],
-      ['潮汐', '經期紀錄和預測。', ['entry', 'cx-period-entry']],
-      ['心晴手帳', '記錄每天的心情。', ['entry', 'mood-function']]
+    { s: '🌿 生活', items: [
+      ['健康小本', '喝水、三餐、心情、不舒服（點一次記一次，可以記時間和程度），月曆和這週小結。標題右邊可以進「🩸 潮汐」（經期紀錄和預測）和「🌙 睡眠」（跟誰睡、睡多久、偷看手機）。哥哥會在 10、13、16、19 點提醒喝水吃飯。', ['entry', 'cx-health-entry']],
+      ['記帳本', '像聊天一樣記帳：直接打「120 珍奶」「A$12 咖啡」「+500 薪水」就記好，會自動分類（點分類可以改），哥哥用字卡回你。上面可以設每月預算，會算出今天還能花多少。旅行可以按「＋」開新的一本（例如回台灣），台幣澳幣自動換算。', ['entry', 'cx-acct-entry']],
+      ['花錢申請單', '在記帳本裡。想買東西先填：買什麼、多少錢、為什麼、有沒有替代品。兩個哥哥各審一票：都准就能買，都駁回就不買，一准一駁要冷靜一天。被駁回可以修改再申請；選「不買了」，省下的錢會記在統計裡。', ['entry', 'cx-acct-entry']],
+      ['待辦', '待辦清單和節日提醒。', ['entry', 'cx-todo-entry']],
+      ['陪伴中心', '一起聽歌、看影片、看小說，還有一起讀書、工作、運動、睡覺四種陪伴模式（有計時和白噪音）。標題右邊可以進「🍅 番茄鐘」。', ['entry', 'cx-comp-entry']]
     ] },
-    { s: '好玩', items: [
-      ['搞怪', '朝他丟番茄、雞蛋、蛋糕、一桶水、枕頭或愛心，他會回話，有時還會丟回來。群聊裡可以選丟誰。', ['entry', 'cx-toss-entry']],
-      ['抉擇', '幫你做決定、轉盤。', ['entry', 'decision-function']],
+    { s: '💞 和哥哥', items: [
+      ['問題箱', '問他問題、設定他多久回答（幾秒到 6 小時）。他回答之後，點別的選項可以幫他改答案，聊天裡會說「我改成…」。他也會用字卡問你問題。', ['entry', 'qa-function']],
+      ['投票', '出題目、列選項（可以複選），兩個哥哥各自投票，投完附一張字卡當留言。你也可以投。點數字可以幫哥哥改票。', ['entry', 'cx-vote-entry']],
+      ['紅包', '發紅包給他，或收他發的紅包。群聊裡可以選發給誰。這個月收到多少會顯示在記帳本的統計裡。', ['entry', 'cx-rp-entry']],
+      ['TA 的手機', '他會偷偷收藏你說過的話，還寫一句小備註。群聊裡每個人有自己的手機。', ['entry', 'cx-phone-entry']]
+    ] },
+    { s: '🎲 好玩', items: [
+      ['抉擇', '拋硬幣、隨機抽籤，還有骰子。', ['entry', 'decision-function']],
+      ['問卷', '出一份問卷給他填。', ['entry', 'cx-quiz-entry']],
+      ['搞怪', '朝他丟番茄、雞蛋、蛋糕、一桶水、枕頭或愛心，他會回話，有時還會丟回來。', ['entry', 'cx-toss-entry']],
       ['運勢 · 占卜', '每週運勢和占卜。', ['entry', 'fortune-lenormand-function']]
+    ] },
+    { s: '⚙️ 設定', items: [
+      ['回覆與來信', '他主動來信、發紅包、連結狀態、自己掛電話的設定，都在這一頁。', ['entry', 'cx-set-entry']],
+      ['自定義回覆（字卡）', '他回話用的句子都在這裡，可以分組、停用整組。', ['entry', 'custom-replies-function']],
+      ['懸浮音樂播放器', '在聊天畫面放歌。', ['entry', 'music-player-toggle']],
+      ['拍一拍', '點 😊 › 拍一拍。快捷動作點了直接送出；「自定義動作」只要打動作，想指定位置就打「你」。群聊裡上面可以選拍誰。', null],
+      ['視訊通話', '點輸入框左邊的 📹。通話功能的開關在 設定 › 聊天設定 › 通話功能。', ['card', 'chat-settings']]
     ] },
     { s: '群聊', items: [
       ['怎麼開群聊', '群聊設定 › 打開群聊 › 新增成員（名字、頭像）。每個聊天室各自設定，關掉這裡不會影響別的聊天室。', ['btn', 'group-chat-btn']],
@@ -2410,11 +2423,13 @@
 
   /* ================= 高階功能分頁 ================= */
   var ADV_TABS = [
-    ['chat', '💬', '聊天', ['cx-help-entry', 'custom-replies-function', 'cx-rate-entry', 'cx-set-entry', 'stats-function', 'cx-calllog-entry', 'music-player-toggle']],
-    ['us', '💞', '我們倆', ['cx-diary-entry', 'cx-phone-entry', 'envelope-function', 'qa-function', 'cx-rp-entry', 'cx-status-entry', 'anniversary-function']],
-    ['life', '🌿', '生活', ['cx-comp-entry', 'cx-pomo-entry', 'cx-period-entry', 'mood-function']],
-    ['fun', '🎲', '好玩', ['cx-toss-entry', 'decision-function', 'fortune-lenormand-function']]
+    ['mem', '📖', '回憶', ['cx-diary-entry', 'anniversary-function', 'mood-function', 'envelope-function', 'cx-calllog-entry', 'stats-function']],
+    ['life', '🌿', '生活', ['cx-health-entry', 'cx-acct-entry', 'cx-todo-entry', 'cx-comp-entry']],
+    ['us', '💞', '和哥哥', ['qa-function', 'cx-vote-entry', 'cx-rp-entry', 'cx-phone-entry']],
+    ['fun', '🎲', '好玩', ['decision-function', 'cx-quiz-entry', 'cx-toss-entry', 'fortune-lenormand-function']],
+    ['set', '⚙️', '設定', ['cx-set-entry', 'custom-replies-function', 'music-player-toggle', 'cx-help-entry']]
   ];
+  var ADV_HIDE = ['cx-period-entry', 'cx-sleep-entry', 'cx-pomo-entry', 'cx-dice-entry', 'cx-rate-entry', 'cx-status-entry'];
   var advList = null, advBar = null;
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -2423,18 +2438,18 @@
     advList = a && a.parentNode; if (!advList || document.getElementById('cx-adv-tabs')) return;
     advBar = document.createElement('div'); advBar.id = 'cx-adv-tabs'; advBar.className = 'cx-adv-tabs';
     advBar.innerHTML = ADV_TABS.map(function (t) { return '<button type="button" data-t="' + t[0] + '"><span>' + t[1] + '</span>' + t[2] + '<i class="dot"></i></button>'; }).join('');
-    advList.parentNode.insertBefore(advBar, advList);
+    advList.parentNode.insertBefore(advBar, advList); advList.classList.add('cx-adv-paper');
     ADV_TABS.forEach(function (t) { t[3].forEach(function (id) { var el = document.getElementById(id); if (el && el.parentNode === advList) { el.dataset.cxTab = t[0]; advList.appendChild(el); } }); });
-    Array.prototype.forEach.call(advList.children, function (el) { if (!el.dataset.cxTab) el.dataset.cxTab = 'chat'; });
+    Array.prototype.forEach.call(advList.children, function (el) { if (!el.dataset.cxTab) el.dataset.cxTab = ADV_HIDE.indexOf(el.id) >= 0 ? 'hide' : 'set'; });
     advBar.addEventListener('click', function (e) { var b = e.target.closest('[data-t]'); if (b) advShow(b.dataset.t); });
     var adv = document.getElementById('advanced-modal');
     if (adv) new MutationObserver(function () { if (adv.style.display !== 'none') advDots(); }).observe(adv, { attributes: true, attributeFilter: ['style', 'class'] });
-    var t0 = lsGet('cxAdvTab'); advShow(ADV_TABS.some(function (t) { return t[0] === t0; }) ? t0 : 'us');
+    var t0 = lsGet('cxAdvTab'); advShow(ADV_TABS.some(function (t) { return t[0] === t0; }) ? t0 : 'life');
   }
   function advShow(t) {
     if (!advList) return; lsSet('cxAdvTab', t);
-    Array.prototype.forEach.call(advBar.children, function (b) { b.classList.toggle('on', b.dataset.t === t); });
-    Array.prototype.forEach.call(advList.children, function (el) { el.classList.toggle('cx-tab-hide', (el.dataset.cxTab || 'chat') !== t); });
+    Array.prototype.forEach.call(advBar.children, function (b) { b.classList.toggle('on', b.dataset.t === t); if (b.dataset.t === t) advList.style.setProperty('--pp', getComputedStyle(b).getPropertyValue('--tb')); });
+    Array.prototype.forEach.call(advList.children, function (el) { el.classList.toggle('cx-tab-hide', (el.dataset.cxTab || 'set') !== t); });
     advDots();
   }
   function advDots() {
@@ -2956,6 +2971,386 @@
     '.cx-hb-bars{display:flex;gap:6px;align-items:flex-end;height:90px;padding:6px;border-radius:12px;background:var(--primary-bg)}.cx-hb-bars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.cx-hb-bars i{width:70%;background:#9cc8f0;border-radius:4px 4px 0 0;min-height:2px}.cx-hb-bars small{font-size:9px}';
   document.head.appendChild(hbCss);
 
+  /* ===== 記帳本（獨立聊天窗：記帳、預算、花錢申請單） ===== */
+  var AC_CAT = [['吃', '🍜', /飯|麵|吃|奶茶|珍奶|咖啡|早餐|午餐|晚餐|宵夜|便當|火鍋|雞排|飲料|零食|蛋糕|甜點|水果|餐|麥當勞|超商|7-?11|全家|鍋|壽司|拉麵|披薩|漢堡|茶|酒|coffee|food/i],
+    ['交通', '🚇', /車|捷運|公車|uber|計程|高鐵|台鐵|火車|油|停車|opal|go ?card|bus|train/i],
+    ['購物', '🛍️', /衣|褲|裙|鞋|包|化妝|口紅|保養|面膜|飾品|耳環|項鍊|手鍊|帽|襪|外套|淘寶|蝦皮|網購/],
+    ['日用', '🧴', /超市|日用|衛生紙|洗|牙|沐浴|coles|woolworths|aldi|藥|電費|水費|網路|手機費|房租/i],
+    ['玩樂', '🎡', /電影|門票|遊樂|ktv|展|演唱會|遊戲|扭蛋|娃娃|抓|按摩|book|書|課/i],
+    ['住宿', '🏨', /飯店|住宿|民宿|旅館|hotel|airbnb/i],
+    ['機票', '✈️', /機票|航空|flight/i],
+    ['伴手禮', '🎁', /伴手禮|禮物|送/],
+    ['其他', '📦', null]];
+  var AC_SAY = {
+    cs: {
+      big: ['這筆不小……真的需要嗎？', '想買就買，但妳自己說過要省，我幫妳記著。'],
+      over: ['今天超過預算了，錢包收起來。', '好妹妹，今天就到這裡，剩下的明天再說。'],
+      low: ['預算快用完了，接下來省著點。', '剩不多了，我盯著妳。'],
+      yes: ['准了，這點錢不用放心上。', '想要就買，我說了算。', '理由說得通，准了。', '准了，買了就好好用。'],
+      no: ['駁回。', '這個月已經花不少了，駁回。', '有替代的就先用替代的，駁回。', '理由不夠，再想想。', '先放著，過幾天還想要再來找我。'],
+      skip: ['真聰明，省下來了。', '忍住了？乖，獎勵一個抱抱。'],
+      split: ['他說准就准？我不同意。', '……我們意見不一樣，妳冷靜一天再說。']
+    },
+    rm: {
+      big: ['唔……這個有點貴耶，真的很想要嗎？', '要不要先送申請單給我們看看～'],
+      over: ['今天花超過了……明天我們省一點好不好？', '錢包說它累了，讓它休息一下嘛～'],
+      low: ['預算剩一點點了……我們省著花好不好？', '快見底了，要小心一點喔～'],
+      yes: ['准啦～妳真的很喜歡嘛', '好～買吧，我幫妳蓋章！', '准了准了～要開開心心用喔'],
+      no: ['唔……這次先不要好不好～', '駁回～先放著，過兩天還喜歡我們再買', '有替代的話先用替代的嘛～駁回', '這個月已經買好多了耶……駁回～'],
+      skip: ['好厲害！省下來了～', '忍住了！摸摸頭，好乖～'],
+      split: ['欸？他准了？那……妳再想一天好不好～', '我們吵起來了啦……妳先冷靜一天嘛']
+    }
+  };
+  function acG() {
+    X.acct = X.acct || {}; var A = X.acct; A.books = A.books || []; A.chat = A.chat || []; A.apps = A.apps || [];
+    if (!A.books.length) A.books.push({ id: 'daily', name: '日常', type: 'daily', main: 'AUD', rate: 21, budget: 0, ex: [], saved: 0 });
+    if (!A.cur || !A.books.some(function (b) { return b.id === A.cur; })) A.cur = A.books[0].id;
+    return A;
+  }
+  function acBook() { var A = acG(); return A.books.filter(function (b) { return b.id === A.cur; })[0]; }
+  function acConv(amt, from, to, rate) { if (from === to) return amt; return from === 'AUD' ? amt * rate : amt / rate; }
+  function acFmt(n, cur) { var neg = n < 0; n = Math.abs(n); return (neg ? '-' : '') + (cur === 'AUD' ? 'A$' + (Math.round(n * 100) / 100).toLocaleString() : 'NT$' + Math.round(n).toLocaleString()); }
+  function acIn(bk, e) { return acConv(e.amt, e.cur, bk.main, bk.rate); }
+  function acMon(d) { return (d || ymd(new Date())).slice(0, 7); }
+  function acRange(bk) { return bk.type === 'daily' ? function (e) { return e.d.slice(0, 7) === acMon(); } : function () { return true; }; }
+  function acSpent(bk, day) { var f = acRange(bk); return bk.ex.filter(function (e) { return !e.inc && (day ? e.d === day : f(e)); }).reduce(function (a, e) { return a + acIn(bk, e); }, 0); }
+  function acDaysLeft(bk) {
+    var td = ymd(new Date());
+    if (bk.type === 'daily') { var n = new Date(); return new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate() - n.getDate() + 1; }
+    if (!bk.end || td > bk.end) return 0; return diffDays(bk.start && td < bk.start ? bk.start : td, bk.end) + 1;
+  }
+  function acDaily(bk) { if (!bk.budget) return 0; var n = acDaysLeft(bk); if (!n) return 0; return Math.max(0, (bk.budget - acSpent(bk) + acSpent(bk, ymd(new Date()))) / n); }
+  function acKey(n) { return /彌/.test(n || '') ? 'rm' : 'cs'; }
+  function acPeople() { var p = who1().map(function (x) { return x.name; }); return p.length ? p : [pname()]; }
+  function acCatOf(t) { for (var i = 0; i < AC_CAT.length - 1; i++) if (AC_CAT[i][2].test(t)) return AC_CAT[i][0]; return '其他'; }
+  function acIcon(c) { var r = AC_CAT.filter(function (x) { return x[0] === c; })[0]; return r ? r[1] : '📦'; }
+  function acParse(t, bk) {
+    t = String(t || '').trim(); if (!t) return null;
+    var m = t.match(/^(.*?)(\+|＋)?\s*(A\$|a\$|AU\$|澳幣?|NT\$|nt\$|台幣?|\$)?\s*(\d+(?:\.\d+)?)\s*(澳幣?|台幣?|元|塊|aud|twd)?(.*)$/i);
+    if (!m) return null;
+    var cur = bk.main, tag = (m[3] || '') + (m[5] || '');
+    if (/A\$|AU|澳|aud/i.test(tag)) cur = 'AUD'; else if (/NT|台|twd/i.test(tag)) cur = 'TWD';
+    var note = (m[1] + ' ' + m[6]).replace(/\s+/g, ' ').trim().slice(0, 40);
+    return { amt: parseFloat(m[4]), cur: cur, note: note, inc: !!m[2] || /^收入|薪水|工資|退款/.test(note) };
+  }
+  function acPush(msg) { var A = acG(); msg.id = msg.id || 'm' + Date.now() + Math.random().toString(36).slice(2, 5); msg.b = msg.b || A.cur; msg.at = Date.now(); A.chat.push(msg); if (A.chat.length > 600) A.chat.splice(0, A.chat.length - 600); return msg; }
+  function acReply(name, line) {
+    setTimeout(async function () {
+      await load(); if (line) acPush({ who: name, text: line }); var c = pickFor(name); if (c) acPush({ who: name, text: c, card: 1 });
+      await save(); if (acM && acM.isOpen()) acRender(true);
+    }, 900 + Math.random() * 1500);
+  }
+  function acSys(t) { acPush({ who: 'sys', text: t }); }
+  /* 申請單：系統審批 */
+  function acVote(name, ap, bk) {
+    var inMain = acConv(ap.amt, ap.cur, bk.main, bk.rate), left = bk.budget ? bk.budget - acSpent(bk) : 0, s = 0.62;
+    if (bk.budget) { var r = left > 0 ? inMain / left : 2; s -= r > 0.5 ? 0.5 : r > 0.25 ? 0.3 : r > 0.1 ? 0.12 : 0; }
+    var rl = (ap.why || '').length; s += rl >= 15 ? 0.12 : rl < 4 ? -0.15 : 0;
+    if (ap.alt) s -= 0.15;
+    var recent = acG().apps.filter(function (x) { return x.res === 'yes' && Date.now() - x.at < 7 * 864e5; }).length; s -= recent * 0.08;
+    if (ap.re) s += 0.1;
+    s += acKey(name) === 'cs' ? 0.05 : -0.03;
+    s += (Math.random() - 0.5) * 0.35;
+    return s >= 0.5;
+  }
+  function acDecide(ap) {
+    var bk = acG().books.filter(function (b) { return b.id === ap.b; })[0] || acBook(), ppl = acPeople();
+    ap.votes = ppl.map(function (n) { return { n: n, ok: acVote(n, ap, bk) }; });
+    var ok = ap.votes.filter(function (v) { return v.ok; }).length;
+    ap.res = ok === ap.votes.length ? 'yes' : ok === 0 ? 'no' : 'wait'; ap.doneAt = Date.now();
+    if (ap.res === 'wait') ap.waitUntil = Date.now() + 864e5;
+  }
+  function acTick() {
+    var A = X && X.acct; if (!A || !A.apps) return false; var ch = false, now = Date.now();
+    A.apps.forEach(function (ap) {
+      if (ap.res === 'pending' && now >= ap.dueAt) {
+        acDecide(ap); ch = true;
+        ap.votes.forEach(function (v, i) {
+          var k = acKey(v.n), line = ap.res === 'wait' ? pick(AC_SAY[k][v.ok ? 'yes' : 'split']) : pick(AC_SAY[k][v.ok ? 'yes' : 'no']);
+          acPush({ b: ap.b, who: v.n, text: (v.ok ? '✅ ' : '❌ ') + line });
+          var c = pickFor(v.n); if (c) acPush({ b: ap.b, who: v.n, text: c, card: 1 });
+        });
+        acPush({ b: ap.b, who: 'sys', kind: 'res', ap: ap.id });
+      } else if (ap.res === 'wait' && ap.waitUntil && now >= ap.waitUntil) {
+        ap.res = Math.random() < 0.5 ? 'yes' : 'no'; ap.waitUntil = 0; ch = true;
+        var n = pick(acPeople()); acPush({ b: ap.b, who: n, text: ap.res === 'yes' ? '冷靜一天了，還想要的話……准了。' : '冷靜一天了，還是不要了吧。' });
+        acPush({ b: ap.b, who: 'sys', kind: 'res', ap: ap.id });
+      }
+    });
+    if (ch && acM && acM.isOpen()) acRender(true);
+    return ch;
+  }
+  var acM = null, acView = 'chat', acForm = null;
+  function acOpen(view) {
+    if (!acM) {
+      acM = makeModal('cx-acct-modal', 'fa-wallet', '記帳本');
+      acM.el.querySelector('.modal-content').classList.add('cx-ac-wrap');
+      acM.onBack = function () { if (acView !== 'chat') { acView = 'chat'; acRender(); return true; } };
+      acM.body.addEventListener('click', acClick);
+      acM.body.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing && e.target.id === 'cx-ac-in') { e.preventDefault(); acSend(); } });
+    }
+    acG(); acView = view || 'chat'; acForm = null; acRender(); acM.open();
+    setTimeout(function () { var l = acM.body.querySelector('.cx-ac-log'); if (l) l.scrollTop = l.scrollHeight; }, 60);
+  }
+  async function acSend() {
+    var inp = acM.body.querySelector('#cx-ac-in'), t = inp ? inp.value.trim() : ''; if (!t) return;
+    var bk = acBook(), p = acParse(t, bk), ppl = acPeople(), who = pick(ppl);
+    inp.value = '';
+    if (!p || !(p.amt > 0)) { acPush({ who: 'me', text: t }); acReply(who); await save(); acRender(true); return; }
+    var e = { id: 'e' + Date.now(), d: acM.body.querySelector('#cx-ac-d') ? acM.body.querySelector('#cx-ac-d').value || ymd(new Date()) : ymd(new Date()), amt: p.amt, cur: p.cur, cat: p.inc ? '收入' : acCatOf(p.note), note: p.note, inc: p.inc };
+    var dayBefore = acSpent(bk, e.d), daily = acDaily(bk);
+    bk.ex.push(e); acPush({ who: 'me', kind: 'ex', ex: e.id, text: t });
+    var line = null, inMain = acIn(bk, e);
+    if (!e.inc && bk.budget) {
+      var left = bk.budget - acSpent(bk);
+      if (left < bk.budget * 0.1) line = pick(AC_SAY[acKey(who)].low);
+      else if (daily && dayBefore <= daily && dayBefore + inMain > daily) line = pick(AC_SAY[acKey(who)].over);
+      else if (inMain > bk.budget * 0.1 && e.cat !== '機票' && e.cat !== '住宿') line = pick(AC_SAY[acKey(who)].big);
+    }
+    acReply(who, line); await save(); acRender(true);
+  }
+  async function acClick(e) {
+    var b = e.target.closest('button,[data-acx]'); if (!b) return;
+    var A = acG(), bk = acBook(), ds = b.dataset, v = function (id) { var el = acM.body.querySelector('#' + id); return el ? el.value.trim() : ''; };
+    if (ds.acsend != null) return acSend();
+    if (ds.acv) { acView = ds.acv; acForm = ds.acv === 'app' ? { cur: bk.main } : null; acRender(); return; }
+    if (ds.acbook) { A.cur = ds.acbook; acView = 'chat'; await save(); acRender(); return; }
+    if (ds.acx) { var ex = bk.ex.filter(function (x) { return x.id === ds.acx; })[0]; if (!ex || ex.inc) return; var i = AC_CAT.map(function (c) { return c[0]; }).indexOf(ex.cat); ex.cat = AC_CAT[(i + 1) % AC_CAT.length][0]; await save(); acRender(true); return; }
+    if (ds.acdel) {
+      if (!confirm('刪掉這筆帳？')) return;
+      A.books.forEach(function (bb) { bb.ex = bb.ex.filter(function (x) { return x.id !== ds.acdel; }); });
+      A.chat = A.chat.filter(function (m) { return m.ex !== ds.acdel; }); await save(); acRender(true); return;
+    }
+    if (ds.acfcur) { acForm = acForm || {}; acForm.cur = ds.acfcur; ['name', 'amt', 'why', 'alt'].forEach(function (k) { acForm[k] = v('cx-ap-' + k); }); acRender(); return; }
+    if (ds.acapp != null) {
+      var ap = { id: 'ap' + Date.now(), b: A.cur, name: v('cx-ap-name').slice(0, 30), amt: parseFloat(v('cx-ap-amt')), cur: (acForm && acForm.cur) || bk.main, why: v('cx-ap-why').slice(0, 120), alt: v('cx-ap-alt').slice(0, 60), at: Date.now(), dueAt: Date.now() + 4000 + Math.random() * 6000, res: 'pending', re: acForm && acForm.re };
+      if (!ap.name || !(ap.amt > 0)) { toast('要寫買什麼、多少錢', 'error'); return; }
+      A.apps.push(ap); acPush({ who: 'me', kind: 'app', ap: ap.id }); acView = 'chat'; acForm = null; await save(); acRender(true);
+      setTimeout(function () { acTick() && save(); }, ap.dueAt - Date.now() + 50); return;
+    }
+    if (ds.acbuy || ds.acskip || ds.acredo) {
+      var ap2 = A.apps.filter(function (x) { return x.id === (ds.acbuy || ds.acskip || ds.acredo); })[0]; if (!ap2) return;
+      var bk2 = A.books.filter(function (x) { return x.id === ap2.b; })[0] || bk;
+      if (ds.acbuy) { var ne = { id: 'e' + Date.now(), d: ymd(new Date()), amt: ap2.amt, cur: ap2.cur, cat: acCatOf(ap2.name), note: ap2.name }; bk2.ex.push(ne); ap2.done = 'buy'; acPush({ who: 'me', kind: 'ex', ex: ne.id, text: '買了 ' + ap2.name }); }
+      else if (ds.acskip) { bk2.saved = (bk2.saved || 0) + acConv(ap2.amt, ap2.cur, bk2.main, bk2.rate); ap2.done = 'skip'; acSys('🐷 不買「' + ap2.name + '」，省下 ' + acFmt(ap2.amt, ap2.cur)); var n2 = pick(acPeople()); acReply(n2, pick(AC_SAY[acKey(n2)].skip)); }
+      else { ap2.done = 'redo'; acForm = { name: ap2.name, amt: ap2.amt, cur: ap2.cur, why: ap2.why, alt: ap2.alt, re: true }; acView = 'app'; }
+      await save(); acRender(acView === 'chat'); return;
+    }
+    if (ds.acsave != null || ds.acnew != null) {
+      var name = v('cx-acb-name') || '旅行', bud = parseFloat(v('cx-acb-bud')) || 0, rate = parseFloat(v('cx-acb-rate')) || 21, main = v('cx-acb-main') || 'AUD';
+      if (ds.acnew != null) { var nb = { id: 'b' + Date.now(), name: name, type: 'trip', main: main, rate: rate, budget: bud, start: v('cx-acb-st'), end: v('cx-acb-en'), ex: [], saved: 0 }; A.books.push(nb); A.cur = nb.id; acSys('📒 開了新的一本：' + name); }
+      else { bk.name = bk.type === 'daily' ? '日常' : name; bk.budget = bud; bk.rate = rate; bk.main = main; if (bk.type !== 'daily') { bk.start = v('cx-acb-st'); bk.end = v('cx-acb-en'); } }
+      acView = 'chat'; await save(); acRender(); return;
+    }
+    if (ds.acdelbook != null) { if (bk.type === 'daily' || !confirm('刪除「' + bk.name + '」和裡面所有紀錄？')) return; A.books = A.books.filter(function (x) { return x !== bk; }); A.chat = A.chat.filter(function (m) { return m.b !== bk.id; }); A.cur = 'daily'; acView = 'chat'; await save(); acRender(); return; }
+  }
+  function acBubble(m, bk) {
+    var A = acG();
+    if (m.who === 'sys' && m.kind === 'res') {
+      var ap = A.apps.filter(function (x) { return x.id === m.ap; })[0]; if (!ap) return '';
+      var stamp = ap.res === 'yes' ? '<span class="stamp ok">准</span>' : ap.res === 'no' ? '<span class="stamp no">駁回</span>' : '<span class="stamp wait">冷靜一天</span>';
+      var act = ap.done ? '<small>' + (ap.done === 'buy' ? '已買，記進帳了' : ap.done === 'skip' ? '沒買，省下來了' : '已重新申請') + '</small>' :
+        ap.res === 'yes' ? '<button class="cx-btn sm pri" data-acbuy="' + ap.id + '">買了，記帳</button><button class="cx-btn sm" data-acskip="' + ap.id + '">還是不買了</button>' :
+        ap.res === 'no' ? '<button class="cx-btn sm" data-acskip="' + ap.id + '">好，不買了</button><button class="cx-btn sm" data-acredo="' + ap.id + '">修改再申請</button>' :
+        '<small>明天這個時候再決定</small><button class="cx-btn sm" data-acskip="' + ap.id + '">不等了，不買</button>';
+      return '<div class="cx-ac-res">' + stamp + '<b>' + esc(ap.name) + '</b> ' + acFmt(ap.amt, ap.cur) + '<div class="acts">' + act + '</div></div>';
+    }
+    if (m.who === 'sys') return '<div class="cx-ac-sys">' + esc(m.text) + '</div>';
+    if (m.who === 'me') {
+      var inner = esc(m.text);
+      if (m.kind === 'ex') {
+        var ex = bk.ex.filter(function (x) { return x.id === m.ex; })[0];
+        if (ex) inner = '<span class="amt' + (ex.inc ? ' inc' : '') + '">' + (ex.inc ? '+' : '') + acFmt(ex.amt, ex.cur) + '</span>' + (ex.cur !== bk.main ? '<small>≈' + acFmt(acIn(bk, ex), bk.main) + '</small>' : '') + '<span class="note">' + esc(ex.note || '') + '</span>' +
+          (ex.inc ? '<em class="cat">💰 收入</em>' : '<em class="cat" data-acx="' + ex.id + '">' + acIcon(ex.cat) + ' ' + ex.cat + '</em>') + '<button class="del" data-acdel="' + ex.id + '">×</button>';
+      } else if (m.kind === 'app') {
+        var ap2 = A.apps.filter(function (x) { return x.id === m.ap; })[0];
+        if (ap2) inner = '<div class="app"><b>📝 花錢申請單' + (ap2.re ? '（重新申請）' : '') + '</b><div>想買：' + esc(ap2.name) + '</div><div>價錢：' + acFmt(ap2.amt, ap2.cur) + '</div>' + (ap2.why ? '<div>理由：' + esc(ap2.why) + '</div>' : '') + (ap2.alt ? '<div>替代：' + esc(ap2.alt) + '</div>' : '') + (ap2.res === 'pending' ? '<small>哥哥審批中…</small>' : '') + '</div>';
+      }
+      return '<div class="cx-ac-me' + (m.kind === 'ex' ? ' ex' : '') + '">' + inner + '</div>';
+    }
+    return '<div class="cx-ac-him"><div class="av">' + avOf(m.who) + '</div><div><div class="n">' + esc(m.who) + '</div><div class="b">' + esc(m.text) + '</div></div></div>';
+  }
+  function acRender(keepScroll) {
+    var A = acG(), bk = acBook(), b = acM.body, today = ymd(new Date());
+    var spent = acSpent(bk), daily = acDaily(bk), tsp = acSpent(bk, today), pct = bk.budget ? Math.min(100, spent / bk.budget * 100) : 0;
+    var top = '<div class="cx-ac-books">' + A.books.map(function (x) { return '<button data-acbook="' + x.id + '" class="' + (x.id === bk.id ? 'on' : '') + '">' + (x.type === 'daily' ? '🏠 ' : '✈️ ') + esc(x.name) + '</button>'; }).join('') + '<button data-acv="new">＋</button></div>';
+    var sum = '<div class="cx-ac-sum"><div><small>' + (bk.type === 'daily' ? '這個月花了' : '這趟花了') + '</small><b>' + acFmt(spent, bk.main) + '</b></div>' +
+      (bk.budget ? '<div><small>還剩</small><b class="' + (bk.budget - spent < 0 ? 'neg' : '') + '">' + acFmt(bk.budget - spent, bk.main) + '</b></div>' : '<div><small>預算</small><b><button class="cx-btn sm" data-acv="set">設定</button></b></div>') +
+      '<div><small>今天</small><b class="' + (daily && tsp > daily ? 'neg' : '') + '">' + acFmt(tsp, bk.main) + '</b>' + (daily ? '<em>可花 ' + acFmt(daily, bk.main) + '</em>' : '') + '</div></div>' +
+      (bk.budget ? '<div class="cx-tp-bar"><i class="' + (pct >= 90 ? 'hot' : pct >= 70 ? 'warm' : '') + '" style="width:' + pct.toFixed(1) + '%"></i></div>' : '') +
+      '<div class="cx-ac-tools"><button data-acv="app">📝 花錢申請單</button><button data-acv="stat">📊 統計</button><button data-acv="set">⚙️ 設定</button></div>';
+    if (acView === 'chat') {
+      var log = A.chat.filter(function (m) { return m.b === bk.id; }).slice(-150);
+      var h = top + sum + '<div class="cx-ac-log">' + (log.length ? log.map(function (m) { return acBubble(m, bk); }).join('') :
+        '<div class="cx-ac-tip">在下面直接打就能記帳：<br><b>120 珍奶</b>、<b>A$12 咖啡</b>、<b>+500 薪水</b><br>會自動分類，點分類可以改。<br>想買東西先按上面的「📝 花錢申請單」，讓哥哥審批。</div>') + '</div>' +
+        '<div class="cx-ac-bar"><input type="date" id="cx-ac-d" value="' + today + '"><input class="cx-in" id="cx-ac-in" placeholder="例：120 珍奶" autocomplete="off"><button class="cx-btn pri" data-acsend="1">記</button></div>';
+      var keep = keepScroll && b.querySelector('#cx-ac-in') ? b.querySelector('#cx-ac-in').value : '';
+      b.innerHTML = h; var l = b.querySelector('.cx-ac-log'); if (l) l.scrollTop = l.scrollHeight;
+      if (keep) b.querySelector('#cx-ac-in').value = keep;
+      return;
+    }
+    if (acView === 'app') {
+      var f = acForm || { cur: bk.main };
+      b.innerHTML = top + '<div class="cx-sec"><h4>📝 花錢申請單</h4><p class="cx-muted" style="font-size:12px">送出後兩個哥哥各審一票：都准就可以買；都駁回就不買；一個准一個駁回，要冷靜一天。</p>' +
+        '<div class="cx-tp-form"><label>想買什麼<input class="cx-in" id="cx-ap-name" maxlength="30" value="' + esc(f.name || '') + '"></label>' +
+        '<label>多少錢<span class="cx-tp-add"><span class="cx-tp-cur"><button data-acfcur="TWD" class="' + (f.cur === 'TWD' ? 'on' : '') + '">NT$</button><button data-acfcur="AUD" class="' + (f.cur === 'AUD' ? 'on' : '') + '">A$</button></span><input class="cx-in" type="number" inputmode="decimal" id="cx-ap-amt" value="' + esc(f.amt || '') + '"></span></label>' +
+        '<label>為什麼想要<textarea class="cx-in" id="cx-ap-why" maxlength="120" rows="2" placeholder="理由寫得越清楚，越容易過">' + esc(f.why || '') + '</textarea></label>' +
+        '<label>有沒有替代品（可不填）<input class="cx-in" id="cx-ap-alt" maxlength="60" value="' + esc(f.alt || '') + '" placeholder="例如：家裡還有一件類似的"></label></div>' +
+        '<div class="cx-tp-btns"><button class="cx-btn pri" data-acapp="1">送出申請</button><button class="cx-btn" data-acv="chat">取消</button></div></div>';
+      return;
+    }
+    if (acView === 'stat') {
+      var f2 = acRange(bk), L = bk.ex.filter(function (e) { return !e.inc && f2(e); }), byc = {};
+      L.forEach(function (e) { byc[e.cat] = (byc[e.cat] || 0) + acIn(bk, e); });
+      var mx = Math.max.apply(null, Object.keys(byc).map(function (k) { return byc[k]; }).concat([1]));
+      var inc = bk.ex.filter(function (e) { return e.inc && f2(e); }).reduce(function (a, e) { return a + acIn(bk, e); }, 0);
+      var apps = A.apps.filter(function (x) { return x.b === bk.id && x.res !== 'pending'; }), apY = apps.filter(function (x) { return x.res === 'yes'; }).length, apN = apps.filter(function (x) { return x.res === 'no'; }).length;
+      var hb = 0; if (bk.type === 'daily') (X.rp.list || []).forEach(function (p) { if (p.from === 'him' && p.opened && ymd(new Date(p.openedAt || p.at)).slice(0, 7) === acMon()) hb += p.amount || 0; });
+      var h2 = top + '<div class="cx-sec"><h4>' + (bk.type === 'daily' ? acMon().replace('-', ' 年 ') + ' 月' : esc(bk.name)) + '</h4>' +
+        '<div class="cx-hb-sum"><div><small>花費</small><b>' + acFmt(spent, bk.main) + '</b></div><div><small>收入</small><b>' + acFmt(inc, bk.main) + '</b></div><div><small>省下</small><b>' + acFmt(bk.saved || 0, bk.main) + '</b></div><div><small>申請 准/駁</small><b>' + apY + '/' + apN + '</b></div></div>' +
+        (hb ? '<div class="cx-tp-saved">🧧 這個月哥哥給的紅包和轉帳：<b>$' + hb.toFixed(2) + '</b></div>' : '') +
+        '<h4>花在哪裡</h4>' + (L.length ? AC_CAT.filter(function (c) { return byc[c[0]]; }).map(function (c) { return '<div class="cx-tp-cat"><span>' + c[1] + ' ' + c[0] + '</span><i style="width:' + (byc[c[0]] / mx * 100).toFixed(0) + '%"></i><b>' + acFmt(byc[c[0]], bk.main) + '</b><small>' + (byc[c[0]] / spent * 100).toFixed(0) + '%</small></div>'; }).join('') : '<div class="cx-muted">還沒有紀錄</div>');
+      var n3 = pick(acPeople()), k3 = acKey(n3), cm = !L.length ? '' : bk.budget && spent > bk.budget ? (k3 === 'cs' ? '超支了。下個月我幫妳盯緊一點。' : '這次花超過了……下次我們一起省嘛～') : (bk.saved || 0) > 0 ? (k3 === 'cs' ? '還知道忍住不買，不錯。' : '有忍住沒買的耶，好乖～') : (k3 === 'cs' ? '花得還算節制。' : '控制得很好耶～');
+      if (cm) h2 += sayBy(n3, cm);
+      h2 += '<button class="cx-btn" data-acv="chat">← 回去記帳</button></div>'; b.innerHTML = h2; return;
+    }
+    var isNew = acView === 'new', e0 = isNew ? { name: '回台灣', budget: '', rate: bk.rate || 21, main: 'TWD', type: 'trip' } : bk;
+    b.innerHTML = top + '<div class="cx-sec"><h4>' + (isNew ? '開一本新的（旅行用）' : bk.type === 'daily' ? '日常設定' : '這本的設定') + '</h4><div class="cx-tp-form">' +
+      (e0.type === 'daily' ? '' : '<label>名稱<input class="cx-in" id="cx-acb-name" maxlength="20" value="' + esc(e0.name) + '"></label><label>出發<input class="cx-in" type="date" id="cx-acb-st" value="' + esc(e0.start || '') + '"></label><label>回來<input class="cx-in" type="date" id="cx-acb-en" value="' + esc(e0.end || '') + '"></label>') +
+      '<label>主要幣別<select class="cx-in" id="cx-acb-main"><option value="AUD"' + (e0.main === 'AUD' ? ' selected' : '') + '>澳幣 A$</option><option value="TWD"' + (e0.main === 'TWD' ? ' selected' : '') + '>台幣 NT$</option></select></label>' +
+      '<label>' + (e0.type === 'daily' ? '每月預算（0＝不設）' : '這趟總預算') + '<input class="cx-in" type="number" inputmode="decimal" id="cx-acb-bud" value="' + esc(e0.budget || '') + '"></label>' +
+      '<label>匯率：1 澳幣 = ? 台幣<input class="cx-in" type="number" inputmode="decimal" step="0.01" id="cx-acb-rate" value="' + esc(e0.rate) + '"></label></div>' +
+      '<p class="cx-muted" style="font-size:11px">匯率照當天銀行或換匯的填，隨時可以改。</p><div class="cx-tp-btns"><button class="cx-btn pri" ' + (isNew ? 'data-acnew="1">建立' : 'data-acsave="1">儲存') + '</button>' + (!isNew && bk.type !== 'daily' ? '<button class="cx-btn" data-acdelbook="1">刪除這本</button>' : '') + '<button class="cx-btn" data-acv="chat">取消</button></div></div>';
+  }
+  var acCss = document.createElement('style');
+  acCss.textContent = '#cx-acct-modal .cx-btn.sm{flex:none;padding:4px 10px;font-size:12px;border-radius:10px}.cx-ac-wrap{display:flex;flex-direction:column;max-height:92vh}.cx-ac-wrap .cx-body{display:flex;flex-direction:column;min-height:0;flex:1}.cx-ac-wrap .cx-body>*{flex:none}.cx-ac-wrap .cx-body>.cx-ac-log{flex:1 1 auto}' +
+    '.cx-ac-books{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.cx-ac-books button{flex:none;border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer}.cx-ac-books button.on{background:#e8799a;color:#fff;border-color:#e8799a}' +
+    '.cx-ac-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}.cx-ac-sum div{background:var(--primary-bg);border:1px solid var(--border-color);border-radius:12px;padding:6px;display:flex;flex-direction:column;align-items:center}.cx-ac-sum small{font-size:10px;color:var(--text-secondary)}.cx-ac-sum b{font-size:15px}.cx-ac-sum b.neg{color:#c0392b}.cx-ac-sum em{font-style:normal;font-size:10px;color:var(--text-secondary)}' +
+    '.cx-ac-tools{display:flex;gap:6px;margin:6px 0}.cx-ac-tools button{flex:1;border:1px dashed var(--border-color);background:none;color:var(--text-primary);border-radius:10px;padding:5px;font:inherit;font-size:12px;cursor:pointer}' +
+    '.cx-ac-log{flex:1;min-height:200px;max-height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;background:var(--primary-bg);border:1px solid var(--border-color)}' +
+    '.cx-ac-tip{margin:auto;text-align:center;font-size:13px;color:var(--text-secondary);line-height:1.8}.cx-ac-sys{align-self:center;font-size:11px;color:var(--text-secondary);background:var(--secondary-bg);padding:2px 10px;border-radius:99px}' +
+    '.cx-ac-me{align-self:flex-end;max-width:82%;background:#ffe3ec;color:#333;border-radius:14px 14px 4px 14px;padding:6px 10px;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.cx-ac-me .amt{font-weight:700;font-size:16px}.cx-ac-me .amt.inc{color:#2e8b57}.cx-ac-me small{font-size:10px;color:#888}.cx-ac-me .note{flex-basis:100%;font-size:13px}.cx-ac-me .note:empty{display:none}.cx-ac-me .cat{font-style:normal;font-size:11px;background:#fff;border-radius:99px;padding:1px 8px;cursor:pointer}.cx-ac-me .del{border:0;background:none;color:#aaa;cursor:pointer;margin-left:auto}' +
+    '.cx-ac-me .app{display:flex;flex-direction:column;gap:2px;font-size:13px}.cx-ac-me .app b{font-size:14px}' +
+    '.cx-ac-him{display:flex;gap:6px;max-width:85%}.cx-ac-him .av{width:30px;height:30px;border-radius:50%;overflow:hidden;flex:none;background:var(--secondary-bg);display:flex;align-items:center;justify-content:center}.cx-ac-him .av img{width:100%;height:100%;object-fit:cover}.cx-ac-him .n{font-size:10px;color:var(--text-secondary)}.cx-ac-him .b{background:var(--secondary-bg);color:var(--text-primary);border-radius:14px 14px 14px 4px;padding:6px 10px;font-size:14px}' +
+    '.cx-ac-res{align-self:center;text-align:center;background:#fffaf0;border:1px dashed #e0c48a;border-radius:14px;padding:8px 12px;font-size:13px;color:#333;max-width:92%}.cx-ac-res .acts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px;align-items:center}.cx-ac-res small{color:#888}' +
+    '.stamp{display:inline-block;border:2px solid;border-radius:8px;padding:0 8px;font-weight:700;transform:rotate(-8deg);margin-right:6px}.stamp.ok{color:#d0342c;border-color:#d0342c}.stamp.no{color:#666;border-color:#666}.stamp.wait{color:#c08a00;border-color:#c08a00}' +
+    '.cx-ac-bar{display:flex;gap:6px;margin-top:8px;align-items:center}.cx-ac-bar .cx-in{flex:1;min-width:0}.cx-ac-bar input[type=date]{width:36px;flex:none;border:1px solid var(--border-color);border-radius:10px;padding:6px 2px;background:var(--primary-bg);color:var(--text-primary);font-size:0}.cx-ac-bar input[type=date]::-webkit-calendar-picker-indicator{margin:0 auto;font-size:16px}' +
+    '.cx-tp-form{display:flex;flex-direction:column;gap:8px}.cx-tp-form label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--text-secondary)}.cx-tp-add{display:flex;gap:6px;align-items:center}.cx-tp-add .cx-in{flex:1;min-width:0}.cx-tp-cur{display:flex;border:1px solid var(--border-color);border-radius:10px;overflow:hidden;flex:none}.cx-tp-cur button{border:0;background:var(--primary-bg);color:var(--text-primary);padding:7px 10px;font:inherit;font-size:13px;cursor:pointer}.cx-tp-cur button.on{background:#e8799a;color:#fff}' +
+    '.cx-tp-btns{display:flex;gap:6px;margin-top:8px}.cx-tp-btns .cx-btn{flex:1}.cx-tp-bar{height:8px;border-radius:99px;background:var(--primary-bg);border:1px solid var(--border-color);overflow:hidden}.cx-tp-bar i{display:block;height:100%;background:#8fd19e}.cx-tp-bar i.warm{background:#f5c26b}.cx-tp-bar i.hot{background:#ef7c6c}' +
+    '.cx-tp-saved{font-size:13px;padding:6px 10px;border-radius:10px;background:#fff3d6;margin:6px 0}.cx-tp-cat{display:grid;grid-template-columns:72px 1fr auto 34px;gap:6px;align-items:center;font-size:13px;margin:4px 0}.cx-tp-cat i{height:10px;border-radius:99px;background:#f0a8bd;min-width:2px}.cx-tp-cat small{color:var(--text-secondary);font-size:11px;text-align:right}';
+  document.head.appendChild(acCss);
+
+  /* ===== 投票（可複選；哥哥由系統投票、可改票；附字卡留言） ===== */
+  var vtM = null, vtView = 'list', vtDraft = null;
+  function vtG() { X.vote = X.vote || {}; X.vote.list = X.vote.list || []; return X.vote; }
+  function vtTally(p) { var c = p.opts.map(function () { return 0; }); Object.keys(p.v).forEach(function (n) { (p.v[n] || []).forEach(function (i) { if (c[i] != null) c[i]++; }); }); return c; }
+  function vtSys(p, name) { var n = p.opts.length, k = p.multi ? 1 + Math.floor(Math.random() * Math.min(n, 2)) : 1, a = []; while (a.length < k) { var i = Math.floor(Math.random() * n); if (a.indexOf(i) < 0) a.push(i); } return a.sort(); }
+  function vtTick() {
+    var V = X && X.vote; if (!V || !V.list) return false; var ch = false, now = Date.now();
+    V.list.forEach(function (p) {
+      (p.wait || []).forEach(function (w) {
+        if (w.done || now < w.at) return; w.done = true; ch = true;
+        p.v[w.n] = vtSys(p, w.n); p.cm[w.n] = pickFor(w.n) || '';
+        if (p.toChat) sayAs(w.n === pname() && !groupOn() ? null : w.n, '【投票】' + p.q + '\n我投 ' + p.v[w.n].map(function (i) { return p.opts[i]; }).join('、') + (p.cm[w.n] ? '\n' + p.cm[w.n] : ''));
+      });
+    });
+    if (ch && vtM && vtM.isOpen()) vtRender();
+    return ch;
+  }
+  function vtOpen() {
+    if (!vtM) {
+      vtM = makeModal('cx-vote-modal', 'fa-square-poll-vertical', '投票');
+      vtM.onBack = function () { if (vtView !== 'list') { vtView = 'list'; vtRender(); return true; } };
+      vtM.body.addEventListener('click', async function (e) {
+        var b = e.target.closest('button'); if (!b) return; var V = vtG(), ds = b.dataset;
+        var sync = function () { if (!vtDraft) return; vtDraft.q = (vtM.body.querySelector('#cx-vt-q') || {}).value || ''; vtDraft.opts = Array.prototype.map.call(vtM.body.querySelectorAll('.cx-vt-o'), function (x) { return x.value; }); };
+        if (ds.vtnew != null) { vtDraft = { q: '', opts: ['', ''], multi: false, toChat: true }; vtView = 'new'; vtRender(); return; }
+        if (ds.vtadd != null) { sync(); if (vtDraft.opts.length < 8) vtDraft.opts.push(''); vtRender(); return; }
+        if (ds.vtrm != null) { sync(); vtDraft.opts.splice(+ds.vtrm, 1); vtRender(); return; }
+        if (ds.vtmulti != null) { sync(); vtDraft.multi = !vtDraft.multi; vtRender(); return; }
+        if (ds.vtchat != null) { sync(); vtDraft.toChat = !vtDraft.toChat; vtRender(); return; }
+        if (ds.vtgo != null) {
+          sync(); var q = vtDraft.q.trim(), opts = vtDraft.opts.map(function (x) { return x.trim(); }).filter(Boolean);
+          if (!q || opts.length < 2) { toast('要有題目和至少兩個選項', 'error'); return; }
+          var now = Date.now(), p = { id: 'vt' + now, q: q, opts: opts, multi: vtDraft.multi, toChat: vtDraft.toChat, at: now, v: {}, cm: {}, wait: acPeople().map(function (n) { return { n: n, at: now + 4000 + Math.random() * 40000 }; }) };
+          V.list.unshift(p); if (p.toChat) iSay('【投票】' + q + (p.multi ? '（可複選）' : '') + '\n' + opts.map(function (o, i) { return (i + 1) + '. ' + o; }).join('\n'));
+          vtView = 'list'; await save(); vtRender(); toast('投票發出去了', 'success');
+          setTimeout(function () { vtTick() && save(); }, 45000); return;
+        }
+        var p2 = ds.vtp && V.list.filter(function (x) { return x.id === ds.vtp; })[0]; if (!p2) return;
+        if (ds.vtdel != null) { if (!confirm('刪除這個投票？')) return; V.list = V.list.filter(function (x) { return x !== p2; }); await save(); vtRender(); return; }
+        var who = ds.vtwho, oi = +ds.vti; if (!who || isNaN(oi)) return;
+        var cur = (p2.v[who] || []).slice(), had = cur.indexOf(oi) >= 0;
+        if (p2.multi) { if (had) cur.splice(cur.indexOf(oi), 1); else cur.push(oi); } else cur = had ? [] : [oi];
+        var was = p2.v[who] && p2.v[who].length; p2.v[who] = cur.sort();
+        (p2.wait || []).forEach(function (w) { if (w.n === who) w.done = true; });
+        if (who !== '__me' && was && p2.toChat && cur.length) sayAs(who === pname() && !groupOn() ? null : who, '【投票】我改投 ' + cur.map(function (i) { return p2.opts[i]; }).join('、'));
+        await save(); vtRender();
+      });
+    }
+    vtView = 'list'; vtTick(); vtRender(); vtM.open();
+  }
+  function vtRender() {
+    var V = vtG(), b = vtM.body;
+    if (vtView === 'new') {
+      var d = vtDraft;
+      b.innerHTML = '<div class="cx-sec"><h4>發起投票</h4><input class="cx-in" id="cx-vt-q" maxlength="60" placeholder="題目，例如：明天吃什麼？" value="' + esc(d.q) + '">' +
+        d.opts.map(function (o, i) { return '<div class="cx-tp-add"><input class="cx-in cx-vt-o" maxlength="30" placeholder="選項 ' + (i + 1) + '" value="' + esc(o) + '">' + (d.opts.length > 2 ? '<button class="cx-btn sm" data-vtrm="' + i + '">×</button>' : '') + '</div>'; }).join('') +
+        (d.opts.length < 8 ? '<button class="cx-btn" data-vtadd="1">＋ 加選項</button>' : '') +
+        '<div class="cx-row"><span>可以複選</span><button class="cx-btn sm' + (d.multi ? ' pri' : '') + '" data-vtmulti="1">' + (d.multi ? '開' : '關') + '</button></div>' +
+        '<div class="cx-row"><span>投票結果傳到聊天</span><button class="cx-btn sm' + (d.toChat ? ' pri' : '') + '" data-vtchat="1">' + (d.toChat ? '開' : '關') + '</button></div>' +
+        '<div class="cx-tp-btns"><button class="cx-btn pri" data-vtgo="1">發出投票</button></div></div>';
+      return;
+    }
+    var ppl = acPeople(), h = '<button class="cx-btn pri" data-vtnew="1" style="width:100%">＋ 發起投票</button>';
+    if (!V.list.length) h += '<div class="cx-muted" style="text-align:center;padding:20px 0">出個題目，讓哥哥們投票～<br>可以單選或複選，哥哥投完會附一張字卡。</div>';
+    V.list.slice(0, 30).forEach(function (p) {
+      var c = vtTally(p), mx = Math.max.apply(null, c.concat([1])), voters = ['__me'].concat(ppl);
+      h += '<div class="cx-vt-card"><div class="q">' + esc(p.q) + (p.multi ? '<small>複選</small>' : '') + '</div>' +
+        p.opts.map(function (o, i) { return '<div class="opt"><span>' + esc(o) + '</span><i style="width:' + (c[i] / mx * 100).toFixed(0) + '%"></i><b>' + c[i] + '</b></div>'; }).join('') +
+        voters.map(function (n) {
+          var mine = p.v[n] || [], waiting = n !== '__me' && !p.v[n] && (p.wait || []).some(function (w) { return w.n === n && !w.done; });
+          return '<div class="who"><span class="nm">' + (n === '__me' ? '我' : esc(n)) + '</span><span class="ch">' + p.opts.map(function (o, i) { return '<button data-vtp="' + p.id + '" data-vtwho="' + esc(n) + '" data-vti="' + i + '" class="' + (mine.indexOf(i) >= 0 ? 'on' : '') + '">' + (i + 1) + '</button>'; }).join('') + '</span>' + (waiting ? '<small>想一下…</small>' : '') + '</div>' +
+            (n !== '__me' && p.cm[n] ? '<div class="cm">💬 ' + esc(p.cm[n]) + '</div>' : '');
+        }).join('') + '<div class="ft"><small>點數字可以幫哥哥改票</small><button class="cx-btn sm" data-vtp="' + p.id + '" data-vtdel="1">刪除</button></div></div>';
+    });
+    b.innerHTML = h;
+  }
+  var vtCss = document.createElement('style');
+  vtCss.textContent = '#cx-vote-modal .cx-btn.sm{flex:none;padding:4px 10px;font-size:12px;border-radius:10px}#cx-vote-modal .cx-row{justify-content:space-between}#cx-vote-modal .cx-tp-add{margin:4px 0}.cx-vt-card{border:1px solid var(--border-color);border-radius:14px;padding:10px;margin-top:10px;background:var(--primary-bg)}.cx-vt-card .q{font-weight:700;margin-bottom:6px}.cx-vt-card .q small{font-weight:400;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:6px;background:#e8f0ff}' +
+    '.cx-vt-card .opt{display:grid;grid-template-columns:minmax(60px,40%) 1fr 22px;gap:6px;align-items:center;font-size:13px;margin:3px 0}.cx-vt-card .opt i{height:10px;border-radius:99px;background:#9cc8f0;min-width:2px}.cx-vt-card .opt b{text-align:right}' +
+    '.cx-vt-card .who{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px}.cx-vt-card .nm{width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cx-vt-card .ch{display:flex;gap:4px;flex-wrap:wrap}.cx-vt-card .ch button{width:26px;height:26px;border-radius:8px;border:1px solid var(--border-color);background:var(--secondary-bg);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer}.cx-vt-card .ch button.on{background:#e8799a;color:#fff;border-color:#e8799a}.cx-vt-card .who small{color:var(--text-secondary)}' +
+    '.cx-vt-card .cm{font-size:12px;color:var(--text-secondary);margin:2px 0 0 62px}.cx-vt-card .ft{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.cx-vt-card .ft small{font-size:10px;color:var(--text-secondary)}';
+  document.head.appendChild(vtCss);
+
+  /* 合併入口：在視窗標題列放捷徑 */
+  function hubAdd(id, links) {
+    var m = document.getElementById(id); if (!m || m.querySelector('.cx-hub')) return;
+    var t = m.querySelector('.modal-title'); if (!t) return;
+    var w = document.createElement('span'); w.className = 'cx-hub';
+    w.innerHTML = links.map(function (l, i) { return '<button type="button" data-hub="' + i + '">' + l[0] + '</button>'; }).join('');
+    w.addEventListener('click', function (e) { var b = e.target.closest('[data-hub]'); if (!b) return; hideModal(m); var fn = links[+b.dataset.hub][1]; setTimeout(async function () { await load(); fn(); }, 120); });
+    t.appendChild(w);
+  }
+  function withHub(fn, id, links) { return function () { var r = fn.apply(this, arguments); hubAdd(id, links); return r; }; }
+  hbOpen = withHub(hbOpen, 'cx-health-modal', [['🩸 潮汐', function () { pOpen(); }], ['🌙 睡眠', function () { sleepOpen(); }]]);
+  pOpen = withHub(pOpen, 'cx-period-modal', [['💗 健康小本', function () { hbOpen(); }]]);
+  sleepOpen = withHub(sleepOpen, 'cx-sleep-modal', [['💗 健康小本', function () { hbOpen(); }]]);
+  compOpen = withHub(compOpen, 'cx-comp-modal', [['🍅 番茄鐘', function () { pomoOpen(); }]]);
+  pomoOpen = withHub(pomoOpen, 'cx-pomo-modal', [['🎧 陪伴中心', function () { compOpen(); }]]);
+  diaryOpen = withHub(diaryOpen, 'cx-diary-modal', [['⭐ 字卡評分', function () { rtOpen(); }]]);
+  rtOpen = withHub(rtOpen, 'cx-rate-modal', [['📔 日記', function () { diaryOpen(); }]]);
+  (function decisionDice() {
+    var g = document.querySelector('#decision-menu-modal .decision-menu-grid'); if (!g || document.getElementById('cx-dec-dice')) return;
+    var c = document.createElement('div'); c.className = 'decision-option-card'; c.id = 'cx-dec-dice';
+    c.innerHTML = '<i class="fas fa-dice"></i><h3>骰子</h3><p>擲骰子、多個選項</p>';
+    c.addEventListener('click', async function () { hideModal(document.getElementById('decision-menu-modal')); await load(); diceOpen(); });
+    g.appendChild(c);
+  })();
+  var hubCss = document.createElement('style');
+  hubCss.textContent = '.cx-hub{margin-left:auto;display:flex;gap:4px}.cx-hub button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap}.modal-title:has(.cx-hub){display:flex;align-items:center;gap:8px;flex-wrap:wrap}';
+  document.head.appendChild(hubCss);
+
   addEntry('cx-diary-entry', 'fa-book', '他的日記', diaryOpen);
   addEntry('cx-dice-entry', 'fa-dice', '骰子', diceOpen);
   addEntry('cx-quiz-entry', 'fa-clipboard-question', '問卷', quizOpen);
@@ -2963,10 +3358,11 @@
   addEntry('cx-sleep-entry', 'fa-bed', '睡眠', sleepOpen);
   addEntry('cx-period-entry', 'fa-droplet', '潮汐', pOpen);
   addEntry('cx-health-entry', 'fa-heart', '健康小本', hbOpen);
+  addEntry('cx-acct-entry', 'fa-wallet', '記帳本', acOpen);
+  addEntry('cx-vote-entry', 'fa-square-poll-vertical', '投票', vtOpen);
   addEntry('cx-pomo-entry', 'fa-clock', '番茄鐘', pomoOpen);
   addEntry('cx-comp-entry', 'fa-headphones', '陪伴中心', compOpen);
   addEntry('cx-rp-entry', 'fa-gift', '紅包', rpOpen);
-  addEntry('cx-status-entry', 'fa-heart-pulse', '狀態檢測', stOpen);
   addEntry('cx-phone-entry', 'fa-mobile-screen', 'TA 的手機', phoneOpen);
   addEntry('cx-toss-entry', 'fa-face-grin-squint-tears', '搞怪', tossOpen);
   addEntry('cx-calllog-entry', 'fa-phone', '通話紀錄', clOpen);

@@ -12,8 +12,7 @@
     fast: { label: '馬上（幾秒～半分鐘）', min: 5e3, max: 30e3 },
     soon: { label: '等一下（1～30 分鐘）', min: 60e3, max: 30 * 60e3 },
     later: { label: '晚一點（半小時～2 小時）', min: 30 * 60e3, max: 2 * 60 * 60e3 },
-    slow: { label: '慢慢來（2～6 小時）', min: 2 * 60 * 60e3, max: 6 * 60 * 60e3 },
-    manual: { label: '不限時（我自己按答案）', manual: true }
+    slow: { label: '慢慢來（2～6 小時）', min: 2 * 60 * 60e3, max: 6 * 60 * 60e3 }
   };
   var FREQ = {
     often: { label: '常常（1～3 小時一題）', min: 1, max: 3 },
@@ -321,8 +320,9 @@
     var now = Date.now();
     items.forEach(function (it) {
       h += '<div class="qa-card"><div class="qa-q">' + esc(it.q) + '</div>';
-      it.opts.forEach(function (o, i) { h += '<div class="qa-opt' + (it.revealed && i === it.pick ? ' on' : '') + (it.manual ? ' qa-tap' : '') + '"' + (it.manual ? ' data-mpick="' + esc(it.id) + '" data-mi="' + i + '"' : '') + '><b>' + LETTERS[i] + '.</b><span>' + esc(o) + '</span></div>'; });
-      if (it.revealed) { if (it.note) h += '<div class="qa-note">' + esc(it.note) + '</div>'; if (it.manual) h += '<div class="qa-wait" style="opacity:.7">按別的選項可以改答案</div>'; }
+      var tap = it.manual || it.revealed;
+      it.opts.forEach(function (o, i) { h += '<div class="qa-opt' + (it.revealed && i === it.pick ? ' on' : '') + (tap ? ' qa-tap' : '') + '"' + (tap ? ' data-mpick="' + esc(it.id) + '" data-mi="' + i + '"' : '') + '><b>' + LETTERS[i] + '.</b><span>' + esc(o) + '</span></div>'; });
+      if (it.revealed) { if (it.note) h += '<div class="qa-note">' + esc(it.note) + '</div>'; h += '<div class="qa-wait" style="opacity:.7">' + esc(pname()) + ' 想改答案的話，點別的選項</div>'; }
       else if (it.manual) h += '<div class="qa-wait"><i class="fas fa-hand-pointer"></i> 不限時・知道 ' + esc(pname()) + ' 的答案時，點上面的選項</div>';
       else h += '<div class="qa-wait"><i class="fas fa-hourglass-half"></i> ' + esc(pname()) + ' 正在想… ' + fmtLeft(it.dueAt - now) + '</div>';
       h += '<div class="qa-meta"><span>' + fmtTime(it.askedAt) + '</span><span>' +
@@ -454,8 +454,8 @@
     if (b.dataset.mpick) {
       var mi = +b.dataset.mi, it3 = data.items.find(function (x) { return x.id === b.dataset.mpick; }); if (!it3 || it3.pick === mi) return;
       var first = !it3.revealed; it3.pick = mi; it3.revealed = true; it3.revealedAt = Date.now(); await save();
-      if (first && it3.toChat && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: pname(), text: '【問題箱】' + it3.q + '\n我選 ' + LETTERS[mi] + '. ' + it3.opts[mi], timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
-      notify(pname() + ' 選了 ' + LETTERS[mi], 'success'); render(); return;
+      if (it3.toChat && typeof addMessage === 'function') addMessage({ id: Date.now(), sender: pname(), text: '【問題箱】' + it3.q + '\n' + (first ? '我選 ' : '我改成 ') + LETTERS[mi] + '. ' + it3.opts[mi], timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' });
+      notify(pname() + (first ? ' 選了 ' : ' 改成 ') + LETTERS[mi], 'success'); render(); return;
     }
     if (b.dataset.del) {
       if (!(await confirmAsync('刪除這個問題？'))) return;
