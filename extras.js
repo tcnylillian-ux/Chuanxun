@@ -2955,10 +2955,50 @@
     else if (hr === 19 && !(D.m || {}).d) { slot = 'm19'; line = '晚餐吃了嗎？吃了記得跟我說。'; }
     if (!slot || H.rd[t + slot]) return false;
     if (X.sleep.cur) return false;
-    H.rd = {}; H.rd[t + slot] = 1; var n = hbSpeaker(); sayAs(n === pname() ? null : n, line); return true;
+    H.rd = {}; H.rd[t + slot] = 1; var n = hbSpeaker();
+    var kind = slot.charAt(0) === 'w' ? 'w' : slot === 'm13' ? 'l' : 'd', mid = Date.now() + Math.floor(Math.random() * 1000);
+    H.rmsg = H.rmsg || {}; Object.keys(H.rmsg).forEach(function (k) { if (Date.now() - H.rmsg[k].at > 3 * 864e5) delete H.rmsg[k]; });
+    H.rmsg[mid] = { k: kind, d: t, at: Date.now(), n: n === pname() ? null : n };
+    if (typeof addMessage === 'function') {
+      var m = { id: mid, sender: pname(), text: line, timestamp: new Date(), status: 'received', favorited: false, note: null, type: 'normal' };
+      if (n !== pname() && groupOn()) m.cxFrom = n;
+      addMessage(m); sound(); if (typeof window._sendPartnerNotification === 'function') window._sendPartnerNotification(n, line);
+    }
+    setTimeout(hrBtns, 300); return true;
   }
+  /* 提醒訊息下面的「吃了／沒吃」「喝了」按鈕，按了自動記進健康小本 */
+  var HR_BTN = { w: [['💧 喝了一杯', 'w1'], ['等一下', 'later']], l: [['🍚 吃了', 'ate'], ['還沒吃', 'no']], d: [['🍚 吃了', 'ate'], ['還沒吃', 'no']] };
+  var HR_SAY = { w1: ['乖，繼續保持。', '好，我看著妳喝完。', '真聽話。'], later: ['等一下要記得喝喔。', '別忘了，我會再問妳。'], ate: ['好乖，有好好吃飯。', '吃了就好，我放心了。', '吃了什麼？下次拍給我看。'], no: ['還沒吃？現在就去吃。', '別餓著，快去吃點東西。', '不准跳過，去吃飯。'] };
+  function hrBtns() {
+    var H = X && X.health; if (!H || !H.rmsg) return;
+    Object.keys(H.rmsg).forEach(function (id) {
+      var el = document.querySelector('#chat-container [data-msg-id="' + id + '"]'); if (!el) return;
+      var r = H.rmsg[id], row = el.querySelector('.cx-hr-row');
+      var html = r.ans ? '<span class="done">✓ ' + esc(r.ans) + '</span>' : HR_BTN[r.k].map(function (b) { return '<button type="button" data-hr="' + id + '" data-hra="' + b[1] + '">' + b[0] + '</button>'; }).join('');
+      if (row && row.dataset.st === (r.ans || '')) return;
+      if (!row) { row = document.createElement('div'); row.className = 'cx-hr-row'; var host = el.querySelector('.message-content-wrapper') || el; host.appendChild(row); }
+      row.dataset.st = r.ans || ''; row.innerHTML = html;
+    });
+  }
+  document.addEventListener('click', async function (e) {
+    var b = e.target.closest && e.target.closest('[data-hr]'); if (!b) return;
+    e.stopPropagation(); await load(); var H = hbG(), r = (H.rmsg || {})[b.dataset.hr]; if (!r || r.ans) return;
+    var a = b.dataset.hra, D = hbDay(r.d), lab = b.textContent.replace(/^\S+\s/, '');
+    if (a === 'w1') { D.w = (D.w || 0) + 1; r.ans = '喝了（今天第 ' + D.w + ' 杯）'; }
+    else if (a === 'later') r.ans = '等一下喝';
+    else if (a === 'ate') { D.m[r.k] = true; r.ans = (r.k === 'l' ? '午餐' : '晚餐') + '吃了，已記進健康小本'; }
+    else { r.ans = (r.k === 'l' ? '午餐' : '晚餐') + '還沒吃'; }
+    await save(); hrBtns();
+    iSay(a === 'w1' ? '喝了～' : a === 'later' ? '等一下喝' : a === 'ate' ? '吃了～' : '還沒吃……');
+    var who = r.n; setTimeout(function () { sayAs(who, pick(HR_SAY[a])); }, 1200 + Math.random() * 1500);
+  }, true);
+  (function hrObs() {
+    var c = document.getElementById('chat-container'); if (!c) return;
+    var tm = null; new MutationObserver(function () { clearTimeout(tm); tm = setTimeout(hrBtns, 120); }).observe(c, { childList: true, subtree: true });
+    load().then(function () { setTimeout(hrBtns, 500); });
+  })();
   var hbCss = document.createElement('style');
-  hbCss.textContent = '#cx-health-modal .cx-btn.sm{flex:none;padding:4px 10px;font-size:13px;border-radius:10px}#cx-health-modal .cx-row{justify-content:space-between}.cx-hb-date{display:flex;gap:8px;align-items:center}.cx-hb-date b{font-size:16px}.cx-hb-date .per{color:#c0392b;font-size:12px}.cx-hb-date .pred{color:#c06080;font-size:12px}' +
+  hbCss.textContent = '.cx-hr-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.cx-hr-row button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}.cx-hr-row .done{font-size:11px;opacity:.7}' + '#cx-health-modal .cx-btn.sm{flex:none;padding:4px 10px;font-size:13px;border-radius:10px}#cx-health-modal .cx-row{justify-content:space-between}.cx-hb-date{display:flex;gap:8px;align-items:center}.cx-hb-date b{font-size:16px}.cx-hb-date .per{color:#c0392b;font-size:12px}.cx-hb-date .pred{color:#c06080;font-size:12px}' +
     '.cx-hb-cups{display:flex;flex-wrap:wrap;gap:4px}.cx-hb-cups button{width:38px;height:38px;border-radius:10px;border:1px solid var(--border-color);background:var(--primary-bg);font-size:20px;cursor:pointer;opacity:.55}.cx-hb-cups button.on{opacity:1;background:#e3f1ff;border-color:#9cc8f0}' +
     '.cx-hb-chips{display:flex;flex-wrap:wrap;gap:6px}.cx-hb-chips button{border:1px solid var(--border-color);background:var(--primary-bg);color:var(--text-primary);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}.cx-hb-chips button.on{background:#e8f6e8;border-color:#9fd39f}.cx-hb-chips button.sick{background:#ffe9e6;border-color:#f0a59a}' +
     '.cx-hb-mood{display:flex;gap:6px}.cx-hb-mood button{flex:1;font-size:24px;border:1px solid var(--border-color);background:var(--primary-bg);border-radius:12px;padding:4px;cursor:pointer;opacity:.5}.cx-hb-mood button.on{opacity:1;background:#fff3d6;border-color:#f0cf7a}' +
@@ -3239,10 +3279,10 @@
     var isNew = acView === 'new', e0 = isNew ? { name: '回台灣', budget: '', rate: bk.rate || 21, rc: bk.rc, rm: bk.rm, main: 'TWD', type: 'trip' } : bk;
     b.innerHTML = top + '<div class="cx-sec"><h4>' + (isNew ? '開一本新的（旅行用）' : bk.type === 'daily' ? '日常設定' : '這本的設定') + '</h4><div class="cx-tp-form">' +
       (e0.type === 'daily' ? '' : '<label>名稱<input class="cx-in" id="cx-acb-name" maxlength="20" value="' + esc(e0.name) + '"></label><label>出發<input class="cx-in" type="date" id="cx-acb-st" value="' + esc(e0.start || '') + '"></label><label>回來<input class="cx-in" type="date" id="cx-acb-en" value="' + esc(e0.end || '') + '"></label>') +
-      '<label>主要幣別<select class="cx-in" id="cx-acb-main"><option value="AUD"' + (e0.main === 'AUD' ? ' selected' : '') + '>澳幣 A$</option><option value="TWD"' + (e0.main === 'TWD' ? ' selected' : '') + '>台幣 NT$</option><option value="MYR"' + (e0.main === 'MYR' ? ' selected' : '') + '>馬幣 RM</option></select></label>' +
+      '<label>主要幣別<select class="cx-in" id="cx-acb-main"><option value="AUD"' + (e0.main === 'AUD' ? ' selected' : '') + '>澳幣 A$</option><option value="TWD"' + (e0.main === 'TWD' ? ' selected' : '') + '>台幣 NT$</option><option value="MYR"' + (e0.main === 'MYR' ? ' selected' : '') + '>馬幣 RM</option><option value="CNY"' + (e0.main === 'CNY' ? ' selected' : '') + '>人民幣 ¥</option></select></label>' +
       '<label>' + (e0.type === 'daily' ? '每月預算（0＝不設）' : '這趟總預算') + '<input class="cx-in" type="number" inputmode="decimal" id="cx-acb-bud" value="' + esc(e0.budget || '') + '"></label>' +
       '<label>匯率：1 澳幣 = ? 台幣<input class="cx-in" type="number" inputmode="decimal" step="0.01" id="cx-acb-rate" value="' + esc(e0.rate) + '"></label>' +
-      '<label>匯率：1 人民幣 = ? 澳幣（淘寶用）<input class="cx-in" type="number" inputmode="decimal" step="0.001" id="cx-acb-rc" value="' + esc(e0.rc || 0.21) + '"></label>' +
+      '<label>匯率：1 人民幣 = ? 澳幣（淘寶、去中國用）<input class="cx-in" type="number" inputmode="decimal" step="0.001" id="cx-acb-rc" value="' + esc(e0.rc || 0.21) + '"></label>' +
       '<label>匯率：1 澳幣 = ? 馬幣（令吉）<input class="cx-in" type="number" inputmode="decimal" step="0.01" id="cx-acb-rm" value="' + esc(e0.rm || 2.9) + '"></label></div>' +
       '<p class="cx-muted" style="font-size:11px">匯率照當天銀行或換匯的填，隨時可以改。</p><div class="cx-tp-btns"><button class="cx-btn pri" ' + (isNew ? 'data-acnew="1">建立' : 'data-acsave="1">儲存') + '</button>' + (!isNew && bk.type !== 'daily' ? '<button class="cx-btn" data-acdelbook="1">刪除這本</button>' : '') + '<button class="cx-btn" data-acv="chat">取消</button></div></div>';
   }
